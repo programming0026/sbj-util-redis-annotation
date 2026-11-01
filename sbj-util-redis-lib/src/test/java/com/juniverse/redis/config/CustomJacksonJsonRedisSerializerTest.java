@@ -15,23 +15,23 @@ import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
 /**
- * Unit tests for CustomJacksonJsonRedisSerializer.
+ * Pruebas unitarias de CustomJacksonJsonRedisSerializer.
  *
  * @author ajuar
  */
 @ExtendWith(MockitoExtension.class)
 class CustomJacksonJsonRedisSerializerTest {
 
-    /** The object mapper. */
+    /** Conversor de objeto. */
     @Mock
     private ObjectMapper objectMapper;
 
-    /** The serializer. */
+    /** Serializador. */
     private CustomJacksonJsonRedisSerializer<Object> serializer;
     
 
     /**
-     * Sets the up.
+     * Prepara la prueba.
      */
     @BeforeEach
     void setUp() {
@@ -40,7 +40,7 @@ class CustomJacksonJsonRedisSerializerTest {
 
     
     /**
-     * Serialize with null value should return empty byte array.
+     * Serializar un valor nulo debe devolver un arreglo de bytes vacío.
      */
     @Test
     void serialize_WithNullValue_ShouldReturnEmptyByteArray() {
@@ -52,9 +52,9 @@ class CustomJacksonJsonRedisSerializerTest {
     }
 
     /**
-     * Serialize with valid object should return serialized bytes.
+     * Serializar un objeto válido debe devolver los bytes serializados.
      *
-     * @throws JacksonException the json processing exception
+     * @throws JacksonException si falla el procesamiento del JSON
      */
     @Test
     void serialize_WithValidObject_ShouldReturnSerializedBytes() throws JacksonException {
@@ -71,9 +71,9 @@ class CustomJacksonJsonRedisSerializerTest {
     }
 
     /**
-     * Serialize when json processing fails should throw serialization exception.
+     * Serializar cuando falla el JSON debe lanzar SerializationException.
      *
-     * @throws JacksonException the json processing exception
+     * @throws JacksonException si falla el procesamiento del JSON
      */
     @Test
     void serialize_WhenJsonProcessingFails_ShouldThrowSerializationException() throws JacksonException {
@@ -89,9 +89,9 @@ class CustomJacksonJsonRedisSerializerTest {
     }
 
     /**
-     * Serialize with complex object should serialize correctly.
+     * Serializar un objeto complejo debe hacerse correctamente.
      *
-     * @throws JacksonException the json processing exception
+     * @throws JacksonException si falla el procesamiento del JSON
      */
     @Test
     void serialize_WithComplexObject_ShouldSerializeCorrectly() throws JacksonException {
@@ -110,7 +110,7 @@ class CustomJacksonJsonRedisSerializerTest {
     
 
     /**
-     * Deserialize with null byte array should return null.
+     * Deserializar bytes nulos debe devolver nulo.
      */
     @Test
     void deserialize_WithNullByteArray_ShouldReturnNull() {
@@ -121,7 +121,7 @@ class CustomJacksonJsonRedisSerializerTest {
     }
 
     /**
-     * Deserialize with empty byte array should return null.
+     * Deserializar un arreglo vacío debe devolver nulo.
      */
     @Test
     void deserialize_WithEmptyByteArray_ShouldReturnNull() {
@@ -134,7 +134,7 @@ class CustomJacksonJsonRedisSerializerTest {
     }
 
     /**
-     * Deserialize when Jackson fails should throw serialization exception.
+     * Deserializar cuando Jackson falla debe lanzar SerializationException.
      */
     @SuppressWarnings("unchecked")
 	@Test
@@ -151,64 +151,40 @@ class CustomJacksonJsonRedisSerializerTest {
 
     
     /**
-     * Test object for serialization tests.
+     * Objeto de prueba para las pruebas de serialización.
      */
     public static class TestObject {
         
-        /** The name. */
+        /** Nombre. */
         private String name;
         
-        /** The age. */
+        /** Edad. */
         private int age;
 
-        /**
-         * Instantiates a new test object.
-         */
         public TestObject() {
         }
 
-        /**
-         * Instantiates a new test object.
-         *
-         * @param name the name
-         * @param age the age
-         */
         public TestObject(String name, int age) {
             this.name = name;
             this.age = age;
         }
 
-        /**
-         * Gets the name.
-         *
-         * @return the name
-         */
         public String getName() {
             return name;
         }
 
-        /**
-         * Sets the name.
-         *
-         * @param name the new name
-         */
         public void setName(String name) {
             this.name = name;
         }
 
-        /**
-         * Gets the age.
-         *
-         * @return the age
-         */
         public int getAge() {
             return age;
         }
 
         /**
-         * Sets the age.
+         * Establece la edad.
          *
-         * @param age the new age
+         * @param age nueva edad
          */
         public void setAge(int age) {
             this.age = age;

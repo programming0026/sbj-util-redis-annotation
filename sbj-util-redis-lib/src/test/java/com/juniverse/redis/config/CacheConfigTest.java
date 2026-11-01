@@ -24,22 +24,22 @@ import static org.mockito.Mockito.*;
 
 
 /**
- * Unit tests for CacheConfig.
+ * Pruebas unitarias de CacheConfig.
  *
  * @author ajuar
  */
 @ExtendWith(MockitoExtension.class)
 class CacheConfigTest {
 
-    /** The annotation metadata. */
+    /** Metadatos de la anotación. */
     @Mock
     private AnnotationMetadata annotationMetadata;
 
-    /** The cache config. */
+    /** Configuración de caché. */
     private CacheConfig cacheConfig;
 
     /**
-     * Sets the up.
+     * Prepara la prueba.
      */
     @BeforeEach
     void setUp() {
@@ -47,7 +47,7 @@ class CacheConfigTest {
     }
 
     /**
-     * Redis health checker should create instance.
+     * El verificador de salud de Redis debe crear su instancia.
      */
     @SuppressWarnings("unchecked")
 	@Test
@@ -61,7 +61,7 @@ class CacheConfigTest {
     }
 
     /**
-     * Redis cache service should create instance.
+     * El servicio de caché de Redis debe crear su instancia.
      */
     @SuppressWarnings("unchecked")
 	@Test
@@ -75,7 +75,7 @@ class CacheConfigTest {
     }
 
     /**
-     * Cache operation builder factory should create instance.
+     * La fábrica del constructor de operaciones debe crear su instancia.
      */
     @Test
     void cacheOperationBuilderFactory_ShouldCreateInstance() {
@@ -106,7 +106,7 @@ class CacheConfigTest {
 
 
     /**
-     * Sets the import metadata should set attributes.
+     * Recibir los metadatos de importación debe asignar los atributos.
      */
     @Test
     void setImportMetadata_ShouldSetAttributes() {
@@ -121,7 +121,7 @@ class CacheConfigTest {
     
 
     /**
-     * Creates the redis connection factory with standalone mode should create standalone factory.
+     * Crear la fábrica con modo standalone debe crear una fábrica standalone.
      */
     @Test
     void createRedisConnectionFactory_WithStandaloneMode_ShouldCreateStandaloneFactory() {
@@ -133,7 +133,7 @@ class CacheConfigTest {
     }
 
     /**
-     * Creates the redis connection factory with cluster mode should create cluster factory.
+     * Crear la fábrica con modo clúster debe crear una fábrica de clúster.
      */
     @Test
     void createRedisConnectionFactory_WithClusterMode_ShouldCreateClusterFactory() {
@@ -145,7 +145,7 @@ class CacheConfigTest {
     }
 
     /**
-     * Creates the redis connection factory with credentials should configure auth.
+     * Crear la fábrica con credenciales debe configurar la autenticación.
      */
     @Test
     void createRedisConnectionFactory_WithCredentials_ShouldConfigureAuth() {
@@ -157,7 +157,7 @@ class CacheConfigTest {
     }
 
     /**
-     * Creates the cluster config with credentials should configure auth.
+     * Crear la configuración de clúster con credenciales debe configurar la autenticación.
      */
     @Test
     void createClusterConfig_WithCredentials_ShouldConfigureAuth() {
@@ -171,7 +171,7 @@ class CacheConfigTest {
     
 
     /**
-     * Creates the redis template should create configured template.
+     * Crear la plantilla de Redis debe crear una plantilla configurada.
      */
     @Test
     void createRedisTemplate_ShouldCreateConfiguredTemplate() {
@@ -186,7 +186,7 @@ class CacheConfigTest {
 
 
     /**
-     * Cache manager should create cache manager.
+     * El administrador de caché debe crearse correctamente.
      */
     @Test
     void cacheManager_ShouldCreateCacheManager() {
@@ -200,7 +200,7 @@ class CacheConfigTest {
    
 
     /**
-     * Validate hosts with null list should throw exception.
+     * Validar servidores con lista nula debe lanzar una excepción.
      */
     @Test
     void validateHosts_WithNullList_ShouldThrowException() {
@@ -212,7 +212,7 @@ class CacheConfigTest {
     }
 
     /**
-     * Validate hosts with empty list should throw exception.
+     * Validar servidores con lista vacía debe lanzar una excepción.
      */
     @Test
     void validateHosts_WithEmptyList_ShouldThrowException() {
@@ -224,7 +224,7 @@ class CacheConfigTest {
     }
 
     /**
-     * Validate hosts with empty host name should throw exception.
+     * Validar servidores con nombre de host vacío debe lanzar una excepción.
      */
     @Test
     void validateHosts_WithEmptyHostName_ShouldThrowException() {
@@ -237,7 +237,7 @@ class CacheConfigTest {
     }
 
     /**
-     * Validate hosts with invalid port low should throw exception.
+     * Validar servidores con puerto inválido (muy bajo) debe lanzar una excepción.
      */
     @Test
     void validateHosts_WithInvalidPortLow_ShouldThrowException() {
@@ -249,7 +249,7 @@ class CacheConfigTest {
     }
 
     /**
-     * Validate hosts with invalid port high should throw exception.
+     * Validar servidores con puerto inválido (muy alto) debe lanzar una excepción.
      */
     @Test
     void validateHosts_WithInvalidPortHigh_ShouldThrowException() {
@@ -261,7 +261,7 @@ class CacheConfigTest {
     }
 
     /**
-     * Validate standalone hosts with multiple hosts should throw exception.
+     * Validar el modo standalone con varios servidores debe lanzar una excepción.
      */
     @Test
     void validateStandaloneHosts_WithMultipleHosts_ShouldThrowException() {
@@ -273,7 +273,7 @@ class CacheConfigTest {
     }
 
     /**
-     * Validate cluster hosts with single host should throw exception.
+     * Validar el modo clúster con un solo servidor debe lanzar una excepción.
      */
     @Test
     void validateClusterHosts_WithSingleHost_ShouldThrowException() {
@@ -287,9 +287,9 @@ class CacheConfigTest {
     
 
     /**
-     * Creates the basic attributes map.
+     * Crea el mapa de atributos básicos.
      *
-     * @return the map
+     * @return mapa
      */
     private Map<String, Object> createBasicAttributesMap() {
         Map<String, Object> map = new HashMap<>();
@@ -315,7 +315,7 @@ class CacheConfigTest {
     }
 
     /**
-     * Setup standalone configuration.
+     * Prepara la configuración standalone.
      */
     private void setupStandaloneConfiguration() {
         Map<String, Object> attributesMap = createBasicAttributesMap();
@@ -330,7 +330,7 @@ class CacheConfigTest {
     }
 
     /**
-     * Setup cluster configuration.
+     * Prepara la configuración de clúster.
      */
     private void setupClusterConfiguration() {
         Map<String, Object> attributesMap = createBasicAttributesMap();
@@ -356,7 +356,7 @@ class CacheConfigTest {
     }
 
     /**
-     * Setup standalone configuration with TTL.
+     * Prepara la configuración standalone con TTL.
      */
     private void setupStandaloneConfigurationWithTTL() {
         Map<String, Object> attributesMap = createBasicAttributesMap();
@@ -375,7 +375,7 @@ class CacheConfigTest {
     }
 
     /**
-     * Setup configuration with null hosts.
+     * Prepara la configuración con servidores nulos.
      */
     private void setupConfigurationWithNullHosts() {
         Map<String, Object> attributesMap = createBasicAttributesMap();
@@ -388,7 +388,7 @@ class CacheConfigTest {
     }
 
     /**
-     * Setup configuration with empty hosts.
+     * Prepara la configuración con servidores vacíos.
      */
     private void setupConfigurationWithEmptyHosts() {
         Map<String, Object> attributesMap = createBasicAttributesMap();
@@ -402,7 +402,7 @@ class CacheConfigTest {
     }
 
     /**
-     * Setup configuration with empty host name.
+     * Prepara la configuración con nombre de host vacío.
      */
     private void setupConfigurationWithEmptyHostName() {
         Map<String, Object> attributesMap = createBasicAttributesMap();
@@ -421,9 +421,9 @@ class CacheConfigTest {
     }
 
     /**
-     * Sets the up configuration with invalid port.
+     * Prepara la configuración con un puerto inválido.
      *
-     * @param port the new up configuration with invalid port
+     * @param port puerto inválido que se usa
      */
     private void setupConfigurationWithInvalidPort(int port) {
         Map<String, Object> attributesMap = createBasicAttributesMap();
@@ -443,7 +443,7 @@ class CacheConfigTest {
     }
 
     /**
-     * Setup configuration with multiple hosts standalone.
+     * Prepara la configuración standalone con varios servidores.
      */
     private void setupConfigurationWithMultipleHostsStandalone() {
         Map<String, Object> attributesMap = createBasicAttributesMap();
@@ -469,7 +469,7 @@ class CacheConfigTest {
     }
 
     /**
-     * Setup configuration with single host cluster.
+     * Prepara la configuración de clúster con un solo servidor.
      */
     private void setupConfigurationWithSingleHostCluster() {
         Map<String, Object> attributesMap = createBasicAttributesMap();
@@ -482,7 +482,7 @@ class CacheConfigTest {
     }
 
     /**
-     * Setup standalone configuration with credentials.
+     * Prepara la configuración standalone con credenciales.
      */
     private void setupStandaloneConfigurationWithCredentials() {
         Map<String, Object> attributesMap = createBasicAttributesMap();
@@ -497,7 +497,7 @@ class CacheConfigTest {
     }
 
     /**
-     * Setup cluster configuration with credentials.
+     * Prepara la configuración de clúster con credenciales.
      */
     private void setupClusterConfigurationWithCredentials() {
         Map<String, Object> attributesMap = createBasicAttributesMap();
@@ -527,7 +527,7 @@ class CacheConfigTest {
     
 
     /**
-     * Creates the redis connection factory with sentinel mode should create sentinel configuration.
+     * Crear la fábrica con modo sentinel debe crear la configuración de sentinel.
      */
     @Test
     void createRedisConnectionFactory_WithSentinelMode_ShouldCreateSentinelConfiguration() {
@@ -539,7 +539,7 @@ class CacheConfigTest {
     }
 
     /**
-     * Creates the redis connection factory with sentinel mode and credentials should configure credentials.
+     * Crear la fábrica con modo sentinel y credenciales debe configurar las credenciales.
      */
     @Test
     void createRedisConnectionFactory_WithSentinelModeAndCredentials_ShouldConfigureCredentials() {
@@ -551,7 +551,7 @@ class CacheConfigTest {
     }
 
     /**
-     * Creates the sentinel config without sentinel master should throw exception.
+     * Crear la configuración de sentinel sin maestro debe lanzar una excepción.
      */
     @Test
     void createSentinelConfig_WithoutSentinelMaster_ShouldThrowException() {
@@ -565,7 +565,7 @@ class CacheConfigTest {
     }
 
     /**
-     * Creates the sentinel config with empty sentinel master should throw exception.
+     * Crear la configuración de sentinel con maestro vacío debe lanzar una excepción.
      */
     @Test
     void createSentinelConfig_WithEmptySentinelMaster_ShouldThrowException() {
@@ -581,7 +581,7 @@ class CacheConfigTest {
 
 
     /**
-     * Setup sentinel configuration.
+     * Prepara la configuración de sentinel.
      */
     private void setupSentinelConfiguration() {
         Map<String, Object> attributesMap = createBasicAttributesMap();
@@ -613,7 +613,7 @@ class CacheConfigTest {
     }
 
     /**
-     * Setup sentinel configuration with credentials.
+     * Prepara la configuración de sentinel con credenciales.
      */
     private void setupSentinelConfigurationWithCredentials() {
         Map<String, Object> attributesMap = createBasicAttributesMap();
@@ -647,7 +647,7 @@ class CacheConfigTest {
     }
 
     /**
-     * Setup sentinel configuration without master.
+     * Prepara la configuración de sentinel sin maestro.
      */
     private void setupSentinelConfigurationWithoutMaster() {
         Map<String, Object> attributesMap = createBasicAttributesMap();
@@ -674,7 +674,7 @@ class CacheConfigTest {
     }
 
     /**
-     * Setup sentinel configuration with empty master.
+     * Prepara la configuración de sentinel con maestro vacío.
      */
     private void setupSentinelConfigurationWithEmptyMaster() {
         Map<String, Object> attributesMap = createBasicAttributesMap();

@@ -8,20 +8,20 @@ import java.util.function.Consumer;
 import java.util.function.Supplier;
 
 /**
- * Builder for cache operations with fluent API.
+ * Constructor de operaciones de caché con API fluida.
  *
- * <p><b>Thread Safety:</b> This class is NOT thread-safe and should not be
- * shared across threads. Each builder instance is designed for single-threaded
- * use. Use {@link Factory#create()} to obtain a new builder instance for each
- * cache operation.</p>
+ * <p><b>Seguridad en hilos:</b> esta clase NO es segura para hilos y no debe
+ * compartirse entre hilos. Cada instancia está pensada para usarse en un solo
+ * hilo. Use {@link Factory#create()} para obtener una instancia nueva por cada
+ * operación de caché.</p>
  *
- * <p><b>Usage:</b></p>
+ * <p><b>Uso:</b></p>
  * <pre>{@code
  * @Autowired
  * private CacheOperationBuilder.Factory builderFactory;
  *
  * public User getUser(String userId) {
- *     // Get a new builder instance for each operation
+ *     // Obtiene una instancia nueva del constructor por cada operación
  *     CacheOperationBuilder<User> builder = builderFactory.create();
  *     return builder
  *         .cacheName("users")
@@ -33,49 +33,49 @@ import java.util.function.Supplier;
  * }</pre>
  *
  * @author ajuar
- * @param <T> the generic type
+ * @param <T> tipo genérico
  * @see Factory
  */
 public final class CacheOperationBuilder<T> {
 
-    /** The cache service. */
+    /** Servicio de caché. */
     private final RedisCacheService cacheService;
 
-    /** The cache name. */
+    /** Nombre de caché. */
     private String cacheName;
 
-    /** The key. */
+    /** Clave. */
     private String key;
 
-    /** The loader. */
+    /** Cargador del valor. */
     private Supplier<T> loader;
 
-    /** The ttl. */
+    /** Tiempo de vida. */
     private Duration ttl = Duration.ofMinutes(10);
 
-    /** The condition. */
+    /** Condición para usar la caché. */
     private boolean condition = true;
 
-    /** The on hit. */
+    /** Retrollamada ante un acierto. */
     private Consumer<T> onHit;
 
-    /** The on miss. */
+    /** Retrollamada ante un fallo. */
     private Consumer<T> onMiss;
 
     /**
-     * Private constructor - use {@link Factory#create()} to create instances.
+     * Constructor privado: use {@link Factory#create()} para crear instancias.
      *
-     * @param cacheService the cache service
+     * @param cacheService servicio de caché
      */
     private CacheOperationBuilder(RedisCacheService cacheService) {
         this.cacheService = cacheService;
     }
 
     /**
-     * Cache name.
+     * Nombre de la caché.
      *
-     * @param cacheName the cache name
-     * @return the cache operation builder
+     * @param cacheName nombre de caché
+     * @return constructor de operación de caché
      */
     public CacheOperationBuilder<T> cacheName(String cacheName) {
         this.cacheName = cacheName;
@@ -83,10 +83,10 @@ public final class CacheOperationBuilder<T> {
     }
 
     /**
-     * Key.
+     * Clave.
      *
-     * @param key the key
-     * @return the cache operation builder
+     * @param key clave
+     * @return constructor de operación de caché
      */
     public CacheOperationBuilder<T> key(String key) {
         this.key = key;
@@ -94,10 +94,10 @@ public final class CacheOperationBuilder<T> {
     }
 
     /**
-     * Loader.
+     * Cargador.
      *
-     * @param loader the loader
-     * @return the cache operation builder
+     * @param loader función que carga el valor
+     * @return constructor de operación de caché
      */
     public CacheOperationBuilder<T> loader(Supplier<T> loader) {
         this.loader = loader;
@@ -105,10 +105,10 @@ public final class CacheOperationBuilder<T> {
     }
 
     /**
-     * Ttl.
+     * Tiempo de vida (TTL).
      *
-     * @param ttl the ttl
-     * @return the cache operation builder
+     * @param ttl tiempo de vida
+     * @return constructor de operación de caché
      */
     public CacheOperationBuilder<T> ttl(Duration ttl) {
         this.ttl = ttl;
@@ -116,10 +116,10 @@ public final class CacheOperationBuilder<T> {
     }
 
     /**
-     * Condition.
+     * Condición.
      *
-     * @param condition the condition
-     * @return the cache operation builder
+     * @param condition expresión de la condición
+     * @return constructor de operación de caché
      */
     public CacheOperationBuilder<T> condition(boolean condition) {
         this.condition = condition;
@@ -127,10 +127,10 @@ public final class CacheOperationBuilder<T> {
     }
 
     /**
-     * On cache hit.
+     * Ante un acierto de caché.
      *
-     * @param callback the callback
-     * @return the cache operation builder
+     * @param callback retrollamada
+     * @return constructor de operación de caché
      */
     public CacheOperationBuilder<T> onCacheHit(Consumer<T> callback) {
         this.onHit = callback;
@@ -138,10 +138,10 @@ public final class CacheOperationBuilder<T> {
     }
 
     /**
-     * On cache miss.
+     * Ante un fallo de caché.
      *
-     * @param callback the callback
-     * @return the cache operation builder
+     * @param callback retrollamada
+     * @return constructor de operación de caché
      */
     public CacheOperationBuilder<T> onCacheMiss(Consumer<T> callback) {
         this.onMiss = callback;
@@ -149,19 +149,19 @@ public final class CacheOperationBuilder<T> {
     }
 
     /**
-     * Cacheable.
+     * Obtiene el valor de la caché o lo carga.
      *
-     * <p><b>Callback Behavior:</b></p>
+     * <p><b>Comportamiento de las retrollamadas:</b></p>
      * <ul>
-     *   <li>If {@code condition} is false, the loader is executed directly
-     *       and NO callbacks (onHit/onMiss) are invoked.</li>
-     *   <li>If {@code condition} is true and cache hit occurs: {@code onHit} callback is invoked
-     *       (if provided).</li>
-     *   <li>If {@code condition} is true and cache miss occurs: {@code onMiss} callback is invoked
-     *       (if provided).</li>
+     *   <li>Si {@code condition} es falsa, el cargador se ejecuta directamente
+     *       y NO se invoca ninguna retrollamada (onHit/onMiss).</li>
+     *   <li>Si {@code condition} es verdadera y hay un acierto: se invoca {@code onHit}
+     *       (si se indicó).</li>
+     *   <li>Si {@code condition} es verdadera y hay un fallo: se invoca {@code onMiss}
+     *       (si se indicó).</li>
      * </ul>
      *
-     * @return the cached or loaded value
+     * @return valor de la caché o cargado
      */
     public T cacheable() {
         Validator.validateRequiredFields(cacheName, key, loader);
@@ -183,9 +183,9 @@ public final class CacheOperationBuilder<T> {
 
 
     /**
-     * Cache put.
+     * Guarda en la caché.
      *
-     * @return the t
+     * @return resultado de la evaluación
      */
     public T cachePut() {
         Validator.validateRequiredFields(cacheName, key, loader);
@@ -194,7 +194,7 @@ public final class CacheOperationBuilder<T> {
     }
 
     /**
-     * Cache evict.
+     * Invalida una clave de la caché.
      */
     public void cacheEvict() {
         Validator.validateCacheEvict(cacheName, key);
@@ -202,12 +202,12 @@ public final class CacheOperationBuilder<T> {
     }
 
     /**
-     * Cache evict all entries for the specified cache name.
+     * Invalida todas las entradas de la caché indicada.
      *
-     * <p>Equivalent to {@code @CacheEvict(allEntries = true)}. This method deletes
-     * all keys matching the pattern {@code cacheName:*}. It uses SCAN to iterate
-     * through keys and deletes them in batches to avoid loading all keys into memory
-     * at once, which prevents {@code OutOfMemoryError} when dealing with large datasets.</p>
+     * <p>Equivale a {@code @CacheEvict(allEntries = true)}. Este método elimina
+     * todas las claves que coinciden con el patrón {@code cacheName:*}. Usa SCAN para recorrer
+     * las claves y las elimina por lotes, para no cargarlas todas en memoria
+     * de una vez, lo que evita {@code OutOfMemoryError} con conjuntos de datos grandes.</p>
      */
     public void cacheEvictAll() {
         Validator.validateCacheEvict(cacheName);
@@ -215,17 +215,17 @@ public final class CacheOperationBuilder<T> {
     }
 
     /**
-     * Factory for creating {@link CacheOperationBuilder} instances.
+     * Fábrica de instancias de {@link CacheOperationBuilder}.
      *
-     * <p>This factory provides a thread-safe way to obtain new builder instances.
-     * The factory itself is a singleton bean and can be safely injected and shared
-     * across threads. Each call to {@link #create()} returns a new, independent
-     * builder instance.</p>
+     * <p>Esta fábrica permite obtener instancias nuevas del constructor de forma segura para hilos.
+     * La fábrica es un bean singleton y se puede inyectar y compartir
+     * entre hilos sin problema. Cada llamada a {@link #create()} devuelve una instancia
+     * nueva e independiente del constructor.</p>
      *
-     * <p><b>Thread Safety:</b> This class is fully thread-safe. Multiple threads
-     * can safely call {@link #create()} concurrently.</p>
+     * <p><b>Seguridad en hilos:</b> esta clase es totalmente segura para hilos. Varios hilos
+     * pueden llamar a {@link #create()} al mismo tiempo.</p>
      *
-     * <p><b>Usage:</b></p>
+     * <p><b>Uso:</b></p>
      * <pre>{@code
      * @Service
      * public class UserService {
@@ -246,26 +246,21 @@ public final class CacheOperationBuilder<T> {
      */
     public static class Factory {
 
-        /** The cache service. */
+        /** Servicio de caché. */
         private final RedisCacheService cacheService;
 
-        /**
-         * Instantiates a new cache operation builder factory.
-         *
-         * @param cacheService the cache service
-         */
         public Factory(RedisCacheService cacheService) {
             this.cacheService = cacheService;
         }
 
         /**
-         * Creates a new {@link CacheOperationBuilder} instance.
+         * Crea una nueva instancia de {@link CacheOperationBuilder}.
          *
-         * <p>Each invocation returns a new, independent builder instance that
-         * should be used for a single cache operation and then discarded.</p>
+         * <p>Cada invocación devuelve una instancia nueva e independiente que
+         * debe usarse para una sola operación de caché y luego descartarse.</p>
          *
-         * @param <T> the type of cached value
-         * @return a new cache operation builder
+         * @param <T> tipo del valor en caché
+         * @return nuevo constructor de operaciones de caché
          */
         public <T> CacheOperationBuilder<T> create() {
             return new CacheOperationBuilder<>(cacheService);

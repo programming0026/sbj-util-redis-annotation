@@ -8,8 +8,6 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * The Interface CoalesceCacheable.
- *
  * @author ajuar
  */
 @Target(ElementType.METHOD)
@@ -21,14 +19,14 @@ public @interface CoalesceCacheable {
      /**
       * Prefijo para la clave de caché.
       *
-      * @return the string
+      * @return cadena
       */
     String value() default "";
     
     /**
      * Expresión SpEL para generar la clave dinámica.
      *
-     * @return the string
+     * @return cadena
      */
     String key() default "";
 
@@ -36,28 +34,28 @@ public @interface CoalesceCacheable {
     /**
      * Tiempo de expiración en segundos.
      *
-     * @return the long
+     * @return valor entero largo
      */
     long ttl() default 300;
     
     /**
      * Condición SpEL para ejecutar el cacheo.
      *
-     * @return the string
+     * @return cadena
      */
     String condition() default "";
     
     /**
      * Si null debe ser cacheado.
      *
-     * @return true, if successful
+     * @return {@code true} si la operación tuvo éxito
      */
     boolean cacheNull() default false;
     
     /**
      * Si debe usar coalescing de requests.
      *
-     * @return true, if successful
+     * @return {@code true} si la operación tuvo éxito
      */
     boolean coalesce() default true;
 }

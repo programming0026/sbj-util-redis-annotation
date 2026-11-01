@@ -22,7 +22,7 @@ import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
 
 /**
- * Unit tests for CoalesceEvictAspect.
+ * Pruebas unitarias de CoalesceEvictAspect.
  *
  * @author ajuar
  */
@@ -30,27 +30,27 @@ import org.mockito.quality.Strictness;
 @MockitoSettings(strictness = Strictness.LENIENT)
 class CoalesceEvictAspectTest {
 
-    /** The cache manager. */
+    /** Administrador de caché. */
     @Mock
     private CoalesceCacheManager cacheManager;
 
-    /** The join point. */
+    /** Punto de unión simulado. */
     @Mock
     private ProceedingJoinPoint joinPoint;
 
-    /** The method signature. */
+    /** Firma del método simulada. */
     @Mock
     private MethodSignature methodSignature;
 
-    /** The signature. */
+    /** Firma del método. */
     @Mock
     private Signature signature;
 
-    /** The aspect. */
+    /** Aspecto bajo prueba. */
     private CoalesceEvictAspect aspect;
 
     /**
-     * Sets up the test environment before each test.
+     * Prepara el entorno antes de cada prueba.
      */
     @BeforeEach
     void setUp() {
@@ -58,17 +58,17 @@ class CoalesceEvictAspectTest {
     }
 
     /**
-     * Test method for mocking.
+     * Método de apoyo para las simulaciones.
      *
-     * @param id the id
-     * @return the string
+     * @param id identificador
+     * @return cadena
      */
     public String testMethod(String id) {
         return "result";
     }
 
     /**
-     * Handle single evict with all entries should evict all.
+     * Una invalidación con todas las entradas debe invalidar todo.
      */
     @Test
     void handleSingleEvict_WithAllEntries_ShouldEvictAll() throws Throwable {
@@ -86,7 +86,7 @@ class CoalesceEvictAspectTest {
 
 
     /**
-     * Handle single evict with key should evict specific key.
+     * Una invalidación con clave debe invalidar esa clave.
      */
     @Test
     void handleSingleEvict_WithKey_ShouldEvictSpecificKey() throws Throwable {
@@ -102,7 +102,7 @@ class CoalesceEvictAspectTest {
     }
 
     /**
-     * Handle single evict with empty key should use args hashcode.
+     * Una invalidación con clave vacía debe usar el hash de los argumentos.
      */
     @Test
     void handleSingleEvict_WithEmptyKey_ShouldUseArgsHashcode() throws Throwable {
@@ -123,7 +123,7 @@ class CoalesceEvictAspectTest {
     }
 
     /**
-     * Handle single evict with empty value should use method signature.
+     * Una invalidación con valor vacío debe usar la firma del método.
      */
     @Test
     void handleSingleEvict_WithEmptyValue_ShouldUseMethodSignature() throws Throwable {
@@ -141,7 +141,7 @@ class CoalesceEvictAspectTest {
     }
 
     /**
-     * Handle single evict before invocation should evict before proceed.
+     * Una invalidación previa a la invocación debe invalidar antes de continuar.
      */
     @Test
     void handleSingleEvict_BeforeInvocation_ShouldEvictBeforeProceed() throws Throwable {
@@ -156,7 +156,7 @@ class CoalesceEvictAspectTest {
     }
 
     /**
-     * Handle single evict after invocation should evict after proceed.
+     * Una invalidación posterior a la invocación debe invalidar después de continuar.
      */
     @Test
     void handleSingleEvict_AfterInvocation_ShouldEvictAfterProceed() throws Throwable {
@@ -171,7 +171,7 @@ class CoalesceEvictAspectTest {
     }
 
     /**
-     * Handle single evict with condition false should not evict.
+     * Una invalidación con condición falsa no debe invalidar.
      */
     @Test
     void handleSingleEvict_WithConditionFalse_ShouldNotEvict() throws Throwable {
@@ -186,7 +186,7 @@ class CoalesceEvictAspectTest {
     }
 
     /**
-     * Handle single evict with condition true should evict.
+     * Una invalidación con condición verdadera debe invalidar.
      */
     @Test
     void handleSingleEvict_WithConditionTrue_ShouldEvict() throws Throwable {
@@ -201,7 +201,7 @@ class CoalesceEvictAspectTest {
     }
 
     /**
-     * Handle single evict with exception should throw exception.
+     * Una invalidación con excepción debe relanzar la excepción.
      */
     @Test
     void handleSingleEvict_WithException_ShouldThrowException() throws Throwable {
@@ -214,7 +214,7 @@ class CoalesceEvictAspectTest {
     }
 
     /**
-     * Handle multiple evicts should process all evictions.
+     * Varias invalidaciones deben procesarse todas.
      */
     @Test
     void handleMultipleEvicts_ShouldProcessAllEvictions() throws Throwable {
@@ -233,7 +233,7 @@ class CoalesceEvictAspectTest {
     }
 
     /**
-     * Handle multiple evicts with mixed timing should respect order.
+     * Varias invalidaciones con momentos mezclados deben respetar el orden.
      */
     @Test
     void handleMultipleEvicts_WithMixedTiming_ShouldRespectOrder() throws Throwable {
@@ -252,8 +252,8 @@ class CoalesceEvictAspectTest {
     }
 
     /**
-     * Handle multiple evicts with all entries should evict all for multiple
-     * prefixes.
+     * Varias invalidaciones con todas las entradas deben invalidar todo para varios
+     * prefijos.
      */
     @Test
     void handleMultipleEvicts_WithAllEntries_ShouldEvictAllForMultiplePrefixes() throws Throwable {
@@ -271,7 +271,7 @@ class CoalesceEvictAspectTest {
     }
 
     /**
-     * Handle single evict with pattern expression should evaluate pattern.
+     * Una invalidación con expresión de patrón debe evaluar el patrón.
      */
     @Test
     void handleSingleEvict_WithPatternExpression_ShouldEvaluatePattern() throws Throwable {
@@ -286,7 +286,7 @@ class CoalesceEvictAspectTest {
     }
 
     /**
-     * Setup join point with default values.
+     * Prepara el punto de unión con valores predeterminados.
      */
     private void setupJoinPoint() {
         when(joinPoint.getSignature()).thenReturn(methodSignature);
@@ -296,15 +296,15 @@ class CoalesceEvictAspectTest {
     }
 
     /**
-     * Creates mock evict annotation.
+     * Crea una anotación de invalidación simulada.
      *
-     * @param value            the value
-     * @param key              the key
-     * @param pattern          the pattern
-     * @param beforeInvocation the before invocation
-     * @param allEntries       the all entries
-     * @param condition        the condition
-     * @return the coalesce evict
+     * @param value            valor
+     * @param key              clave
+     * @param pattern          patrón
+     * @param beforeInvocation indica si invalida antes de la invocación
+     * @param allEntries       indica si invalida todas las entradas
+     * @param condition        condición
+     * @return anotación de invalidación con coalescencia
      */
     private CoalesceEvict createMockEvict(
             String[] value, String key, String pattern,
@@ -320,10 +320,10 @@ class CoalesceEvictAspectTest {
     }
 
     /**
-     * Creates mock evicts annotation.
+     * Crea una anotación agrupadora de invalidaciones simulada.
      *
-     * @param value the value
-     * @return the coalesce evicts
+     * @param value valor
+     * @return anotación agrupadora de invalidaciones
      */
     private CoalesceEvicts createMockEvicts(CoalesceEvict[] value) {
         CoalesceEvicts evicts = mock(CoalesceEvicts.class);
@@ -332,9 +332,9 @@ class CoalesceEvictAspectTest {
     }
 
     /**
-     * Gets the test method.
+     * Obtiene método de prueba.
      *
-     * @return the test method
+     * @return método de prueba
      */
     private Method getTestMethod() {
         try {

@@ -12,14 +12,14 @@ import java.util.function.Supplier;
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
- * Unit tests for Validator.
+ * Pruebas unitarias de Validator.
  *
  * @author ajuar
  */
 class ValidatorTest {
 
     /**
-     * Validate hosts with null list should throw exception.
+     * Validar servidores con lista nula debe lanzar una excepción.
      */
     @Test
     void validateHosts_WithNullList_ShouldThrowException() {
@@ -29,7 +29,7 @@ class ValidatorTest {
     }
 
     /**
-     * Validate hosts with empty list should throw exception.
+     * Validar servidores con lista vacía debe lanzar una excepción.
      */
     @Test
     void validateHosts_WithEmptyList_ShouldThrowException() {
@@ -39,7 +39,7 @@ class ValidatorTest {
     }
 
     /**
-     * Validate hosts with null hostname should throw exception.
+     * Validar servidores con nombre de host nulo debe lanzar una excepción.
      */
     @Test
     void validateHosts_WithNullHostname_ShouldThrowException() {
@@ -53,7 +53,7 @@ class ValidatorTest {
     }
 
     /**
-     * Validate hosts with empty hostname should throw exception.
+     * Validar servidores con nombre de host vacío debe lanzar una excepción.
      */
     @Test
     void validateHosts_WithEmptyHostname_ShouldThrowException() {
@@ -67,7 +67,7 @@ class ValidatorTest {
     }
 
     /**
-     * Validate hosts with whitespace hostname should throw exception.
+     * Validar servidores con nombre de host en blanco debe lanzar una excepción.
      */
     @Test
     void validateHosts_WithWhitespaceHostname_ShouldThrowException() {
@@ -81,7 +81,7 @@ class ValidatorTest {
     }
 
     /**
-     * Validate hosts with port below range should throw exception.
+     * Validar servidores con puerto por debajo del rango debe lanzar una excepción.
      */
     @Test
     void validateHosts_WithPortBelowRange_ShouldThrowException() {
@@ -95,7 +95,7 @@ class ValidatorTest {
     }
 
     /**
-     * Validate hosts with port above range should throw exception.
+     * Validar servidores con puerto por encima del rango debe lanzar una excepción.
      */
     @Test
     void validateHosts_WithPortAboveRange_ShouldThrowException() {
@@ -109,7 +109,7 @@ class ValidatorTest {
     }
 
     /**
-     * Validate hosts with valid host should not throw exception.
+     * Validar servidores con un host válido no debe lanzar excepción.
      */
     @Test
     void validateHosts_WithValidHost_ShouldNotThrowException() {
@@ -121,7 +121,7 @@ class ValidatorTest {
     }
 
     /**
-     * Validate timeout with null connection timeout should throw exception.
+     * Validar tiempos con espera de conexión nula debe lanzar una excepción.
      */
     @Test
     void validateTimeout_WithNullConnectionTimeout_ShouldThrowException() {
@@ -131,7 +131,7 @@ class ValidatorTest {
     }
 
     /**
-     * Validate timeout with null read timeout should throw exception.
+     * Validar tiempos con espera de lectura nula debe lanzar una excepción.
      */
     @Test
     void validateTimeout_WithNullReadTimeout_ShouldThrowException() {
@@ -141,7 +141,7 @@ class ValidatorTest {
     }
 
     /**
-     * Validate timeout with negative connection timeout should throw exception.
+     * Validar tiempos con espera de conexión negativa debe lanzar una excepción.
      */
     @Test
     void validateTimeout_WithNegativeConnectionTimeout_ShouldThrowException() {
@@ -151,7 +151,7 @@ class ValidatorTest {
     }
 
     /**
-     * Validate timeout with zero connection timeout should throw exception.
+     * Validar tiempos con espera de conexión cero debe lanzar una excepción.
      */
     @Test
     void validateTimeout_WithZeroConnectionTimeout_ShouldThrowException() {
@@ -161,7 +161,7 @@ class ValidatorTest {
     }
 
     /**
-     * Validate timeout with negative read timeout should throw exception.
+     * Validar tiempos con espera de lectura negativa debe lanzar una excepción.
      */
     @Test
     void validateTimeout_WithNegativeReadTimeout_ShouldThrowException() {
@@ -171,7 +171,7 @@ class ValidatorTest {
     }
 
     /**
-     * Validate timeout with zero read timeout should throw exception.
+     * Validar tiempos con espera de lectura cero debe lanzar una excepción.
      */
     @Test
     void validateTimeout_WithZeroReadTimeout_ShouldThrowException() {
@@ -181,7 +181,7 @@ class ValidatorTest {
     }
 
     /**
-     * Validate timeout with valid timeouts should not throw exception.
+     * Validar tiempos válidos no debe lanzar excepción.
      */
     @Test
     void validateTimeout_WithValidTimeouts_ShouldNotThrowException() {
@@ -189,7 +189,7 @@ class ValidatorTest {
     }
 
     /**
-     * Validate standalone hosts with multiple hosts should throw exception.
+     * Validar el modo standalone con varios servidores debe lanzar una excepción.
      */
     @Test
     void validateStandaloneHosts_WithMultipleHosts_ShouldThrowException() {
@@ -204,7 +204,7 @@ class ValidatorTest {
     }
 
     /**
-     * Validate standalone hosts with single host should not throw exception.
+     * Validar el modo standalone con un servidor no debe lanzar excepción.
      */
     @Test
     void validateStandaloneHosts_WithSingleHost_ShouldNotThrowException() {
@@ -216,7 +216,7 @@ class ValidatorTest {
     }
 
     /**
-     * Validate cluster hosts with single host should throw exception.
+     * Validar el modo clúster con un solo servidor debe lanzar una excepción.
      */
     @Test
     void validateClusterHosts_WithSingleHost_ShouldThrowException() {
@@ -231,7 +231,7 @@ class ValidatorTest {
     }
 
     /**
-     * Validate cluster hosts with multiple hosts should not throw exception.
+     * Validar el modo clúster con varios servidores no debe lanzar excepción.
      */
     @Test
     void validateClusterHosts_WithMultipleHosts_ShouldNotThrowException() {
@@ -244,7 +244,7 @@ class ValidatorTest {
     }
 
     /**
-     * Validate sentinel hosts with null sentinel master should throw exception.
+     * Validar sentinel con maestro nulo debe lanzar una excepción.
      */
     @Test
     void validateSentinelHosts_WithNullSentinelMaster_ShouldThrowException() {
@@ -260,7 +260,7 @@ class ValidatorTest {
     }
 
     /**
-     * Validate sentinel hosts with empty sentinel master should throw exception.
+     * Validar sentinel con maestro vacío debe lanzar una excepción.
      */
     @Test
     void validateSentinelHosts_WithEmptySentinelMaster_ShouldThrowException() {
@@ -276,7 +276,7 @@ class ValidatorTest {
     }
 
     /**
-     * Validate sentinel hosts with single host should throw exception.
+     * Validar sentinel con un solo servidor debe lanzar una excepción.
      */
     @Test
     void validateSentinelHosts_WithSingleHost_ShouldThrowException() {
@@ -291,7 +291,7 @@ class ValidatorTest {
     }
 
     /**
-     * Validate sentinel hosts with valid config should not throw exception.
+     * Validar sentinel con una configuración válida no debe lanzar excepción.
      */
     @Test
     void validateSentinelHosts_WithValidConfig_ShouldNotThrowException() {
@@ -304,7 +304,7 @@ class ValidatorTest {
     }
 
     /**
-     * Validate required fields with null cache name should throw exception.
+     * Validar campos obligatorios con nombre de caché nulo debe lanzar una excepción.
      */
     @Test
     void validateRequiredFields_WithNullCacheName_ShouldThrowException() {
@@ -316,7 +316,7 @@ class ValidatorTest {
     }
 
     /**
-     * Validate required fields with empty cache name should throw exception.
+     * Validar campos obligatorios con nombre de caché vacío debe lanzar una excepción.
      */
     @Test
     void validateRequiredFields_WithEmptyCacheName_ShouldThrowException() {
@@ -328,7 +328,7 @@ class ValidatorTest {
     }
 
     /**
-     * Validate required fields with null key should throw exception.
+     * Validar campos obligatorios con clave nula debe lanzar una excepción.
      */
     @Test
     void validateRequiredFields_WithNullKey_ShouldThrowException() {
@@ -340,7 +340,7 @@ class ValidatorTest {
     }
 
     /**
-     * Validate required fields with empty key should throw exception.
+     * Validar campos obligatorios con clave vacía debe lanzar una excepción.
      */
     @Test
     void validateRequiredFields_WithEmptyKey_ShouldThrowException() {
@@ -352,7 +352,7 @@ class ValidatorTest {
     }
 
     /**
-     * Validate required fields with null loader should throw exception.
+     * Validar campos obligatorios con cargador nulo debe lanzar una excepción.
      */
     @Test
     void validateRequiredFields_WithNullLoader_ShouldThrowException() {
@@ -362,7 +362,7 @@ class ValidatorTest {
     }
 
     /**
-     * Validate required fields with valid params should not throw exception.
+     * Validar campos obligatorios con parámetros válidos no debe lanzar excepción.
      */
     @Test
     void validateRequiredFields_WithValidParams_ShouldNotThrowException() {
@@ -372,7 +372,7 @@ class ValidatorTest {
     }
 
     /**
-     * Validate TT L with null cache name should throw exception.
+     * Validar TTL con nombre de caché nulo debe lanzar una excepción.
      */
     @Test
     void validateTTL_WithNullCacheName_ShouldThrowException() {
@@ -382,7 +382,7 @@ class ValidatorTest {
     }
 
     /**
-     * Validate TT L with empty cache name should throw exception.
+     * Validar TTL con nombre de caché vacío debe lanzar una excepción.
      */
     @Test
     void validateTTL_WithEmptyCacheName_ShouldThrowException() {
@@ -392,7 +392,7 @@ class ValidatorTest {
     }
 
     /**
-     * Validate TT L with null ttl should throw exception.
+     * Validar TTL con TTL nulo debe lanzar una excepción.
      */
     @Test
     void validateTTL_WithNullTtl_ShouldThrowException() {
@@ -402,7 +402,7 @@ class ValidatorTest {
     }
 
     /**
-     * Validate TT L with zero ttl should throw exception.
+     * Validar TTL con TTL cero debe lanzar una excepción.
      */
     @Test
     void validateTTL_WithZeroTtl_ShouldThrowException() {
@@ -412,7 +412,7 @@ class ValidatorTest {
     }
 
     /**
-     * Validate TT L with negative ttl should throw exception.
+     * Validar TTL con TTL negativo debe lanzar una excepción.
      */
     @Test
     void validateTTL_WithNegativeTtl_ShouldThrowException() {
@@ -422,7 +422,7 @@ class ValidatorTest {
     }
 
     /**
-     * Validate TT L with valid params should not throw exception.
+     * Validar TTL con parámetros válidos no debe lanzar excepción.
      */
     @Test
     void validateTTL_WithValidParams_ShouldNotThrowException() {
@@ -430,7 +430,7 @@ class ValidatorTest {
     }
 
     /**
-     * Validate cacheable with null ttl should throw exception.
+     * Validar la operación de caché con TTL nulo debe lanzar una excepción.
      */
     @Test
     void validateCacheable_WithNullTtl_ShouldThrowException() {
@@ -442,7 +442,7 @@ class ValidatorTest {
     }
 
     /**
-     * Validate cacheable with negative ttl should throw exception.
+     * Validar la operación de caché con TTL negativo debe lanzar una excepción.
      */
     @Test
     void validateCacheable_WithNegativeTtl_ShouldThrowException() {
@@ -454,7 +454,7 @@ class ValidatorTest {
     }
 
     /**
-     * Validate cacheable with zero ttl should throw exception.
+     * Validar la operación de caché con TTL cero debe lanzar una excepción.
      */
     @Test
     void validateCacheable_WithZeroTtl_ShouldThrowException() {
@@ -466,7 +466,7 @@ class ValidatorTest {
     }
 
     /**
-     * Validate cacheable with cache name containing colon should throw exception.
+     * Validar la operación de caché con nombre que contiene dos puntos debe lanzar una excepción.
      */
     @Test
     void validateCacheable_WithCacheNameContainingColon_ShouldThrowException() {
@@ -478,7 +478,7 @@ class ValidatorTest {
     }
 
     /**
-     * Validate cacheable with cache name containing asterisk should throw exception.
+     * Validar la operación de caché con nombre que contiene asterisco debe lanzar una excepción.
      */
     @Test
     void validateCacheable_WithCacheNameContainingAsterisk_ShouldThrowException() {
@@ -490,7 +490,7 @@ class ValidatorTest {
     }
 
     /**
-     * Validate cacheable with key containing asterisk should throw exception.
+     * Validar la operación de caché con clave que contiene asterisco debe lanzar una excepción.
      */
     @Test
     void validateCacheable_WithKeyContainingAsterisk_ShouldThrowException() {
@@ -502,7 +502,7 @@ class ValidatorTest {
     }
 
     /**
-     * Validate cacheable with valid params should not throw exception.
+     * Validar la operación de caché con parámetros válidos no debe lanzar excepción.
      */
     @Test
     void validateCacheable_WithValidParams_ShouldNotThrowException() {
@@ -513,7 +513,7 @@ class ValidatorTest {
     }
 
     /**
-     * Validate cache evict with null cache name should throw exception.
+     * Validar invalidación con nombre de caché nulo debe lanzar una excepción.
      */
     @Test
     void validateCacheEvict_WithNullCacheName_ShouldThrowException() {
@@ -523,7 +523,7 @@ class ValidatorTest {
     }
 
     /**
-     * Validate cache evict with empty cache name should throw exception.
+     * Validar invalidación con nombre de caché vacío debe lanzar una excepción.
      */
     @Test
     void validateCacheEvict_WithEmptyCacheName_ShouldThrowException() {
@@ -533,7 +533,7 @@ class ValidatorTest {
     }
 
     /**
-     * Validate cache evict with null key should throw exception.
+     * Validar invalidación con clave nula debe lanzar una excepción.
      */
     @Test
     void validateCacheEvict_WithNullKey_ShouldThrowException() {
@@ -543,7 +543,7 @@ class ValidatorTest {
     }
 
     /**
-     * Validate cache evict with empty key should throw exception.
+     * Validar invalidación con clave vacía debe lanzar una excepción.
      */
     @Test
     void validateCacheEvict_WithEmptyKey_ShouldThrowException() {
@@ -553,7 +553,7 @@ class ValidatorTest {
     }
 
     /**
-     * Validate cache evict with cache name containing colon should throw exception.
+     * Validar invalidación con nombre que contiene dos puntos debe lanzar una excepción.
      */
     @Test
     void validateCacheEvict_WithCacheNameContainingColon_ShouldThrowException() {
@@ -563,7 +563,7 @@ class ValidatorTest {
     }
 
     /**
-     * Validate cache evict with cache name containing asterisk should throw exception.
+     * Validar invalidación con nombre que contiene asterisco debe lanzar una excepción.
      */
     @Test
     void validateCacheEvict_WithCacheNameContainingAsterisk_ShouldThrowException() {
@@ -573,7 +573,7 @@ class ValidatorTest {
     }
 
     /**
-     * Validate cache evict with key containing asterisk should throw exception.
+     * Validar invalidación con clave que contiene asterisco debe lanzar una excepción.
      */
     @Test
     void validateCacheEvict_WithKeyContainingAsterisk_ShouldThrowException() {
@@ -583,7 +583,7 @@ class ValidatorTest {
     }
 
     /**
-     * Validate cache evict with valid params should not throw exception.
+     * Validar invalidación con parámetros válidos no debe lanzar excepción.
      */
     @Test
     void validateCacheEvict_WithValidParams_ShouldNotThrowException() {
@@ -591,7 +591,7 @@ class ValidatorTest {
     }
 
     /**
-     * Validate cache evict all with null cache name should throw exception.
+     * Validar invalidar todo con nombre de caché nulo debe lanzar una excepción.
      */
     @Test
     void validateCacheEvictAll_WithNullCacheName_ShouldThrowException() {
@@ -601,7 +601,7 @@ class ValidatorTest {
     }
 
     /**
-     * Validate cache evict all with empty cache name should throw exception.
+     * Validar invalidar todo con nombre de caché vacío debe lanzar una excepción.
      */
     @Test
     void validateCacheEvictAll_WithEmptyCacheName_ShouldThrowException() {
@@ -611,7 +611,7 @@ class ValidatorTest {
     }
 
     /**
-     * Validate cache evict all with whitespace cache name should throw exception.
+     * Validar invalidar todo con nombre de caché en blanco debe lanzar una excepción.
      */
     @Test
     void validateCacheEvictAll_WithWhitespaceCacheName_ShouldThrowException() {
@@ -621,7 +621,7 @@ class ValidatorTest {
     }
 
     /**
-     * Validate cache evict all with cache name containing colon should throw exception.
+     * Validar invalidar todo con nombre que contiene dos puntos debe lanzar una excepción.
      */
     @Test
     void validateCacheEvictAll_WithCacheNameContainingColon_ShouldThrowException() {
@@ -631,7 +631,7 @@ class ValidatorTest {
     }
 
     /**
-     * Validate cache evict all with cache name containing asterisk should throw exception.
+     * Validar invalidar todo con nombre que contiene asterisco debe lanzar una excepción.
      */
     @Test
     void validateCacheEvictAll_WithCacheNameContainingAsterisk_ShouldThrowException() {
@@ -641,7 +641,7 @@ class ValidatorTest {
     }
 
     /**
-     * Validate cache evict all with valid cache name should not throw exception.
+     * Validar invalidar todo con un nombre válido no debe lanzar excepción.
      */
     @Test
     void validateCacheEvictAll_WithValidCacheName_ShouldNotThrowException() {
@@ -649,7 +649,7 @@ class ValidatorTest {
     }
 
     /**
-     * Validate pattern with null pattern should throw exception.
+     * Validar patrón nulo debe lanzar una excepción.
      */
     @Test
     void validatePattern_WithNullPattern_ShouldThrowException() {
@@ -659,7 +659,7 @@ class ValidatorTest {
     }
 
     /**
-     * Validate pattern with empty pattern should throw exception.
+     * Validar patrón vacío debe lanzar una excepción.
      */
     @Test
     void validatePattern_WithEmptyPattern_ShouldThrowException() {
@@ -669,7 +669,7 @@ class ValidatorTest {
     }
 
     /**
-     * Validate pattern with whitespace pattern should throw exception.
+     * Validar patrón en blanco debe lanzar una excepción.
      */
     @Test
     void validatePattern_WithWhitespacePattern_ShouldThrowException() {
@@ -679,7 +679,7 @@ class ValidatorTest {
     }
 
     /**
-     * Validate pattern with valid pattern should not throw exception.
+     * Validar un patrón válido no debe lanzar excepción.
      */
     @Test
     void validatePattern_WithValidPattern_ShouldNotThrowException() {

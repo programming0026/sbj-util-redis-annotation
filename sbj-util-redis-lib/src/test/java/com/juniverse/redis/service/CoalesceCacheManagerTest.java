@@ -36,30 +36,30 @@ import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
 /**
- * Unit tests for CoalesceCacheManager.
+ * Pruebas unitarias de CoalesceCacheManager.
  *
  * @author ajuar
  */
 @ExtendWith(MockitoExtension.class)
 class CoalesceCacheManagerTest {
 
-    /** The redis template. */
+    /** Plantilla de Redis. */
     @Mock
     private RedisTemplate<String, Object> redisTemplate;
 
-    /** The value operations. */
+    /** Operaciones de valores simuladas. */
     @Mock
     private ValueOperations<String, Object> valueOperations;
 
-    /** The listener container. */
+    /** Contenedor de escuchas simulado. */
     @Mock
     private RedisMessageListenerContainer listenerContainer;
 
-    /** The cache manager. */
+    /** Administrador de caché. */
     private CoalesceCacheManager cacheManager;
 
     /**
-     * Sets up the test environment before each test.
+     * Prepara el entorno antes de cada prueba.
      */
     @BeforeEach
     void setUp() {
@@ -67,14 +67,14 @@ class CoalesceCacheManagerTest {
     }
 
     /**
-     * Sets up value operations mock.
+     * Prepara el simulado de las operaciones de valores.
      */
     private void setupValueOperations() {
         when(redisTemplate.opsForValue()).thenReturn(valueOperations);
     }
 
     /**
-     * Constructor should register message listeners.
+     * El constructor debe registrar los escuchas de mensajes.
      */
     @Test
     void constructor_ShouldRegisterMessageListeners() {
@@ -84,7 +84,7 @@ class CoalesceCacheManagerTest {
     }
 
     /**
-     * Put with TTL should set value with expiration.
+     * Guardar con TTL debe establecer el valor con expiración.
      */
     @Test
     void put_WithTTL_ShouldSetValueWithExpiration() {
@@ -102,7 +102,7 @@ class CoalesceCacheManagerTest {
     }
 
     /**
-     * Put without TTL should set value without expiration.
+     * Guardar sin TTL debe establecer el valor sin expiración.
      */
     @Test
     void put_WithoutTTL_ShouldSetValueWithoutExpiration() {
@@ -119,7 +119,7 @@ class CoalesceCacheManagerTest {
     }
 
     /**
-     * Put with negative TTL should set value without expiration.
+     * Guardar con TTL negativo debe establecer el valor sin expiración.
      */
     @Test
     void put_WithNegativeTTL_ShouldSetValueWithoutExpiration() {
@@ -136,7 +136,7 @@ class CoalesceCacheManagerTest {
     }
 
     /**
-     * Get when cache hit should return value.
+     * Obtener ante un acierto de caché debe devolver el valor.
      */
     @Test
     void get_WhenCacheHit_ShouldReturnValue() {
@@ -153,7 +153,7 @@ class CoalesceCacheManagerTest {
     }
 
     /**
-     * Get when cache miss should return empty.
+     * Obtener ante un fallo de caché debe devolver vacío.
      */
     @Test
     void get_WhenCacheMiss_ShouldReturnEmpty() {
@@ -168,7 +168,7 @@ class CoalesceCacheManagerTest {
     }
 
     /**
-     * Evict should delete key and publish event.
+     * Invalidar debe eliminar la clave y publicar el evento.
      */
     @Test
     void evict_ShouldDeleteKeyAndPublishEvent() {
@@ -184,7 +184,7 @@ class CoalesceCacheManagerTest {
     }
 
     /**
-     * Evict all with matching keys should delete all and publish events.
+     * Invalidar todo con claves coincidentes debe eliminarlas y publicar los eventos.
      */
     @Test
     void evictAll_WithMatchingKeys_ShouldDeleteAllAndPublishEvents() {
@@ -203,7 +203,7 @@ class CoalesceCacheManagerTest {
     }
 
     /**
-     * Evict all with no matching keys should not delete.
+     * Invalidar todo sin claves coincidentes no debe eliminar nada.
      */
     @Test
     void evictAll_WithNoMatchingKeys_ShouldNotDelete() {
@@ -217,7 +217,7 @@ class CoalesceCacheManagerTest {
     }
 
     /**
-     * Evict all with empty set should not delete.
+     * Invalidar todo con un conjunto vacío no debe eliminar nada.
      */
     @Test
     void evictAll_WithEmptySet_ShouldNotDelete() {
@@ -231,7 +231,7 @@ class CoalesceCacheManagerTest {
     }
 
     /**
-     * Evict pattern with matching keys should delete all and publish events.
+     * Invalidar por patrón con claves coincidentes debe eliminarlas y publicar los eventos.
      */
     @Test
     void evictPattern_WithMatchingKeys_ShouldDeleteAllAndPublishEvents() {
@@ -250,7 +250,7 @@ class CoalesceCacheManagerTest {
     }
 
     /**
-     * Evict pattern with no matching keys should not delete.
+     * Invalidar por patrón sin claves coincidentes no debe eliminar nada.
      */
     @Test
     void evictPattern_WithNoMatchingKeys_ShouldNotDelete() {
@@ -264,7 +264,7 @@ class CoalesceCacheManagerTest {
     }
 
     /**
-     * Evict pattern with empty set should not delete.
+     * Invalidar por patrón con un conjunto vacío no debe eliminar nada.
      */
     @Test
     void evictPattern_WithEmptySet_ShouldNotDelete() {
@@ -278,7 +278,7 @@ class CoalesceCacheManagerTest {
     }
 
     /**
-     * Evict multiple should delete all keys and publish events.
+     * Invalidar varias claves debe eliminarlas todas y publicar los eventos.
      */
     @Test
     void evictMultiple_ShouldDeleteAllKeysAndPublishEvents() {
@@ -301,7 +301,7 @@ class CoalesceCacheManagerTest {
     }
 
     /**
-     * Evict multiple with empty list should not delete.
+     * Invalidar varias claves con lista vacía no debe eliminar nada.
      */
     @Test
     void evictMultiple_WithEmptyList_ShouldNotDelete() {
@@ -314,7 +314,7 @@ class CoalesceCacheManagerTest {
     }
 
     /**
-     * Exists when key exists should return true.
+     * Existe cuando la clave existe debe devolver verdadero.
      */
     @Test
     void exists_WhenKeyExists_ShouldReturnTrue() {
@@ -328,7 +328,7 @@ class CoalesceCacheManagerTest {
     }
 
     /**
-     * Exists when key does not exist should return false.
+     * Existe cuando la clave no existe debe devolver falso.
      */
     @Test
     void exists_WhenKeyDoesNotExist_ShouldReturnFalse() {
@@ -342,7 +342,7 @@ class CoalesceCacheManagerTest {
     }
 
     /**
-     * Exists when result is null should return false.
+     * Existe cuando el resultado es nulo debe devolver falso.
      */
     @Test
     void exists_WhenResultIsNull_ShouldReturnFalse() {
@@ -356,7 +356,7 @@ class CoalesceCacheManagerTest {
     }
 
     /**
-     * Clear with matching keys should delete all.
+     * Limpiar con claves coincidentes debe eliminarlas todas.
      */
     @Test
     void clear_WithMatchingKeys_ShouldDeleteAll() {
@@ -371,7 +371,7 @@ class CoalesceCacheManagerTest {
     }
 
     /**
-     * Clear with no matching keys should not delete.
+     * Limpiar sin claves coincidentes no debe eliminar nada.
      */
     @Test
     void clear_WithNoMatchingKeys_ShouldNotDelete() {
@@ -383,7 +383,7 @@ class CoalesceCacheManagerTest {
     }
 
     /**
-     * Clear with empty set should not delete.
+     * Limpiar con un conjunto vacío no debe eliminar nada.
      */
     @Test
     void clear_WithEmptySet_ShouldNotDelete() {
@@ -395,7 +395,7 @@ class CoalesceCacheManagerTest {
     }
 
     /**
-     * Get time to live should return TTL.
+     * Obtener el tiempo de vida debe devolver el TTL.
      */
     @Test
     void getTimeToLive_ShouldReturnTTL() {
@@ -410,7 +410,7 @@ class CoalesceCacheManagerTest {
     }
 
     /**
-     * Get time to live when null should return minus one.
+     * Obtener el tiempo de vida cuando es nulo debe devolver -1.
      */
     @Test
     void getTimeToLive_WhenNull_ShouldReturnMinusOne() {
@@ -425,7 +425,7 @@ class CoalesceCacheManagerTest {
     }
 
     /**
-     * Expire should set expiration.
+     * Expirar debe establecer la expiración.
      */
     @Test
     void expire_ShouldSetExpiration() {
@@ -442,7 +442,7 @@ class CoalesceCacheManagerTest {
 
 
     /**
-     * GetOrLoad when cache hit should return cached value.
+     * GetOrLoad ante un acierto de caché debe devolver el valor en caché.
      */
     @Test
     void getOrLoad_WhenCacheHit_ShouldReturnCachedValue() {
@@ -461,7 +461,7 @@ class CoalesceCacheManagerTest {
     }
 
     /**
-     * GetOrLoad when lock acquired should execute loader and cache result.
+     * GetOrLoad con el bloqueo obtenido debe ejecutar el cargador y guardar el resultado.
      */
     @Test
     void getOrLoad_WhenLockAcquired_ShouldExecuteLoaderAndCacheResult() {
@@ -489,7 +489,7 @@ class CoalesceCacheManagerTest {
     }
 
     /**
-     * GetOrLoad when loader returns null and cacheNull is true should cache null.
+     * GetOrLoad con cargador nulo y cacheNull verdadero debe guardar el nulo.
      */
     @Test
     void getOrLoad_WhenLoaderReturnsNullAndCacheNullTrue_ShouldCacheNull() {
@@ -515,7 +515,7 @@ class CoalesceCacheManagerTest {
     }
 
     /**
-     * GetOrLoad when loader returns null and cacheNull is false should not cache.
+     * GetOrLoad con cargador nulo y cacheNull falso no debe guardar en caché.
      */
     @Test
     void getOrLoad_WhenLoaderReturnsNullAndCacheNullFalse_ShouldNotCache() {
@@ -541,7 +541,7 @@ class CoalesceCacheManagerTest {
     }
 
     /**
-     * GetOrLoad when loader throws exception should publish error and rethrow.
+     * GetOrLoad cuando el cargador lanza una excepción debe publicar el error y relanzarlo.
      */
     @Test
     void getOrLoad_WhenLoaderThrowsException_ShouldPublishErrorAndRethrow() {
@@ -568,7 +568,7 @@ class CoalesceCacheManagerTest {
     }
 
     /**
-     * GetOrLoad when lock not acquired should wait for result.
+     * GetOrLoad sin obtener el bloqueo debe esperar el resultado.
      */
     @Test
     void getOrLoad_WhenLockNotAcquired_ShouldThrowOnTimeout() {
@@ -587,7 +587,7 @@ class CoalesceCacheManagerTest {
     }
 
     /**
-     * GetOrLoad when lock not acquired and cache populated should return cached value.
+     * GetOrLoad sin obtener el bloqueo y con la caché llena debe devolver el valor en caché.
      */
     @Test
     void getOrLoad_WhenLockNotAcquiredAndCachePopulated_ShouldReturnCachedValue() {
@@ -610,7 +610,7 @@ class CoalesceCacheManagerTest {
     }
 
     /**
-     * GetOrLoad with zero TTL should use default timeout.
+     * GetOrLoad con TTL cero debe usar el tiempo de espera predeterminado.
      */
     @Test
     void getOrLoad_WithZeroTTL_ShouldUseDefaultTimeout() {
@@ -634,7 +634,7 @@ class CoalesceCacheManagerTest {
 
 
     /**
-     * HandleCoalesceEvent with successful response should complete future.
+     * HandleCoalesceEvent con respuesta exitosa debe completar el futuro.
      */
     @Test
     @SuppressWarnings("unchecked")
@@ -660,7 +660,7 @@ class CoalesceCacheManagerTest {
     }
 
     /**
-     * HandleCoalesceEvent with error response should complete exceptionally.
+     * HandleCoalesceEvent con respuesta de error debe completar el futuro con error.
      */
     @Test
     @SuppressWarnings("unchecked")
@@ -685,7 +685,7 @@ class CoalesceCacheManagerTest {
     }
 
     /**
-     * HandleCoalesceEvent with null response should not throw.
+     * HandleCoalesceEvent con respuesta nula no debe lanzar excepción.
      */
     @Test
     @SuppressWarnings("unchecked")
@@ -699,7 +699,7 @@ class CoalesceCacheManagerTest {
     }
 
     /**
-     * HandleCoalesceEvent with no pending future should not throw.
+     * HandleCoalesceEvent sin futuro pendiente no debe lanzar excepción.
      */
     @Test
     @SuppressWarnings("unchecked")
@@ -717,7 +717,7 @@ class CoalesceCacheManagerTest {
     }
 
     /**
-     * HandleCoalesceEvent with serialization exception should not throw.
+     * HandleCoalesceEvent con error de serialización no debe lanzar excepción.
      */
     @Test
     @SuppressWarnings("unchecked")
@@ -732,7 +732,7 @@ class CoalesceCacheManagerTest {
 
 
     /**
-     * HandleEvictionEvent with valid event should not throw.
+     * HandleEvictionEvent con un evento válido no debe lanzar excepción.
      */
     @Test
     @SuppressWarnings("unchecked")
@@ -748,7 +748,7 @@ class CoalesceCacheManagerTest {
     }
 
     /**
-     * HandleEvictionEvent with null event should not throw.
+     * HandleEvictionEvent con un evento nulo no debe lanzar excepción.
      */
     @Test
     @SuppressWarnings("unchecked")
@@ -762,7 +762,7 @@ class CoalesceCacheManagerTest {
     }
 
     /**
-     * HandleEvictionEvent with serialization exception should not throw.
+     * HandleEvictionEvent con error de serialización no debe lanzar excepción.
      */
     @Test
     @SuppressWarnings("unchecked")
@@ -776,7 +776,7 @@ class CoalesceCacheManagerTest {
     }
 
     /**
-     * Gets pending requests map via reflection.
+     * Obtiene el mapa de peticiones pendientes por reflexión.
      */
     @SuppressWarnings("unchecked")
     private ConcurrentHashMap<String, CompletableFuture<Object>> getPendingRequests() throws Exception {
@@ -786,7 +786,7 @@ class CoalesceCacheManagerTest {
     }
 
     /**
-     * Invokes handleCoalesceEvent via reflection.
+     * Invoca handleCoalesceEvent por reflexión.
      */
     private void invokeHandleCoalesceEvent(Message message, byte[] pattern) throws Exception {
         Method method = CoalesceCacheManager.class.getDeclaredMethod(
@@ -796,7 +796,7 @@ class CoalesceCacheManagerTest {
     }
 
     /**
-     * Invokes handleEvictionEvent via reflection.
+     * Invoca handleEvictionEvent por reflexión.
      */
     private void invokeHandleEvictionEvent(Message message, byte[] pattern) throws Exception {
         Method method = CoalesceCacheManager.class.getDeclaredMethod(

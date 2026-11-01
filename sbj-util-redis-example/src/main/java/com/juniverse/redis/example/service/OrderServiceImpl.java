@@ -15,8 +15,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 /**
- * Order service implementation using Coalesce caching annotations.
- * Demonstrates request coalescing to prevent cache stampedes.
+ * Implementación del servicio de pedidos con anotaciones de caché con coalescencia.
+ * Muestra la coalescencia de peticiones para evitar avalanchas de caché.
  *
  * @author ajuar
  */

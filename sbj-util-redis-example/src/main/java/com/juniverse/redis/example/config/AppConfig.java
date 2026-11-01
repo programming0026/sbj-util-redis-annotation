@@ -7,9 +7,9 @@ import com.juniverse.redis.util.Mode;
 import org.springframework.context.annotation.Configuration;
 
 /**
- * Redis configuration class using sbj-util-redis library
- * Configures Redis in STANDALONE mode (a single server on localhost:6379) with TTL entries for different caches.
- * The SENTINEL and CLUSTER configurations are kept below, commented out, to switch modes.
+ * Configuración de Redis con la librería sbj-util-redis
+ * Configura Redis en modo STANDALONE (un solo servidor en localhost:6379) con entradas de TTL para distintas cachés.
+ * Las configuraciones SENTINEL y CLUSTER se conservan abajo, comentadas, para cambiar de modo.
  *
  * @author ajuar
  */

@@ -18,37 +18,30 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.ScanOptions;
 
 /**
- * The Class RedisCacheService.
- *
  * @author ajuar
  */
 @Slf4j
 public class RedisCacheService {
 
     /**
-     * The redis template.
+     * Plantilla de Redis.
      */
     private final RedisTemplate<String, Object> redisTemplate;
 
-    /**
-     * Instantiates a new redis cache service.
-     *
-     * @param redisTemplate the redis template
-     */
     public RedisCacheService(RedisTemplate<String, Object> redisTemplate) {
         this.redisTemplate = redisTemplate;
     }
 
     /**
-     * Equivalent to @Cacheable Searches the cache, if it does not exist,
-     * execute the loader and save the result.
+     * Equivale a @Cacheable: busca en la caché y, si no existe,
+     * ejecuta el cargador y guarda el resultado.
      *
-     * @param <T> the generic type
-     * @param cacheName the cache name
-     * @param key the key
-     * @param loader the loader
-     * @param ttl the ttl
-     * @return the object
+     * @param <T> tipo genérico
+     * @param cacheName nombre de caché
+     * @param key clave
+     * @param loader función que carga el valor
+     * @param ttl tiempo de vida
+     * @return objeto
      */
     public <T> T cacheable(String cacheName, String key, Supplier<T> loader, Duration ttl) {
         return cacheableWithResult(cacheName, key, loader, ttl).getValue();
@@ -57,30 +50,30 @@ public class RedisCacheService {
 
     
     /**
-     * Overhead with default TTL of 10 minutes.
+     * Sobrecarga con el TTL predeterminado de 10 minutos.
      *
-     * @param <T> the generic type
-     * @param cacheName the cache name
-     * @param key the key
-     * @param loader the loader
-     * @return the object
+     * @param <T> tipo genérico
+     * @param cacheName nombre de caché
+     * @param key clave
+     * @param loader función que carga el valor
+     * @return objeto
      */
     public <T> T cacheable(String cacheName, String key, Supplier<T> loader) {
         return cacheable(cacheName, key, loader, Duration.ofMinutes(10));
     }
 
     /**
-     * Cacheable operation that returns detailed result including cache hit/miss information.
+     * Operación de caché que devuelve un resultado detallado con información de acierto o fallo.
      *
-     * <p>This method provides the same functionality as {@link #cacheable(String, String, Supplier, Duration)}
-     * but includes metadata about whether the value came from cache (hit) or was loaded from the source (miss).</p>
+     * <p>Este método ofrece lo mismo que {@link #cacheable(String, String, Supplier, Duration)}
+     * pero incluye si el valor vino de la caché (acierto) o se cargó de la fuente (fallo).</p>
      *
-     * @param <T> the generic type
-     * @param cacheName the cache name
-     * @param key the key
-     * @param loader the loader function to execute on cache miss
-     * @param ttl the time to live
-     * @return CacheResult containing the value and hit/miss information
+     * @param <T> tipo genérico
+     * @param cacheName nombre de caché
+     * @param key clave
+     * @param loader función que se ejecuta ante un fallo de caché
+     * @param ttl tiempo de vida
+     * @return CacheResult con el valor y la información de acierto o fallo
      */
     @SuppressWarnings("unchecked")
     public <T> CacheResult<T> cacheableWithResult(String cacheName, String key,
@@ -118,27 +111,27 @@ public class RedisCacheService {
     }
 
     /**
-     * Cacheable operation with result and default TTL of 10 minutes.
+     * Operación de caché con resultado y TTL predeterminado de 10 minutos.
      *
-     * @param <T> the generic type
-     * @param cacheName the cache name
-     * @param key the key
-     * @param loader the loader
-     * @return CacheResult containing the value and hit/miss information
+     * @param <T> tipo genérico
+     * @param cacheName nombre de caché
+     * @param key clave
+     * @param loader función que carga el valor
+     * @return CacheResult con el valor y la información de acierto o fallo
      */
     public <T> CacheResult<T> cacheableWithResult(String cacheName, String key, Supplier<T> loader) {
         return cacheableWithResult(cacheName, key, loader, Duration.ofMinutes(10));
     }
 
     /**
-     * Equivalent to @CachePut.
+     * Equivale a @CachePut.
      *
-     * @param <T> the generic type
-     * @param cacheName the cache name
-     * @param key the key
-     * @param loader the loader
-     * @param ttl the ttl
-     * @return the object
+     * @param <T> tipo genérico
+     * @param cacheName nombre de caché
+     * @param key clave
+     * @param loader función que carga el valor
+     * @param ttl tiempo de vida
+     * @return objeto
      */
     public <T> T cachePut(String cacheName, String key, Supplier<T> loader, Duration ttl) {
         Validator.validateCacheable(cacheName, key, loader, ttl);
@@ -170,23 +163,23 @@ public class RedisCacheService {
     }
 
     /**
-     * Overloading with TTL by default.
+     * Sobrecarga con el TTL predeterminado.
      *
-     * @param <T> the generic type
-     * @param cacheName the cache name
-     * @param key the key
-     * @param loader the loader
-     * @return the object
+     * @param <T> tipo genérico
+     * @param cacheName nombre de caché
+     * @param key clave
+     * @param loader función que carga el valor
+     * @return objeto
      */
     public <T> T cachePut(String cacheName, String key, Supplier<T> loader) {
         return cachePut(cacheName, key, loader, Duration.ofMinutes(10));
     }
 
     /**
-     * Equivalent to @CacheEvict.
+     * Equivale a @CacheEvict.
      *
-     * @param cacheName the cache name
-     * @param key the key
+     * @param cacheName nombre de caché
+     * @param key clave
      */
     public void cacheEvict(String cacheName, String key) {
         Validator.validateCacheEvict(cacheName, key);
@@ -206,12 +199,12 @@ public class RedisCacheService {
     }
 
     /**
-     * Equivalent to @CacheEvict(allEntries = true).
+     * Equivale a @CacheEvict(allEntries = true).
      *
-     * <p>This method uses SCAN to iterate through keys and deletes them in batches
-     * during the scan to avoid loading all keys into memory at once.</p>
+     * <p>Este método usa SCAN para recorrer las claves y las elimina por lotes
+     * durante el recorrido, para no cargarlas todas en memoria de una vez.</p>
      *
-     * @param cacheName the cache name
+     * @param cacheName nombre de caché
      */
     public void cacheEvictAll(String cacheName) {
         Validator.validateCacheEvict(cacheName);
@@ -257,10 +250,10 @@ public class RedisCacheService {
     }
 
     /**
-     * Evict multiple specific keys.
+     * Invalida varias claves concretas.
      *
-     * @param cacheName the cache name
-     * @param keys the keys
+     * @param cacheName nombre de caché
+     * @param keys claves
      */
     public void cacheEvictMultiple(String cacheName, String... keys) {
         Validator.validateCacheEvict(cacheName);
@@ -287,12 +280,12 @@ public class RedisCacheService {
     }
 
     /**
-     * Evict by custom pattern.
+     * Invalida por un patrón propio.
      *
-     * <p>This method uses SCAN to iterate through keys and deletes them in batches
-     * during the scan to avoid loading all keys into memory at once.</p>
+     * <p>Este método usa SCAN para recorrer las claves y las elimina por lotes
+     * durante el recorrido, para no cargarlas todas en memoria de una vez.</p>
      *
-     * @param pattern the pattern
+     * @param pattern patrón de claves
      */
     public void cacheEvictByPattern(String pattern) {
         Validator.validatePattern(pattern);
@@ -337,11 +330,11 @@ public class RedisCacheService {
     }
 
     /**
-     * Check if a cached key exists.
+     * Comprueba si existe una clave en la caché.
      *
-     * @param cacheName the cache name
-     * @param key the key
-     * @return true, if successful
+     * @param cacheName nombre de caché
+     * @param key clave
+     * @return {@code true} si la operación tuvo éxito
      */
     public boolean exists(String cacheName, String key) {
         Validator.validateCacheEvict(cacheName, key);
@@ -357,11 +350,11 @@ public class RedisCacheService {
     }
 
     /**
-     * Gets the remaining TTL of a key.
+     * Obtiene el TTL restante de una clave.
      *
-     * @param cacheName the cache name
-     * @param key the key
-     * @return the ttl
+     * @param cacheName nombre de caché
+     * @param key clave
+     * @return tiempo de vida
      */
     public Long getTTL(String cacheName, String key) {
         Validator.validateCacheEvict(cacheName, key);
@@ -377,11 +370,11 @@ public class RedisCacheService {
     }
 
     /**
-     * Build the complete key.
+     * Construye la clave completa.
      *
-     * @param cacheName the cache name
-     * @param key the key
-     * @return the string
+     * @param cacheName nombre de caché
+     * @param key clave
+     * @return cadena
      */
     private String buildKey(String cacheName, String key) {
         return cacheName + ":" + key;

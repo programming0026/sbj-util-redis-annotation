@@ -16,32 +16,25 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
 /**
- * The Class RedisHealthChecker.
- *
  * @author ajuar
  */
 @Slf4j
 public class RedisHealthChecker {
 
     /**
-     * The redis template.
+     * Plantilla de Redis.
      */
     private final RedisTemplate<String, Object> redisTemplate;
 
-    /**
-     * Instantiates a new redis health checker.
-     *
-     * @param redisTemplate the redis template
-     */
     public RedisHealthChecker(RedisTemplate<String, Object> redisTemplate) {
         this.redisTemplate = redisTemplate;
     }
 
     /**
-     * Creates the status.
+     * Crea estado.
      *
-     * @param message the message
-     * @return the redis status dto
+     * @param message mensaje
+     * @return DTO de estado de Redis
      */
     private RedisStatusDto createStatus(String message) {
 
@@ -57,9 +50,9 @@ public class RedisHealthChecker {
     }
 
     /**
-     * Checks if is redis active.
+     * Comprueba si Redis está activo.
      *
-     * @return the redis status dto
+     * @return DTO de estado de Redis
      */
     public RedisStatusDto isRedisActive() {
 
@@ -117,11 +110,11 @@ public class RedisHealthChecker {
     }
 
     /**
-     * Gets redis info using native Lettuce connection.
-     * Supports standalone, cluster, and sentinel modes.
+     * Obtiene la información de Redis con una conexión nativa de Lettuce.
+     * Admite los modos standalone, clúster y sentinel.
      *
-     * @param connection the redis connection
-     * @return map of redis info properties
+     * @param connection conexión a Redis
+     * @return propiedades de información de Redis de de de mapa
      */
     private Map<String, String> getRedisInfo(RedisConnection connection) {
         Map<String, String> info = new HashMap<>();
@@ -175,10 +168,10 @@ public class RedisHealthChecker {
     }
 
     /**
-     * Parse Redis INFO command output.
+     * Interpreta la salida del comando INFO de Redis.
      *
-     * @param infoString the INFO command output
-     * @return map of key-value pairs
+     * @param infoString salida del comando INFO
+     * @return mapa de pares clave-valor
      */
     private Map<String, String> parseRedisInfo(String infoString) {
         Map<String, String> result = new HashMap<>();
@@ -207,11 +200,11 @@ public class RedisHealthChecker {
     }
 
     /**
-     * Parse long value safely.
+     * Convierte un valor long de forma segura.
      *
-     * @param value        the string value
-     * @param defaultValue the default value
-     * @return the parsed long or default value
+     * @param value        valor en texto
+     * @param defaultValue valor predeterminado
+     * @return número convertido o el valor predeterminado
      */
     private long parseLong(String value, long defaultValue) {
         try {
@@ -223,11 +216,11 @@ public class RedisHealthChecker {
     }
 
     /**
-     * Parse int value safely.
+     * Convierte un valor int de forma segura.
      *
-     * @param value        the string value
-     * @param defaultValue the default value
-     * @return the parsed int or default value
+     * @param value        valor en texto
+     * @param defaultValue valor predeterminado
+     * @return número convertido o el valor predeterminado
      */
     private int parseInt(String value, int defaultValue) {
         try {

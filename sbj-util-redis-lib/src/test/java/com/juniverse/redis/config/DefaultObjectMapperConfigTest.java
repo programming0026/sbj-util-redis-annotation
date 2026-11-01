@@ -12,13 +12,13 @@ import static org.junit.jupiter.api.Assertions.*;
 import java.time.LocalDateTime;
 
 /**
- * Unit tests for DefaultObjectMapperConfig.
+ * Pruebas unitarias de DefaultObjectMapperConfig.
  *
  * @author ajuar
  */
 class DefaultObjectMapperConfigTest {
 
-    /** The config. */
+    /** Configuración. */
     private final DefaultObjectMapperConfig config = new DefaultObjectMapperConfig();
 
     /**
@@ -33,7 +33,7 @@ class DefaultObjectMapperConfigTest {
     }
 
     /**
-     * Jackson 3 supports java.time without registering any module.
+     * Jackson 3 admite java.time sin registrar ningún módulo.
      */
     @Test
     void configure_ShouldSupportJavaTimeWithoutModules() {
@@ -43,7 +43,7 @@ class DefaultObjectMapperConfigTest {
     }
 
     /**
-     * Jackson 3 supports Optional without registering any module.
+     * Jackson 3 admite Optional sin registrar ningún módulo.
      */
     @Test
     void configure_ShouldSupportOptionalWithoutModules() {
@@ -53,7 +53,7 @@ class DefaultObjectMapperConfigTest {
     }
 
     /**
-     * Configure should disable write dates as timestamps.
+     * La configuración debe deshabilitar escribir fechas como marcas de tiempo.
      */
     @Test
     void configure_ShouldDisableWriteDatesAsTimestamps() {
@@ -63,7 +63,7 @@ class DefaultObjectMapperConfigTest {
     }
 
     /**
-     * Configure should configure visibility.
+     * La configuración debe configurar la visibilidad.
      */
     @Test
     void configure_ShouldConfigureVisibility() {
@@ -75,7 +75,7 @@ class DefaultObjectMapperConfigTest {
     }
 
     /**
-     * Configure should not fail on unknown properties.
+     * La configuración no debe fallar con propiedades desconocidas.
      */
     @Test
     void configure_ShouldNotFailOnUnknownProperties() {
@@ -85,7 +85,7 @@ class DefaultObjectMapperConfigTest {
     }
 
     /**
-     * Configure should not fail on empty beans.
+     * La configuración no debe fallar con beans vacíos.
      */
     @Test
     void configure_ShouldNotFailOnEmptyBeans() {
@@ -95,7 +95,7 @@ class DefaultObjectMapperConfigTest {
     }
 
     /**
-     * Configure should not fail on null for primitives.
+     * La configuración no debe fallar con nulos en primitivos.
      */
     @Test
     void configure_ShouldNotFailOnNullForPrimitives() {
@@ -105,7 +105,7 @@ class DefaultObjectMapperConfigTest {
     }
 
     /**
-     * Configure should accept single value as array.
+     * La configuración debe aceptar un valor único como arreglo.
      */
     @Test
     void configure_ShouldAcceptSingleValueAsArray() {
@@ -115,7 +115,7 @@ class DefaultObjectMapperConfigTest {
     }
 
     /**
-     * Configure should not accept empty string as null object.
+     * La configuración no debe aceptar una cadena vacía como objeto nulo.
      */
     @Test
     void configure_ShouldNotAcceptEmptyStringAsNullObject() {
@@ -125,7 +125,7 @@ class DefaultObjectMapperConfigTest {
     }
 
     /**
-     * Configure should not accept empty array as null object.
+     * La configuración no debe aceptar un arreglo vacío como objeto nulo.
      */
     @Test
     void configure_ShouldNotAcceptEmptyArrayAsNullObject() {
@@ -135,7 +135,7 @@ class DefaultObjectMapperConfigTest {
     }
 
     /**
-     * Configure should not read enums using to string.
+     * La configuración no debe leer enumeraciones con toString.
      */
     @Test
     void configure_ShouldNotReadEnumsUsingToString() {
@@ -145,7 +145,7 @@ class DefaultObjectMapperConfigTest {
     }
 
     /**
-     * Configure should not write enums using to string.
+     * La configuración no debe escribir enumeraciones con toString.
      */
     @Test
     void configure_ShouldNotWriteEnumsUsingToString() {
@@ -155,9 +155,9 @@ class DefaultObjectMapperConfigTest {
     }
 
     /**
-     * Configure should be usable for serialization.
+     * La configuración debe poder usarse para serializar.
      *
-     * @throws Exception the exception
+     * @throws Exception si ocurre un error
      */
     @Test
     void configure_ShouldBeUsableForSerialization() throws Exception {
@@ -172,9 +172,9 @@ class DefaultObjectMapperConfigTest {
     }
 
     /**
-     * Configure should be usable for deserialization.
+     * La configuración debe poder usarse para deserializar.
      *
-     * @throws Exception the exception
+     * @throws Exception si ocurre un error
      */
     @Test
     void configure_ShouldBeUsableForDeserialization() throws Exception {
@@ -193,9 +193,9 @@ class DefaultObjectMapperConfigTest {
     }
 
     /**
-     * Configure should handle java time types.
+     * La configuración debe manejar los tipos de java.time.
      *
-     * @throws Exception the exception
+     * @throws Exception si ocurre un error
      */
     @Test
     void configure_ShouldHandleJavaTimeTypes() throws Exception {
@@ -211,7 +211,7 @@ class DefaultObjectMapperConfigTest {
     }
 
     /**
-     * Configure should create new instance each time.
+     * La configuración debe crear una instancia nueva cada vez.
      */
     @Test
     void configure_ShouldCreateNewInstanceEachTime() {
@@ -225,51 +225,34 @@ class DefaultObjectMapperConfigTest {
     }
 
     
-    /**
-     * The Class TestObject.
-     */
     private static class TestObject {
         
-        /** The name. */
+        /** Nombre. */
         private String name;
         
-        /** The value. */
+        /** Valor. */
         private int value;
 
-        /** The construct. */
+        /** Constructor. */
         public TestObject () {
         }
 
-        /**
-         * Instantiates a new test object.
-         *
-         * @param name the name
-         * @param value the value
-         */
         public TestObject(String name, int value) {
             this.name = name;
             this.value = value;
         }
     }
 
-    /**
-     * The Class TimeObject.
-     */
     private static class TimeObject {
         
-        /** The timestamp. */
+        /** Marca de tiempo. */
         private LocalDateTime timestamp;
 
-        /** The construct. */
+        /** Constructor. */
        public TimeObject() {
 
        }
 
-        /**
-         * Instantiates a new time object.
-         *
-         * @param timestamp the timestamp
-         */
         public TimeObject(LocalDateTime timestamp) {
             this.timestamp = timestamp;
         }

@@ -4,36 +4,30 @@ import lombok.Builder;
 import lombok.Getter;
 
 /**
- * The Class RedisStatusDto.
- *
  * @author ajuar
  */
 
-/**
- * The Class RedisStatusDtoBuilder.
- */
 @Builder
 @Getter
 public class RedisStatusDto {
 
-    /** The connected. */
     private boolean connected;
     
-    /** The response time. */
+    /** Tiempo de respuesta. */
     private long responseTime;
     
-    /** The error message. */
+    /** Mensaje de error. */
     private String errorMessage;
 
-    /** The used memory. */
+    /** Memoria usada. */
     private Long usedMemory;
 
-    /** The max memory. */
+    /** Memoria máxima. */
     private Long maxMemory;
 
-    /** The connected clients. */
+    /** Clientes conectados. */
     private Integer connectedClients;
 
-    /** The redis version. */
+    /** Versión de Redis. */
     private String redisVersion;
 }

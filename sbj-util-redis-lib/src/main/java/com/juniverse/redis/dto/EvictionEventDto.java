@@ -6,8 +6,6 @@ import lombok.NoArgsConstructor;
 import java.time.LocalDateTime;
 
 /**
- * The Class EvictionEventDto.
- *
  * @author ajuar
  */
 @Data
@@ -15,12 +13,11 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 public class EvictionEventDto implements java.io.Serializable {
 
-    /** The Constant serialVersionUID. */
 	private static final long serialVersionUID = 1L;
 
-	/** The key. */
+	/** Clave. */
     private String key;
     
-    /** The timestamp. */
+    /** Marca de tiempo. */
     private LocalDateTime timestamp;
 }

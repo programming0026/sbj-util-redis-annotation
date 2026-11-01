@@ -1,32 +1,32 @@
 # sbj-util-redis-example
 
-Spring Boot example application demonstrating four different Redis caching patterns using the `sbj-util-redis` library.
+Aplicación de ejemplo con Spring Boot que muestra cuatro patrones de caché con Redis usando la librería `sbj-util-redis`.
 
-## Description
+## Descripción
 
-This project is a demonstration application that shows how to implement Redis caching in Spring Boot using four different approaches:
+Este proyecto es una aplicación de demostración que enseña cómo implementar caché con Redis en Spring Boot de cuatro maneras distintas:
 
-1. **Spring Cache Annotations** - Simple and declarative pattern
-2. **RedisCacheService** - Programmatic control with callbacks
-3. **CacheOperationBuilder.Factory** - Fluent API for complex scenarios
-4. **Coalesce Annotations** - Request coalescing to prevent cache stampedes
+1. **Anotaciones de Spring Cache**: patrón sencillo y declarativo
+2. **RedisCacheService**: control programático con retrollamadas
+3. **CacheOperationBuilder.Factory**: API fluida para escenarios complejos
+4. **Anotaciones de coalescencia**: unifica peticiones iguales para evitar avalanchas de caché
 
-The application manages four domain entities (Products, Users, Accounts, Orders), each implementing a different caching pattern to facilitate comparison.
+La aplicación administra cuatro entidades de dominio (productos, usuarios, cuentas y pedidos); cada una usa un patrón de caché distinto para poder compararlos.
 
-## Features
+## Características
 
-- Four Redis cache implementation patterns
-- Automatic cache invalidation in CRUD operations
-- Force Refresh support
-- Request coalescing for high-concurrency scenarios
-- STANDALONE, SENTINEL and CLUSTER configuration
-- Configurable TTL per entity
-- Complete REST API with CORS enabled
-- Redis health check
-- Callbacks for cache hit/miss
-- Slow operation simulation (3s) to demonstrate caching benefits
+- Cuatro patrones de caché con Redis
+- Invalidación automática de la caché en las operaciones CRUD
+- Actualización forzada de la caché
+- Coalescencia de peticiones para escenarios de alta concurrencia
+- Configuración STANDALONE, SENTINEL y CLUSTER
+- TTL configurable por entidad
+- API REST completa con CORS habilitado
+- Verificación de salud de Redis
+- Retrollamadas ante aciertos y fallos de caché
+- Simulación de una operación lenta (3 s) para mostrar las ventajas de la caché
 
-## Technologies
+## Tecnologías
 
 - **Java 21**
 - **Spring Boot 4.0.1**
@@ -34,39 +34,39 @@ The application manages four domain entities (Products, Users, Accounts, Orders)
 - **Maven**
 - **Lombok**
 - **sbj-util-redis 2.0.0**
-- **Jackson 3** (JSON serialization; java.time support is built in)
+- **Jackson 3** (serialización JSON; el soporte de java.time viene integrado)
 
-## Prerequisites
+## Requisitos previos
 
-- JDK 21 or higher
-- Maven 3.6+
-- Redis Server (STANDALONE, SENTINEL or CLUSTER mode)
-  - **STANDALONE** (default): a single Redis on `localhost:6379`, for example `docker run -d --name redis -p 6379:6379 redis:7-alpine`
-  - **SENTINEL**: Redis Sentinel on ports 26379, 26380, 26381 with master "mymaster"
-  - **CLUSTER**: Redis Cluster on ports 7000-7005
+- JDK 21 o superior
+- Maven 3.6 o superior
+- Servidor Redis (modo STANDALONE, SENTINEL o CLUSTER)
+  - **STANDALONE** (por defecto): un solo Redis en `localhost:6379`, por ejemplo `docker run -d --name redis -p 6379:6379 redis:7-alpine`
+  - **SENTINEL**: Redis Sentinel en los puertos 26379, 26380 y 26381 con el maestro «mymaster»
+  - **CLUSTER**: Redis Cluster en los puertos 7000-7005
 
-## Installation and Execution
+## Instalación y ejecución
 
-### 1. Clone the repository
+### 1. Clonar el repositorio
 
 ```bash
-git clone <repository-url>
+git clone <url-del-repositorio>
 cd sbj-util-redis-example
 ```
 
-### 2. Configure Redis
+### 2. Configurar Redis
 
-The example runs in STANDALONE mode (default configuration), so a single Redis on `localhost:6379` is enough:
+El ejemplo se ejecuta en modo STANDALONE (configuración por defecto), así que basta un solo Redis en `localhost:6379`:
 
 ```bash
 docker run -d --name redis -p 6379:6379 redis:7-alpine
 ```
 
-To switch to SENTINEL or CLUSTER, edit `src/main/java/com/juniverse/redis/example/config/AppConfig.java`: comment out the active `@EnableRedisLibrary` block and uncomment the one you want.
+Para cambiar a SENTINEL o CLUSTER, edite `src/main/java/com/juniverse/redis/example/config/AppConfig.java`: comente el bloque `@EnableRedisLibrary` activo y descomente el que necesite.
 
-### 3. Install the library
+### 3. Instalar la librería
 
-The example depends on `com.juniverse.redis:sbj-util-redis`, which is the `sbj-util-redis-lib` module of this repository (it is not published on Maven Central). Install it once in your local Maven repository:
+El ejemplo depende de `com.juniverse.redis:sbj-util-redis`, que es el módulo `sbj-util-redis-lib` de este repositorio (no está publicado en Maven Central). Instálela una vez en su repositorio local de Maven:
 
 ```bash
 cd ../sbj-util-redis-lib
@@ -74,39 +74,39 @@ mvn install
 cd ../sbj-util-redis-example
 ```
 
-### 4. Compile the project
+### 4. Compilar el proyecto
 
 ```bash
 mvn clean compile
 ```
 
-### 5. Run the application
+### 5. Ejecutar la aplicación
 
 ```bash
 mvn spring-boot:run
 ```
 
-The application will be available at `http://localhost:8080`
+La aplicación estará disponible en `http://localhost:8080`
 
-### 6. Generate executable JAR
+### 6. Generar el JAR ejecutable
 
 ```bash
 mvn clean package
 java -jar target/sbj-util-redis-example-1.0.0-SNAPSHOT.jar
 ```
 
-## API Endpoints
+## Endpoints de la API
 
-### Products (Spring Cache Annotations)
+### Productos (anotaciones de Spring Cache)
 
 ```bash
-# Get all products (cache 10s)
+# Obtener todos los productos (caché 10 s)
 GET http://localhost:8080/api/v1/products
 
-# Get product by ID
+# Obtener un producto por ID
 GET http://localhost:8080/api/v1/products/{id}
 
-# Create/update product
+# Crear o actualizar un producto
 POST http://localhost:8080/api/v1/products
 Content-Type: application/json
 {
@@ -114,26 +114,26 @@ Content-Type: application/json
   "mount": 99.99
 }
 
-# Delete product
+# Eliminar un producto
 DELETE http://localhost:8080/api/v1/products/{id}
 
-# Clear complete products cache
+# Limpiar toda la caché de productos
 GET http://localhost:8080/api/v1/products/refresh
 ```
 
-### Users (RedisCacheService)
+### Usuarios (RedisCacheService)
 
 ```bash
-# Get all users (cache 15min)
+# Obtener todos los usuarios (caché 15 min)
 GET http://localhost:8080/api/v1/users
 
-# Get user by ID (cache 30min)
+# Obtener un usuario por ID (caché 30 min)
 GET http://localhost:8080/api/v1/users/{id}
 
-# Get user with force refresh
+# Obtener un usuario forzando la actualización
 GET http://localhost:8080/api/v1/users/{id}?forceRefresh=true
 
-# Create/update user
+# Crear o actualizar un usuario
 POST http://localhost:8080/api/v1/users
 Content-Type: application/json
 {
@@ -141,26 +141,26 @@ Content-Type: application/json
   "email": "newuser@example.com"
 }
 
-# Delete user
+# Eliminar un usuario
 DELETE http://localhost:8080/api/v1/users/{id}
 
-# Clear complete users cache
+# Limpiar toda la caché de usuarios
 GET http://localhost:8080/api/v1/users/refresh
 ```
 
-### Accounts (CacheOperationBuilder.Factory)
+### Cuentas (CacheOperationBuilder.Factory)
 
 ```bash
-# Get all accounts (cache 10min)
+# Obtener todas las cuentas (caché 10 min)
 GET http://localhost:8080/api/v1/accounts
 
-# Get account by ID (cache 20min)
+# Obtener una cuenta por ID (caché 20 min)
 GET http://localhost:8080/api/v1/accounts/{id}
 
-# Get account with force refresh
+# Obtener una cuenta forzando la actualización
 GET http://localhost:8080/api/v1/accounts/{id}?forceRefresh=true
 
-# Create/update account
+# Crear o actualizar una cuenta
 POST http://localhost:8080/api/v1/accounts
 Content-Type: application/json
 {
@@ -170,138 +170,138 @@ Content-Type: application/json
   "accountType": "SAVINGS"
 }
 
-# Delete account
+# Eliminar una cuenta
 DELETE http://localhost:8080/api/v1/accounts/{id}
 
-# Clear complete accounts cache
+# Limpiar toda la caché de cuentas
 GET http://localhost:8080/api/v1/accounts/refresh
 ```
 
-### Orders (Coalesce Annotations)
+### Pedidos (anotaciones de coalescencia)
 
 ```bash
-# Get all orders (cache 3min)
+# Obtener todos los pedidos (caché 3 min)
 GET http://localhost:8080/api/v1/orders
 
-# Get order by ID (cache 5min)
+# Obtener un pedido por ID (caché 5 min)
 GET http://localhost:8080/api/v1/orders/{id}
 
-# Get orders by customer
+# Obtener los pedidos de un cliente
 GET http://localhost:8080/api/v1/orders/customer/{customerId}
 
-# Get orders by status
+# Obtener los pedidos por estado
 GET http://localhost:8080/api/v1/orders/status/{status}
 
-# Update order status
+# Actualizar el estado de un pedido
 PATCH http://localhost:8080/api/v1/orders/{id}/status?status=SHIPPED
 
-# Clear order status cache
+# Limpiar la caché de estados de pedidos
 DELETE http://localhost:8080/api/v1/orders/cache/clear
 ```
 
-### Health Check
+### Verificación de salud
 
 ```bash
-# Check Redis status
+# Consultar el estado de Redis
 GET http://localhost:8080/api/health/redis
 ```
 
-## Usage Examples
+## Ejemplos de uso
 
-### Example 1: Verify Cache (Products)
+### Ejemplo 1: verificar la caché (productos)
 
 ```bash
-# First call - takes 3 seconds (cache miss)
+# Primera llamada: tarda 3 segundos (fallo de caché)
 curl http://localhost:8080/api/v1/products
 
-# Second call - instant (cache hit)
+# Segunda llamada: instantánea (acierto de caché)
 curl http://localhost:8080/api/v1/products
 
-# Create a new product
+# Crear un producto nuevo
 curl -X POST http://localhost:8080/api/v1/products \
   -H "Content-Type: application/json" \
   -d '{"name":"New Product","mount":199.99}'
 
-# Get list again - takes 3 seconds (cache invalidated)
+# Obtener la lista otra vez: tarda 3 segundos (la caché se invalidó)
 curl http://localhost:8080/api/v1/products
 ```
 
-### Example 2: Force Refresh (Users)
+### Ejemplo 2: actualización forzada (usuarios)
 
 ```bash
-# Load into cache
+# Cargar en la caché
 curl http://localhost:8080/api/v1/users/1
 
-# Get from cache (instant)
+# Obtener desde la caché (instantáneo)
 curl http://localhost:8080/api/v1/users/1
 
-# Force reload from database (3 seconds)
+# Forzar la recarga desde la base de datos (3 segundos)
 curl "http://localhost:8080/api/v1/users/1?forceRefresh=true"
 ```
 
-### Example 3: Callbacks (Accounts)
+### Ejemplo 3: retrollamadas (cuentas)
 
 ```bash
-# When getting accounts, you'll see in the logs:
-# - "Cache hit" or "Cache miss" as appropriate
-# - Total balance calculated in callbacks
+# Al obtener las cuentas verá en los logs:
+# - "Cache hit" o "Cache miss", según corresponda
+# - El saldo total calculado en las retrollamadas
 curl http://localhost:8080/api/v1/accounts
 ```
 
-### Example 4: Request Coalescing (Orders)
+### Ejemplo 4: coalescencia de peticiones (pedidos)
 
 ```bash
-# Multiple simultaneous requests to the same endpoint
-# will be coalesced into a single database call
+# Varias peticiones simultáneas al mismo endpoint
+# se unifican en una sola consulta a la base de datos
 curl http://localhost:8080/api/v1/orders/1 &
 curl http://localhost:8080/api/v1/orders/1 &
 curl http://localhost:8080/api/v1/orders/1 &
-# Only one "Fetching order from database" log entry appears
+# Solo aparece una entrada de log "Fetching order from database"
 ```
 
-## Architecture
+## Arquitectura
 
-### Package Structure
+### Estructura de paquetes
 
 ```
 com.juniverse.redis.example
 ├── config/
-│   └── AppConfig.java              # Redis configuration with @EnableRedisLibrary
+│   └── AppConfig.java              # Configuración de Redis con @EnableRedisLibrary
 ├── controller/
-│   ├── ProductController.java      # REST endpoints for Products
-│   ├── UserController.java         # REST endpoints for Users
-│   ├── AccountController.java      # REST endpoints for Accounts
-│   ├── OrderController.java        # REST endpoints for Orders
-│   └── RedisHealthController.java  # Health check
+│   ├── ProductController.java      # Endpoints REST de productos
+│   ├── UserController.java         # Endpoints REST de usuarios
+│   ├── AccountController.java      # Endpoints REST de cuentas
+│   ├── OrderController.java        # Endpoints REST de pedidos
+│   └── RedisHealthController.java  # Verificación de salud
 ├── service/
-│   ├── ProductService.java         # Interface
-│   ├── ProductServiceImpl.java     # Implementation with @Cacheable
-│   ├── UserService.java            # Interface
-│   ├── UserServiceImpl.java        # Implementation with RedisCacheService
-│   ├── AccountService.java         # Interface
-│   ├── AccountServiceImpl.java     # Implementation with CacheOperationBuilder
-│   ├── OrderService.java           # Interface
-│   └── OrderServiceImpl.java       # Implementation with @CoalesceCacheable
+│   ├── ProductService.java         # Interfaz
+│   ├── ProductServiceImpl.java     # Implementación con @Cacheable
+│   ├── UserService.java            # Interfaz
+│   ├── UserServiceImpl.java        # Implementación con RedisCacheService
+│   ├── AccountService.java         # Interfaz
+│   ├── AccountServiceImpl.java     # Implementación con CacheOperationBuilder
+│   ├── OrderService.java           # Interfaz
+│   └── OrderServiceImpl.java       # Implementación con @CoalesceCacheable
 ├── dto/
-│   ├── ProductDTO.java             # DTO with Serializable
-│   ├── UserDTO.java                # DTO with Serializable
-│   ├── AccountDTO.java             # DTO with Serializable
-│   ├── OrderDTO.java               # DTO with Serializable
-│   └── OrderItemDTO.java           # DTO with Serializable
+│   ├── ProductDTO.java             # DTO con Serializable
+│   ├── UserDTO.java                # DTO con Serializable
+│   ├── AccountDTO.java             # DTO con Serializable
+│   ├── OrderDTO.java               # DTO con Serializable
+│   └── OrderItemDTO.java           # DTO con Serializable
 └── util/
-    └── Utility.java                # Utilities (simulateSlowService)
+    └── Utility.java                # Utilidades (simulateSlowService)
 ```
 
-### Implemented Cache Patterns
+### Patrones de caché implementados
 
-#### 1. ProductService - Spring Cache Annotations
+#### 1. ProductService: anotaciones de Spring Cache
 
-**Advantages:**
-- Simple and declarative
-- Familiar to Spring developers
-- Centralized TTL configuration
+**Ventajas:**
+- Sencillo y declarativo
+- Familiar para quien conoce Spring
+- Configuración centralizada del TTL
 
-**Usage:**
+**Uso:**
 ```java
 @Cacheable(value = "products", key = "'all'")
 public List<ProductDTO> getProducts() { ... }
@@ -313,14 +313,14 @@ public List<ProductDTO> getProducts() { ... }
 public ProductDTO saveOrUpdateProduct(ProductDTO product) { ... }
 ```
 
-#### 2. UserService - RedisCacheService
+#### 2. UserService: RedisCacheService
 
-**Advantages:**
-- Programmatic control
-- Flexible TTL per operation
-- Easy force refresh implementation
+**Ventajas:**
+- Control programático
+- TTL flexible por operación
+- La actualización forzada es fácil de implementar
 
-**Usage:**
+**Uso:**
 ```java
 return redisCacheService.cacheable(
     CACHE_NAME,
@@ -330,15 +330,15 @@ return redisCacheService.cacheable(
 );
 ```
 
-#### 3. AccountService - CacheOperationBuilder.Factory
+#### 3. AccountService: CacheOperationBuilder.Factory
 
-**Advantages:**
-- Maximum flexibility
-- Callbacks for additional logic
-- Conditional caching
-- Fluent API
+**Ventajas:**
+- Máxima flexibilidad
+- Retrollamadas para lógica adicional
+- Caché condicional
+- API fluida
 
-**Usage:**
+**Uso:**
 ```java
 return builderFactory.<AccountDTO>create()
     .cacheName(CACHE_NAME)
@@ -351,16 +351,16 @@ return builderFactory.<AccountDTO>create()
     .cacheable();
 ```
 
-#### 4. OrderService - Coalesce Annotations
+#### 4. OrderService: anotaciones de coalescencia
 
-**Advantages:**
-- Prevents cache stampedes
-- Request coalescing for concurrent calls
-- Configurable timeout per operation
-- Conditional caching with SpEL
-- Pattern-based cache eviction
+**Ventajas:**
+- Evita las avalanchas de caché
+- Unifica las peticiones concurrentes
+- Tiempo de espera configurable por operación
+- Caché condicional con SpEL
+- Invalidación de caché por patrón
 
-**Usage:**
+**Uso:**
 ```java
 @CoalesceCacheable(
     value = "order",
@@ -384,28 +384,28 @@ public OrderDTO updateOrderStatus(Long id, String newStatus) { ... }
 public void clearSearchCache() { ... }
 ```
 
-### Cache Invalidation
+### Invalidación de la caché
 
-All services implement the invalidation pattern:
-- On **create/update**: Individual cache is updated and complete list is invalidated
-- On **delete**: Individual cache and complete list are invalidated
+Todos los servicios aplican el mismo patrón de invalidación:
+- Al **crear o actualizar**: se actualiza la caché individual y se invalida la lista completa
+- Al **eliminar**: se invalidan la caché individual y la lista completa
 
-This ensures consistency between individual queries and listings.
+Así se mantiene la consistencia entre las consultas individuales y los listados.
 
-## Configuration
+## Configuración
 
-### TTL by Service
+### TTL por servicio
 
-| Service | Method | Individual TTL | List TTL |
+| Servicio | Método | TTL individual | TTL de la lista |
 |---------|--------|----------------|----------|
-| Products | `@Cacheable` | 10 seconds | 10 seconds |
-| Users | `RedisCacheService` | 30 minutes | 15 minutes |
-| Accounts | `CacheOperationBuilder` | 20 minutes | 10 minutes |
-| Orders | `@CoalesceCacheable` | 5 minutes | 3 minutes |
+| Productos | `@Cacheable` | 10 segundos | 10 segundos |
+| Usuarios | `RedisCacheService` | 30 minutos | 15 minutos |
+| Cuentas | `CacheOperationBuilder` | 20 minutos | 10 minutos |
+| Pedidos | `@CoalesceCacheable` | 5 minutos | 3 minutos |
 
-### Redis Modes
+### Modos de Redis
 
-#### STANDALONE (Current)
+#### STANDALONE (actual)
 ```java
 @EnableRedisLibrary(
     hostEntries = {
@@ -418,7 +418,7 @@ This ensures consistency between individual queries and listings.
 )
 ```
 
-#### SENTINEL (Alternative)
+#### SENTINEL (alternativa)
 ```java
 @EnableRedisLibrary(
     hostEntries = {
@@ -434,13 +434,13 @@ This ensures consistency between individual queries and listings.
 )
 ```
 
-#### CLUSTER (Alternative)
+#### CLUSTER (alternativa)
 ```java
 @EnableRedisLibrary(
     hostEntries = {
         @HostEntry(host = "localhost", port = 7000),
         @HostEntry(host = "localhost", port = 7001),
-        // ... ports 7002-7005
+        // ... puertos 7002-7005
     },
     mode = Mode.CLUSTER,
     ttlEntries = {
@@ -449,51 +449,51 @@ This ensures consistency between individual queries and listings.
 )
 ```
 
-## Important Notes
+## Notas importantes
 
-### TTL Configuration
+### Configuración del TTL
 
-The `ttlEntries` parameter in `@EnableRedisLibrary` **only applies to caches using `@Cacheable`**. That's why only "products" is defined there. The other services define TTL programmatically or via annotation attributes.
+El parámetro `ttlEntries` de `@EnableRedisLibrary` **solo se aplica a las cachés que usan `@Cacheable`**. Por eso solo se define «products». Los demás servicios definen el TTL por código o con atributos de la anotación.
 
-### Serialization
+### Serialización
 
-All DTOs must implement `java.io.Serializable` to be stored in Redis.
+Todos los DTO deben implementar `java.io.Serializable` para poder guardarse en Redis.
 
-### Latency Simulation
+### Simulación de latencia
 
-All database operations simulate a 3-second delay (`Utility.simulateSlowService()`) to clearly demonstrate caching benefits.
+Todas las operaciones de base de datos simulan un retraso de 3 segundos (`Utility.simulateSlowService()`) para mostrar con claridad las ventajas de la caché.
 
-### Request Coalescing
+### Coalescencia de peticiones
 
-The `@CoalesceCacheable` annotation with `coalesce = true` ensures that multiple concurrent requests for the same cache key are coalesced into a single database call, preventing cache stampedes during high traffic.
+La anotación `@CoalesceCacheable` con `coalesce = true` garantiza que varias peticiones concurrentes por la misma clave de caché se unifiquen en una sola consulta a la base de datos, lo que evita avalanchas de caché cuando hay mucho tráfico.
 
-## Testing
+## Pruebas
 
 ```bash
 mvn test
 ```
 
-59 unit tests that do not need Redis: services (with `RedisCacheService` mocked and the real `CacheOperationBuilder.Factory`), controllers (`MockMvc` in standalone mode) and `Utility`. The 3-second delay that simulates a slow database is disabled in the tests through the `example.slow-service-millis` system property (set to `0` in the Surefire configuration); you can also use it to speed up or slow down the running application, for example `java -Dexample.slow-service-millis=500 -jar ...`.
+59 pruebas unitarias que no necesitan Redis: servicios (con `RedisCacheService` simulado y el `CacheOperationBuilder.Factory` real), controladores (`MockMvc` en modo independiente) y `Utility`. El retraso de 3 segundos que simula una base de datos lenta se desactiva en las pruebas con la propiedad del sistema `example.slow-service-millis` (en `0` en la configuración de Surefire); también puede usarla para acelerar o ralentizar la aplicación en ejecución, por ejemplo `java -Dexample.slow-service-millis=500 -jar ...`.
 
-Endpoints can also be tested manually using:
+Los endpoints también se pueden probar a mano con:
 - curl
 - Postman
-- Browser (for GET endpoints)
+- El navegador (para los endpoints GET)
 
-## License
+## Licencia
 
-This is an example project for educational purposes.
+Este es un proyecto de ejemplo con fines educativos.
 
-## Author
+## Autor
 
-**AJuarez** (ajuarez0021)
-- Email: programacion0025@gmail.com
-- GitHub: [@ajuarez0021](https://github.com/ajuarez0021)
+**AJuarez** (programming0026)
+- Correo: programacion0026@gmail.com
+- GitHub: [@programming0026](https://github.com/programming0026)
 
-## Links
+## Enlaces
 
-- `sbj-util-redis-lib` (in this repository): install it with `mvn install` before building this example
-- [Spring Boot Documentation](https://spring.io/projects/spring-boot)
+- `sbj-util-redis-lib` (en este repositorio): instálela con `mvn install` antes de compilar este ejemplo
+- [Documentación de Spring Boot](https://spring.io/projects/spring-boot)
 - [Spring Data Redis](https://spring.io/projects/spring-data-redis)
 
-If this project was useful to you, give it a star on GitHub!
+¡Si este proyecto le fue útil, déjele una estrella en GitHub!

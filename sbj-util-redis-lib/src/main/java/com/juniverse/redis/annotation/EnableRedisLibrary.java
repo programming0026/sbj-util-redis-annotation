@@ -12,8 +12,6 @@ import java.lang.annotation.Target;
 import org.springframework.context.annotation.Import;
 
 /**
- * The Interface EnableRedisLibrary.
- *
  * @author ajuar
  */
 @Target({ElementType.TYPE})
@@ -23,81 +21,81 @@ import org.springframework.context.annotation.Import;
 public @interface EnableRedisLibrary {
 
     /**
-     * Database.
-     * Only for sentinel and standalone mode
+     * Base de datos.
+     * Solo para los modos sentinel y standalone
      *
-     * @return The database
+     * @return base de datos
      */
     int database() default 0;
     /**
-     * Hosts.
+     * Servidores.
      *
-     * @return the HostEntry[]
+     * @return servidores configurados
      */
     HostEntry[] hostEntries() default {};
 
     /**
-     * User name.
+     * Nombre de usuario.
      *
-     * @return the string
+     * @return cadena
      */
     String userName() default "";
 
     /**
-     * Pwd.
+     * Contraseña.
      *
-     * @return the string
+     * @return cadena
      */
     String pwd() default "";
 
     /**
-     * Mode.
+     * Modo.
      *
-     * @return the mode
+     * @return modo
      */
     Mode mode() default Mode.STANDALONE;
 
     /**
-     * Connection timeout.
+     * Tiempo de espera de conexión.
      *
-     * @return the long
+     * @return valor entero largo
      */
     long connectionTimeout() default 5000;
 
     /**
-     * Read timeout.
+     * Lee tiempo de espera.
      *
-     * @return the long
+     * @return valor entero largo
      */
     long readTimeout() default 3000;
 
     /**
-     * Error handler.
+     * Manejador de errores.
      *
-     * @return the class<? extends object mapper config>
+     * @return clase de configuración del ObjectMapper
      */
     Class<? extends ObjectMapperConfig> mapperConfig() default DefaultObjectMapperConfig.class;
 
 
     /**
-     * Ttl entries.
+     * Entradas de TTL por caché.
      *
-     * @return the TTL entry[]
+     * @return entradas de TTL
      */
     TTLEntry[] ttlEntries() default {};
 
     /**
-     * Use ssl.
+     * Usar SSL.
      *
-     * @return true, if successful
+     * @return {@code true} si la operación tuvo éxito
      */
     boolean useSsl() default false;
 
     /**
-     * Sentinel master name.
-     * Required when mode is SENTINEL.
+     * Nombre del maestro de sentinel.
+     * Obligatorio cuando el modo es SENTINEL.
      *
-     * @return the sentinel master name
+     * @return nombre del maestro de sentinel
      */
     String sentinelMaster() default "";
 

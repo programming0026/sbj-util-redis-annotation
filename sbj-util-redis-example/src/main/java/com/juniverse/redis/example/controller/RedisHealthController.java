@@ -8,8 +8,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
- * Redis Health Controller
- * Provides endpoints to check Redis connection status
+ * Controlador de salud de Redis
+ * Ofrece endpoints para consultar el estado de la conexión con Redis
  *
  * @author linux
  */
@@ -21,16 +21,16 @@ public class RedisHealthController {
     private final RedisHealthChecker healthChecker;
 
     /**
-     * Constructor for dependency injection
-     * @param healthChecker the Redis health checker service
+     * Constructor para la inyección de dependencias
+     * @param healthChecker servicio verificador de salud de Redis
      */
     public RedisHealthController(RedisHealthChecker healthChecker) {
         this.healthChecker = healthChecker;
     }
 
     /**
-     * Check Redis connection health
-     * @return RedisStatusDto with connection status information
+     * Comprueba la salud de la conexión con Redis
+     * @return RedisStatusDto con el estado de la conexión
      */
     @GetMapping("/health/redis")
     public RedisStatusDto checkRedisHealth() {

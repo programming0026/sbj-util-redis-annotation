@@ -22,15 +22,15 @@
     </licenses>
     <developers>
         <developer>
-            <id>ajuarez0021</id>
+            <id>programming0026</id>
             <name>AJuarez</name>
-            <email>programacion0025@gmail.com</email>
+            <email>programacion0026@gmail.com</email>
         </developer>
     </developers>
     <scm>
-        <connection>scm:git:git://github.com/ajuarez0021/sbj-util-redis-example.git</connection>
-        <developerConnection>scm:git:ssh://github.com:ajuarez0021/sbj-util-redis-example.git</developerConnection>
-        <url>https://github.com/ajuarez0021/sbj-util-redis-example</url>
+        <connection>scm:git:git://github.com/programming0026/sbj-util-redis.git</connection>
+        <developerConnection>scm:git:ssh://github.com:programming0026/sbj-util-redis.git</developerConnection>
+        <url>https://github.com/programming0026/sbj-util-redis</url>
     </scm>
     <properties>
         <java.version>21</java.version>

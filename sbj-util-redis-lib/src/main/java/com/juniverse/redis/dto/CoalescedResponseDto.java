@@ -7,8 +7,6 @@ import lombok.NoArgsConstructor;
 import java.time.LocalDateTime;
 
 /**
- * The Class CoalescedResponseDto.
- *
  * @author ajuar
  */
 @Data
@@ -16,21 +14,20 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 public class CoalescedResponseDto implements Serializable{
     
-    /** The Constant serialVersionUID. */
 	private static final long serialVersionUID = 8579398868082295820L;
 	
-	/** The request id. */
+	/** Identificador de petición. */
 	private String requestId;
     
-    /** The coalescing key. */
+    /** Clave de coalescencia. */
     private String coalescingKey;
     
-    /** The result. */
+    /** Resultado. */
     private Object result;
     
-    /** The error. */
+    /** Error. */
     private Throwable error;
     
-    /** The completed at. */
+    /** Momento en que se completó. */
     private LocalDateTime completedAt;
 }

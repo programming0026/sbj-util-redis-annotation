@@ -43,8 +43,6 @@ import org.springframework.data.redis.listener.RedisMessageListenerContainer;
 
 
 /**
- * The Class CacheConfig.
- *
  * @author ajuar
  */
 @Configuration
@@ -55,21 +53,21 @@ import org.springframework.data.redis.listener.RedisMessageListenerContainer;
 public class CacheConfig implements ImportAware {
 
     /**
-     * The attribute username.
+     * Atributo del nombre de usuario.
      */
     private static final String ATTRIBUTE_USER_NAME = "userName";
 
     /**
-     * The attributes.
+     * Atributos.
      */
     private AnnotationAttributes attributes;
 
     /**
-     * Coalesce Cache Manager.
+     * Administrador de caché con coalescencia.
      * 
-     * @param redisTemplate The redis template
-     * @param redisMessageListener The message listener
-     * @return The CoalesceCacheManager object 
+     * @param redisTemplate plantilla de Redis
+     * @param redisMessageListener escucha de mensaje
+     * @return administrador CoalesceCacheManager
      */
     @Bean
     CoalesceCacheManager coalesceCacheManager(RedisTemplate<String, Object> redisTemplate,
@@ -78,10 +76,10 @@ public class CacheConfig implements ImportAware {
     }
 
     /**
-     * Coalesce Aspect.
+     * Aspecto de coalescencia.
      *
-     * @param cacheManager The cache manager
-     * @return The CoalesceCachingAspect object
+     * @param cacheManager administrador de caché
+     * @return aspecto CoalesceCachingAspect
      */
     @Bean
     CoalesceCachingAspect coalesceCachingAspect(CoalesceCacheManager cacheManager) {
@@ -89,10 +87,10 @@ public class CacheConfig implements ImportAware {
     }
 
     /**
-     * Redis Message Listener.
+     * Escucha de mensajes de Redis.
      * 
-     * @param connectionFactory The connection factory
-     * @return The redis message listener
+     * @param connectionFactory fábrica de conexiones
+     * @return escucha de mensaje de Redis
      */
     @Bean
     RedisMessageListenerContainer redisMessageListenerContainer(
@@ -103,10 +101,10 @@ public class CacheConfig implements ImportAware {
     }
     
     /**
-     * Redis health checker.
+     * Verificador de salud de Redis.
      *
-     * @param redisTemplate the redis template
-     * @return the redis health checker
+     * @param redisTemplate plantilla de Redis
+     * @return verificador de salud de Redis
      */
     @Bean
     RedisHealthChecker redisHealthChecker(RedisTemplate<String, Object> redisTemplate) {
@@ -114,10 +112,10 @@ public class CacheConfig implements ImportAware {
     }
 
     /**
-     * Redis cache service.
+     * Servicio de caché sobre Redis.
      *
-     * @param redisTemplate the redis template
-     * @return the redis cache service
+     * @param redisTemplate plantilla de Redis
+     * @return servicio de caché de Redis
      */
     @Bean
     RedisCacheService redisCacheService(RedisTemplate<String, Object> redisTemplate) {
@@ -125,10 +123,10 @@ public class CacheConfig implements ImportAware {
     }
 
     /**
-     * Cache operation builder factory.
+     * Fábrica del constructor de operaciones de caché.
      *
-     * @param redisCacheService the redis cache service
-     * @return the cache operation builder factory
+     * @param redisCacheService servicio de caché de Redis
+     * @return fábrica de constructor de operación de caché
      */
     @Bean
     CacheOperationBuilder.Factory cacheOperationBuilderFactory(RedisCacheService redisCacheService) {
@@ -136,11 +134,6 @@ public class CacheConfig implements ImportAware {
     }
 
 
-    /**
-     * Gets the host entries.
-     *
-     * @return the host entries
-     */
     private List<HostsDto> getHostEntries() {
         List<HostsDto> list = new ArrayList<>();
         AnnotationAttributes[] hostArray = attributes.getAnnotationArray("hostEntries");
@@ -155,9 +148,9 @@ public class CacheConfig implements ImportAware {
     }
 
     /**
-     * Creates the standalone config.
+     * Crea la configuración standalone.
      *
-     * @return the redis standalone configuration
+     * @return configuración standalone de Redis
      */
 
     private RedisStandaloneConfiguration createStandaloneConfig() {
@@ -181,9 +174,9 @@ public class CacheConfig implements ImportAware {
 
 
     /**
-     * Creates the cluster config.
+     * Crea la configuración de clúster.
      *
-     * @return the redis cluster configuration
+     * @return configuración de clúster de Redis
      */
     private RedisClusterConfiguration createClusterConfig() {
         List<HostsDto> hosts = getHostEntries();
@@ -205,9 +198,9 @@ public class CacheConfig implements ImportAware {
     }
 
     /**
-     * Create sentinel config.
+     * Crea la configuración de sentinel.
      *
-     * @return The sentinel config
+     * @return configuración de sentinel
      */
 
     private RedisSentinelConfiguration createSentinelConfig() {
@@ -236,9 +229,9 @@ public class CacheConfig implements ImportAware {
     }
 
     /**
-     * Creates the redis connection factory.
+     * Crea la fábrica de conexiones de Redis.
      *
-     * @return the redis connection factory
+     * @return fábrica de conexiones de Redis
      */
     @Bean
     @ConditionalOnMissingBean
@@ -273,11 +266,11 @@ public class CacheConfig implements ImportAware {
     }
 
     /**
-     * Creates the redis template.
+     * Crea plantilla de Redis.
      *
-     * @param <T> the generic type
-     * @param connectionFactory The connection factory
-     * @return the redis template
+     * @param <T> tipo genérico
+     * @param connectionFactory fábrica de conexiones
+     * @return plantilla de Redis
      */
     @Bean
     @ConditionalOnMissingBean
@@ -302,9 +295,9 @@ public class CacheConfig implements ImportAware {
     }
 
     /**
-     * Gets the object mapper config.
+     * Obtiene configuración de conversor de objeto.
      *
-     * @return the object mapper config
+     * @return configuración de conversor de objeto
      */
     private ObjectMapperConfig getObjectMapperConfig() {
         var configClass = attributes.getClass("mapperConfig");
@@ -334,9 +327,9 @@ public class CacheConfig implements ImportAware {
     }
 
     /**
-     * Cache manager.
-     * @param connectionFactory The connection factory
-     * @return the cache manager
+     * Administrador de caché.
+     * @param connectionFactory fábrica de conexiones
+     * @return administrador de caché
      */
     @Bean
     CacheManager cacheManager(RedisConnectionFactory connectionFactory) {
@@ -373,9 +366,9 @@ public class CacheConfig implements ImportAware {
     }
 
     /**
-     * Sets the import metadata.
+     * Recibe los metadatos de la importación.
      *
-     * @param importMetadata the new import metadata
+     * @param importMetadata metadatos de la anotación que importa la configuración
      */
     @Override
     public void setImportMetadata(AnnotationMetadata importMetadata) {

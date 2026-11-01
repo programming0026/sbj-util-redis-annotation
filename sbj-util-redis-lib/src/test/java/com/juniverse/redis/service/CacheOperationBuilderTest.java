@@ -17,22 +17,22 @@ import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
 /**
- * Unit tests for CacheOperationBuilder.
+ * Pruebas unitarias de CacheOperationBuilder.
  *
  * @author ajuar
  */
 @ExtendWith(MockitoExtension.class)
 class CacheOperationBuilderTest {
 
-        /** The cache service. */
+        /** Servicio de caché. */
         @Mock
         private RedisCacheService cacheService;
 
-        /** The builder. */
+        /** Constructor. */
         private CacheOperationBuilder<String> builder;
 
         /**
-         * Sets the up.
+         * Prepara la prueba.
          */
         @BeforeEach
         void setUp() {
@@ -41,7 +41,7 @@ class CacheOperationBuilderTest {
         }
 
         /**
-         * Cacheable without cache name should throw illegal state exception.
+         * Obtener de caché sin nombre de caché debe lanzar IllegalStateException.
          */
         @Test
         void cacheable_WithoutCacheName_ShouldThrowIllegalStateException() {
@@ -53,7 +53,7 @@ class CacheOperationBuilderTest {
         }
 
         /**
-         * Cacheable without key should throw illegal state exception.
+         * Obtener de caché sin clave debe lanzar IllegalStateException.
          */
         @Test
         void cacheable_WithoutKey_ShouldThrowIllegalStateException() {
@@ -65,7 +65,7 @@ class CacheOperationBuilderTest {
         }
 
         /**
-         * Cacheable without loader should throw illegal state exception.
+         * Obtener de caché sin cargador debe lanzar IllegalStateException.
          */
         @Test
         void cacheable_WithoutLoader_ShouldThrowIllegalStateException() {
@@ -77,7 +77,7 @@ class CacheOperationBuilderTest {
         }
 
         /**
-         * Cacheable with empty cache name should throw illegal state exception.
+         * Obtener de caché con nombre de caché vacío debe lanzar IllegalStateException.
          */
         @Test
         void cacheable_WithEmptyCacheName_ShouldThrowIllegalStateException() {
@@ -90,7 +90,7 @@ class CacheOperationBuilderTest {
         }
 
         /**
-         * Cacheable with empty key should throw illegal state exception.
+         * Obtener de caché con clave vacía debe lanzar IllegalStateException.
          */
         @Test
         void cacheable_WithEmptyKey_ShouldThrowIllegalStateException() {
@@ -103,11 +103,11 @@ class CacheOperationBuilderTest {
         }
 
         /**
-         * Cacheable with all required fields should execute.
+         * Obtener de caché con todos los campos obligatorios debe ejecutarse.
          */
         @Test
         void cacheable_WithAllRequiredFields_ShouldExecute() {
-                // Given
+                // Dado
                 String cacheName = "testCache";
                 String key = "testKey";
                 String expectedValue = "testValue";
@@ -127,7 +127,7 @@ class CacheOperationBuilderTest {
         }
 
         /**
-         * Cacheable with custom ttl should use custom ttl.
+         * Obtener de caché con TTL propio debe usar ese TTL.
          */
         @Test
         void cacheable_WithCustomTtl_ShouldUseCustomTtl() {
@@ -150,7 +150,7 @@ class CacheOperationBuilderTest {
         }
 
         /**
-         * Builder should support fluent API.
+         * El constructor debe admitir la API fluida.
          */
         @Test
         void builder_ShouldSupportFluentAPI() {
@@ -171,7 +171,7 @@ class CacheOperationBuilderTest {
 
 
         /**
-         * Cacheable with condition false should bypass cache.
+         * Obtener de caché con condición falsa debe omitir la caché.
          */
         @Test
         void cacheable_WithConditionFalse_ShouldBypassCache() {
@@ -189,7 +189,7 @@ class CacheOperationBuilderTest {
         }
 
         /**
-         * Cacheable with condition true should use cache.
+         * Obtener de caché con condición verdadera debe usar la caché.
          */
         @Test
         void cacheable_WithConditionTrue_ShouldUseCache() {
@@ -210,7 +210,7 @@ class CacheOperationBuilderTest {
 
 
         /**
-         * Cacheable on cache hit should invoke on hit callback.
+         * Obtener de caché ante un acierto debe invocar la retrollamada onHit.
          */
         @Test
         void cacheable_OnCacheHit_ShouldInvokeOnHitCallback() {
@@ -237,7 +237,7 @@ class CacheOperationBuilderTest {
         }
 
         /**
-         * Cacheable on cache miss should invoke on miss callback.
+         * Obtener de caché ante un fallo debe invocar la retrollamada onMiss.
          */
         @Test
         void cacheable_OnCacheMiss_ShouldInvokeOnMissCallback() {
@@ -264,7 +264,7 @@ class CacheOperationBuilderTest {
         }
 
         /**
-         * Cacheable with both callbacks should invoke only relevant callback.
+         * Obtener de caché con ambas retrollamadas debe invocar solo la que corresponde.
          */
         @Test
         void cacheable_WithBothCallbacks_ShouldInvokeOnlyRelevantCallback() {
@@ -290,7 +290,7 @@ class CacheOperationBuilderTest {
         }
 
         /**
-         * Cacheable without callbacks should not throw exception.
+         * Obtener de caché sin retrollamadas no debe lanzar excepción.
          */
         @Test
         void cacheable_WithoutCallbacks_ShouldNotThrowException() {
@@ -306,7 +306,7 @@ class CacheOperationBuilderTest {
 
 
         /**
-         * Cache put should delegate to service.
+         * Guardar en caché debe delegar en el servicio.
          */
         @Test
         void cachePut_ShouldDelegateToService() {
@@ -332,7 +332,7 @@ class CacheOperationBuilderTest {
         }
 
         /**
-         * Cache put with default ttl should use default.
+         * Guardar en caché con TTL predeterminado debe usar ese valor.
          */
         @Test
         void cachePut_WithDefaultTtl_ShouldUseDefault() {
@@ -354,7 +354,7 @@ class CacheOperationBuilderTest {
 
 
         /**
-         * Cache evict should delegate to service.
+         * Invalidar la caché debe delegar en el servicio.
          */
         @Test
         void cacheEvict_ShouldDelegateToService() {
@@ -369,7 +369,7 @@ class CacheOperationBuilderTest {
         }
 
         /**
-         * Cache evict with loader set should still work.
+         * Invalidar la caché con un cargador asignado debe seguir funcionando.
          */
         @Test
         void cacheEvict_WithLoaderSet_ShouldStillWork() {
@@ -385,7 +385,7 @@ class CacheOperationBuilderTest {
         }
 
         /**
-         * Builder should have default ttl of 10 minutes.
+         * El constructor debe tener un TTL predeterminado de 10 minutos.
          */
         @Test
         void builder_ShouldHaveDefaultTtlOf10Minutes() {
@@ -404,7 +404,7 @@ class CacheOperationBuilderTest {
         }
 
         /**
-         * Builder should have default condition true.
+         * El constructor debe tener la condición verdadera por defecto.
          */
         @Test
         void builder_ShouldHaveDefaultConditionTrue() {
@@ -421,7 +421,7 @@ class CacheOperationBuilderTest {
         }
 
         /**
-         * Cache evict without cache name should throw exception.
+         * Invalidar sin nombre de caché debe lanzar una excepción.
          */
         @Test
         void cacheEvict_WithoutCacheName_ShouldThrowException() {
@@ -433,7 +433,7 @@ class CacheOperationBuilderTest {
         }
 
         /**
-         * Cache evict without key should throw exception.
+         * Invalidar sin clave debe lanzar una excepción.
          */
         @Test
         void cacheEvict_WithoutKey_ShouldThrowException() {
@@ -445,7 +445,7 @@ class CacheOperationBuilderTest {
         }
 
         /**
-         * Cache evict with valid params should succeed.
+         * Invalidar con parámetros válidos debe tener éxito.
          */
         @Test
         void cacheEvict_WithValidParams_ShouldSucceed() {
@@ -455,7 +455,7 @@ class CacheOperationBuilderTest {
         }
 
         /**
-         * Cache evict all should delegate to service.
+         * Invalidar todo debe delegar en el servicio.
          */
         @Test
         void cacheEvictAll_ShouldDelegateToService() {
@@ -468,7 +468,7 @@ class CacheOperationBuilderTest {
         }
 
         /**
-         * Cache evict all without cache name should throw exception.
+         * Invalidar todo sin nombre de caché debe lanzar una excepción.
          */
         @Test
         void cacheEvictAll_WithoutCacheName_ShouldThrowException() {
@@ -480,7 +480,7 @@ class CacheOperationBuilderTest {
         }
 
         /**
-         * Cache evict all with valid params should succeed.
+         * Invalidar todo con parámetros válidos debe tener éxito.
          */
         @Test
         void cacheEvictAll_WithValidParams_ShouldSucceed() {
@@ -490,7 +490,7 @@ class CacheOperationBuilderTest {
         }
 
         /**
-         * Cache evict all with key set should ignore key.
+         * Invalidar todo con una clave asignada debe ignorarla.
          */
         @Test
         void cacheEvictAll_WithKeySet_ShouldIgnoreKey() {

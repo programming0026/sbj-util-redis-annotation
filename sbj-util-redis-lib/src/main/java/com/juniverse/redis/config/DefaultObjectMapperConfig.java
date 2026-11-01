@@ -14,19 +14,18 @@ import tools.jackson.databind.jsontype.BasicPolymorphicTypeValidator;
 import tools.jackson.databind.jsontype.PolymorphicTypeValidator;
 
 /**
- * The Class DefaultObjectMapperConfig.
  *
- * <p>Builds a Jackson 3 {@link JsonMapper}. Jackson 3 mappers are immutable, so everything is set on the builder.
- * The {@code java.time} and {@code Optional} support is built into Jackson 3 (there is no module to register).
+ * <p>Construye un {@link JsonMapper} de Jackson 3. Los mappers de Jackson 3 son inmutables, así que todo se configura en el constructor.
+ * El soporte de {@code java.time} y {@code Optional} viene integrado en Jackson 3 (no hay módulo que registrar).
  *
  * @author ajuar
  */
 public class DefaultObjectMapperConfig implements ObjectMapperConfig {
 
     /**
-     * Configure.
+     * Configura.
      *
-     * @return the object mapper
+     * @return conversor de objeto
      */
     @Override
     public ObjectMapper configure() {

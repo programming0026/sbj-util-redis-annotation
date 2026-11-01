@@ -1,61 +1,61 @@
 # SBJ-Util-Redis
 
-A powerful and flexible Spring Boot utility library for Redis integration, providing simplified cache operations, health checking, and advanced configuration options.
+Librería de utilidades para Spring Boot, potente y flexible, que simplifica la integración con Redis: operaciones de caché, verificación de salud y opciones avanzadas de configuración.
 
-## Table of Contents
+## Tabla de contenido
 
-- [Features](#-features)
-- [Requirements](#-requirements)
-- [Installation](#-installation)
-- [Quick Start](#-quick-start)
-- [Configuration](#-configuration)
-- [Usage](#-usage)
-  - [Basic Cache Operations](#basic-cache-operations)
-  - [Advanced Cache Operations](#advanced-cache-operations)
-  - [Health Checking](#health-checking)
-  - [Request Coalescing](#request-coalescing-high-concurrency-caching)
-- [Caching Approaches Comparison](#caching-approaches-comparison)
-- [Security](#-security)
-- [Thread Safety](#-thread-safety)
-- [API Reference](#-api-reference)
-- [Examples](#-examples)
-- [UML Diagrams](#uml-diagrams)
-- [Migrating from 1.x to 2.0 (Jackson 3)](#migrating-from-1x-to-20-jackson-3)
-- [Troubleshooting](#-troubleshooting)
-- [License](#-license)
+- [Características](#características)
+- [Requisitos](#requisitos)
+- [Instalación](#instalación)
+- [Inicio rápido](#inicio-rápido)
+- [Configuración](#configuración)
+- [Uso](#uso)
+  - [Operaciones básicas de caché](#operaciones-básicas-de-caché)
+  - [Operaciones avanzadas de caché](#operaciones-avanzadas-de-caché)
+  - [Verificación de salud](#verificación-de-salud)
+  - [Coalescencia de peticiones](#coalescencia-de-peticiones-caché-con-alta-concurrencia)
+- [Comparación de enfoques de caché](#comparación-de-enfoques-de-caché)
+- [Seguridad](#seguridad)
+- [Seguridad en hilos](#seguridad-en-hilos)
+- [Referencia de la API](#referencia-de-la-api)
+- [Ejemplos](#ejemplos)
+- [Diagramas UML](#diagramas-uml)
+- [Migración de 1.x a 2.0 (Jackson 3)](#migración-de-1x-a-20-jackson-3)
+- [Solución de problemas](#solución-de-problemas)
+- [Licencia](#licencia)
 
-## Features
+## Características
 
-- **Simple Integration**: Enable Redis with a single annotation
-- **Flexible Configuration**: Support for Standalone, Cluster, and Sentinel modes
-- **High Availability**: Redis Sentinel support for automatic failover
-- **SSL/TLS Support**: Secure connections with built-in SSL/TLS support
-- **Cache Operations**: Programmatic cache operations similar to Spring Cache annotations
-- **Builder Pattern**: Fluent API for complex cache operations
-- **Health Monitoring**: Built-in Redis health checker with detailed metrics (memory, clients, version)
-- **Custom Serialization**: Configurable Jackson 3 `ObjectMapper` for JSON serialization
-- **TTL Management**: Per-cache TTL configuration support
-- **Robust Validation**: Comprehensive parameter validation with descriptive error messages
-- **Error Handling**: Graceful error handling with fallback mechanisms
-- **High Test Coverage**: 85%+ code coverage with comprehensive unit tests
-- **Request Coalescing**: AOP-based annotations for high-concurrency scenarios with automatic request deduplication
+- **Integración sencilla**: habilita Redis con una sola anotación
+- **Configuración flexible**: admite los modos Standalone, Cluster y Sentinel
+- **Alta disponibilidad**: soporte de Redis Sentinel para la conmutación automática por fallo
+- **Soporte SSL/TLS**: conexiones seguras con SSL/TLS integrado
+- **Operaciones de caché**: operaciones programáticas equivalentes a las anotaciones de Spring Cache
+- **Patrón constructor**: API fluida para operaciones de caché complejas
+- **Monitoreo de salud**: verificador de Redis con métricas detalladas (memoria, clientes, versión)
+- **Serialización personalizada**: `ObjectMapper` de Jackson 3 configurable para la serialización JSON
+- **Gestión de TTL**: configuración del TTL por caché
+- **Validación robusta**: validación completa de parámetros con mensajes de error descriptivos
+- **Manejo de errores**: manejo elegante de errores con mecanismos de respaldo
+- **Alta cobertura de pruebas**: más del 85 % de cobertura con pruebas unitarias completas
+- **Coalescencia de peticiones**: anotaciones basadas en AOP para escenarios de alta concurrencia con deduplicación automática de peticiones
 
-## Requirements
+## Requisitos
 
-- Java 21 or higher
-- Spring Boot 4.0.1 or higher
-- Redis Server (Standalone, Sentinel or Cluster)
+- Java 21 o superior
+- Spring Boot 4.0.1 o superior
+- Servidor Redis (Standalone, Sentinel o Cluster)
 
-## Installation
+## Instalación
 
-This copy of the library uses the group `com.juniverse.redis`, which is not published on Maven Central, so install it in your local Maven repository first:
+Esta copia de la librería usa el grupo `com.juniverse.redis`, que no está publicado en Maven Central, así que primero instálela en su repositorio local de Maven:
 
 ```bash
 cd sbj-util-redis-lib
 mvn install
 ```
 
-Then add the dependency to your `pom.xml`:
+Después agregue la dependencia a su `pom.xml`:
 
 ```xml
 <dependency>
@@ -65,11 +65,11 @@ Then add the dependency to your `pom.xml`:
 </dependency>
 ```
 
-## Quick Start
+## Inicio rápido
 
-### 1. Enable Redis Library
+### 1. Habilitar la librería de Redis
 
-Add the `@EnableRedisLibrary` annotation to your Spring Boot application:
+Agregue la anotación `@EnableRedisLibrary` a su aplicación Spring Boot:
 
 ```java
 import com.juniverse.redis.annotation.EnableRedisLibrary;
@@ -93,7 +93,7 @@ public class Application {
 }
 ```
 
-### 2. Inject and Use
+### 2. Inyectar y usar
 
 ```java
 import com.juniverse.redis.service.RedisCacheService;
@@ -117,26 +117,26 @@ public class UserService {
 }
 ```
 
-## Configuration
+## Configuración
 
-### Annotation Parameters
+### Parámetros de la anotación
 
-The `@EnableRedisLibrary` annotation supports the following parameters:
+La anotación `@EnableRedisLibrary` admite los siguientes parámetros:
 
-| Parameter | Type | Default | Description |
+| Parámetro | Tipo | Valor por defecto | Descripción |
 |-----------|------|---------|-------------|
-| `hostEntries` | HostEntry[] | `{}` | Redis host(s) configuration using `@HostEntry(host, port)` |
-| `userName` | String | `""` | Redis username (optional) |
-| `pwd` | String | `""` | Redis password (optional) |
-| `mode` | Mode | `STANDALONE` | Connection mode: `STANDALONE`, `CLUSTER`, or `SENTINEL` |
-| `sentinelMaster` | String | `""` | Sentinel master name (required when mode is `SENTINEL`) |
-| `useSsl` | boolean | `false` | Enable SSL/TLS for secure connections |
-| `connectionTimeout` | long | `5000` | Connection timeout in milliseconds (must be > 0) |
-| `readTimeout` | long | `3000` | Read timeout in milliseconds (must be > 0) |
-| `errorHandler` | Class | `DefaultObjectMapperConfig.class` | Custom ObjectMapper configuration |
-| `ttlEntries` | TTLEntry[] | `{}` | Per-cache TTL configurations |
+| `hostEntries` | HostEntry[] | `{}` | Configuración de los servidores Redis con `@HostEntry(host, port)` |
+| `userName` | String | `""` | Usuario de Redis (opcional) |
+| `pwd` | String | `""` | Contraseña de Redis (opcional) |
+| `mode` | Mode | `STANDALONE` | Modo de conexión: `STANDALONE`, `CLUSTER` o `SENTINEL` |
+| `sentinelMaster` | String | `""` | Nombre del maestro de Sentinel (obligatorio con el modo `SENTINEL`) |
+| `useSsl` | boolean | `false` | Habilita SSL/TLS para conexiones seguras |
+| `connectionTimeout` | long | `5000` | Tiempo de espera de conexión en milisegundos (debe ser > 0) |
+| `readTimeout` | long | `3000` | Tiempo de espera de lectura en milisegundos (debe ser > 0) |
+| `errorHandler` | Class | `DefaultObjectMapperConfig.class` | Configuración personalizada del ObjectMapper |
+| `ttlEntries` | TTLEntry[] | `{}` | Configuración del TTL por caché |
 
-### Standalone Configuration Example
+### Ejemplo de configuración Standalone
 
 ```java
 @EnableRedisLibrary(
@@ -149,7 +149,7 @@ The `@EnableRedisLibrary` annotation supports the following parameters:
 )
 ```
 
-### Standalone with SSL/TLS
+### Standalone con SSL/TLS
 
 ```java
 @EnableRedisLibrary(
@@ -159,11 +159,11 @@ The `@EnableRedisLibrary` annotation supports the following parameters:
     mode = Mode.STANDALONE,
     userName = "myuser",
     pwd = "mypassword",
-    useSsl = true  // Enable SSL/TLS
+    useSsl = true  // Habilita SSL/TLS
 )
 ```
 
-### Cluster Configuration Example
+### Ejemplo de configuración Cluster
 
 ```java
 @EnableRedisLibrary(
@@ -178,7 +178,7 @@ The `@EnableRedisLibrary` annotation supports the following parameters:
 )
 ```
 
-### Sentinel Configuration Example
+### Ejemplo de configuración Sentinel
 
 ```java
 @EnableRedisLibrary(
@@ -188,33 +188,33 @@ The `@EnableRedisLibrary` annotation supports the following parameters:
         @HostEntry(host = "sentinel3", port = 26379)
     },
     mode = Mode.SENTINEL,
-    sentinelMaster = "mymaster",  // Required: name of the master instance
+    sentinelMaster = "mymaster",  // Obligatorio: nombre de la instancia maestra
     userName = "myuser",
     pwd = "mypassword"
 )
 ```
 
-**Notes:**
-- Redis Sentinel provides high availability through automatic failover
-- Sentinel nodes monitor the master and replica instances
-- The `sentinelMaster` parameter is **required** when using SENTINEL mode
-- Common master names: "mymaster", "redis-master" (configured in sentinel.conf)
+**Notas:**
+- Redis Sentinel ofrece alta disponibilidad mediante la conmutación automática por fallo
+- Los nodos Sentinel vigilan las instancias maestra y réplica
+- El parámetro `sentinelMaster` es **obligatorio** con el modo SENTINEL
+- Nombres comunes del maestro: «mymaster», «redis-master» (se configuran en sentinel.conf)
 
-### Choosing the Right Mode
+### Cómo elegir el modo
 
-| Mode | Use Case | Pros | Cons |
+| Modo | Caso de uso | Ventajas | Desventajas |
 |------|----------|------|------|
-| **STANDALONE** | Development, testing, small apps | Simple setup, low overhead | No HA, single point of failure |
-| **CLUSTER** | Large-scale applications, big datasets | Horizontal scaling, data partitioning | Complex setup, overhead |
-| **SENTINEL** | Production apps needing HA | Automatic failover, monitoring | Requires sentinel nodes |
+| **STANDALONE** | Desarrollo, pruebas, aplicaciones pequeñas | Configuración sencilla, poca sobrecarga | Sin alta disponibilidad, punto único de fallo |
+| **CLUSTER** | Aplicaciones grandes, grandes volúmenes de datos | Escalado horizontal, particionado de datos | Configuración compleja, sobrecarga |
+| **SENTINEL** | Aplicaciones de producción que necesitan alta disponibilidad | Conmutación automática, monitoreo | Requiere nodos Sentinel |
 
-**Recommendations:**
-- **Development/Testing**: Use STANDALONE
-- **Production (Small/Medium)**: Use SENTINEL for high availability
-- **Production (Large Scale)**: Use CLUSTER for horizontal scaling
-- **Production (Critical)**: Consider CLUSTER + SENTINEL for both scaling and HA
+**Recomendaciones:**
+- **Desarrollo y pruebas**: use STANDALONE
+- **Producción (pequeña o mediana)**: use SENTINEL para alta disponibilidad
+- **Producción (gran escala)**: use CLUSTER para escalar horizontalmente
+- **Producción (crítica)**: considere CLUSTER + SENTINEL para escalar y tener alta disponibilidad
 
-### Custom TTL Configuration
+### TTL personalizado
 
 ```java
 @EnableRedisLibrary(
@@ -222,18 +222,18 @@ The `@EnableRedisLibrary` annotation supports the following parameters:
         @HostEntry(host = "localhost", port = 6379)
     },
     ttlEntries = {
-        @TTLEntry(name = "users", ttl = 30),      // 30 minutes
-        @TTLEntry(name = "products", ttl = 60),   // 1 hour
-        @TTLEntry(name = "sessions", ttl = 120)    // 2 hours
+        @TTLEntry(name = "users", ttl = 30),      // 30 minutos
+        @TTLEntry(name = "products", ttl = 60),   // 1 hora
+        @TTLEntry(name = "sessions", ttl = 120)    // 2 horas
     }
 )
 ```
 
-**Note:** `@TTLEntry` configurations only apply to Spring's **`@Cacheable` annotation**. For programmatic cache operations using `RedisCacheService` (such as `cacheable()`, `cachePut()`, etc.), you must explicitly specify the TTL as a parameter in the method call.
+**Nota:** las configuraciones de `@TTLEntry` solo se aplican a la **anotación `@Cacheable` de Spring**. En las operaciones programáticas con `RedisCacheService` (como `cacheable()`, `cachePut()`, etc.) debe indicar el TTL de forma explícita como parámetro de la llamada.
 
-### Custom ObjectMapper Configuration
+### Configuración personalizada del ObjectMapper
 
-Create a custom configuration class:
+Cree una clase de configuración propia:
 
 ```java
 import com.juniverse.redis.config.ObjectMapperConfig;
@@ -245,19 +245,19 @@ public class CustomObjectMapperConfig implements ObjectMapperConfig {
 
     @Override
     public ObjectMapper configure() {
-        // Jackson 3 mappers are immutable: everything is set on the builder.
-        // java.time and Optional are supported out of the box (no modules to register).
+        // Los mappers de Jackson 3 son inmutables: todo se configura en el constructor.
+        // java.time y Optional se admiten de fábrica (no hay módulos que registrar).
         return JsonMapper.builder()
                 .disable(DateTimeFeature.WRITE_DATES_AS_TIMESTAMPS)
-                // Add your custom configuration
+                // Agregue su configuración personalizada
                 .build();
     }
 }
 ```
 
-> The mapper must write and read the type information (`@class`) the library relies on to rebuild your objects; start from `DefaultObjectMapperConfig` if you are unsure.
+> El mapper debe escribir y leer la información de tipo (`@class`) que la librería necesita para reconstruir sus objetos; parta de `DefaultObjectMapperConfig` si tiene dudas.
 
-Then reference it in the annotation:
+Después, haga referencia a ella en la anotación:
 
 ```java
 @EnableRedisLibrary(
@@ -268,21 +268,21 @@ Then reference it in the annotation:
 )
 ```
 
-## Usage
+## Uso
 
-### Basic Cache Operations
+### Operaciones básicas de caché
 
 #### RedisCacheService
 
-The `RedisCacheService` provides programmatic equivalents to Spring Cache annotations:
+`RedisCacheService` ofrece el equivalente programático de las anotaciones de Spring Cache:
 
-##### Cacheable (Similar to @Cacheable)
+##### Cacheable (equivale a @Cacheable)
 
 ```java
 @Autowired
 private RedisCacheService cacheService;
 
-// With custom TTL
+// Con TTL personalizado
 public Product getProduct(String productId) {
     return cacheService.cacheable(
         "products",
@@ -292,7 +292,7 @@ public Product getProduct(String productId) {
     );
 }
 
-// With default TTL (10 minutes)
+// Con el TTL predeterminado (10 minutos)
 public Product getProduct(String productId) {
     return cacheService.cacheable(
         "products",
@@ -302,7 +302,7 @@ public Product getProduct(String productId) {
 }
 ```
 
-##### Cache Put (Similar to @CachePut)
+##### Cache Put (equivale a @CachePut)
 
 ```java
 public Product updateProduct(String productId, Product product) {
@@ -315,46 +315,46 @@ public Product updateProduct(String productId, Product product) {
 }
 ```
 
-##### Cache Evict (Similar to @CacheEvict)
+##### Cache Evict (equivale a @CacheEvict)
 
 ```java
-// Evict single entry
+// Invalidar una sola entrada
 public void deleteProduct(String productId) {
     productRepository.deleteById(productId);
     cacheService.cacheEvict("products", productId);
 }
 
-// Evict all entries in a cache
+// Invalidar todas las entradas de una caché
 public void clearProductCache() {
     cacheService.cacheEvictAll("products");
 }
 
-// Evict multiple specific keys
+// Invalidar varias claves concretas
 public void deleteProducts(String... productIds) {
     cacheService.cacheEvictMultiple("products", productIds);
 }
 
-// Evict by pattern
+// Invalidar por patrón
 public void evictUserSessions() {
     cacheService.cacheEvictByPattern("sessions:user:*");
 }
 ```
 
-##### Utility Methods
+##### Métodos de utilidad
 
 ```java
-// Check if key exists
+// Comprobar si existe una clave
 boolean exists = cacheService.exists("products", "product-123");
 
-// Get remaining TTL (in seconds)
+// Obtener el TTL restante (en segundos)
 Long ttl = cacheService.getTTL("products", "product-123");
 ```
 
-### Advanced Cache Operations
+### Operaciones avanzadas de caché
 
 #### CacheOperationBuilder
 
-For more complex scenarios, use the fluent builder API:
+Para escenarios más complejos, use la API fluida del constructor:
 
 ```java
 @Autowired
@@ -366,30 +366,30 @@ public User getUser(String userId, boolean forceRefresh) {
         .key(userId)
         .loader(() -> userRepository.findById(userId))
         .ttl(Duration.ofMinutes(30))
-        .condition(!forceRefresh)  // Skip cache if forceRefresh is true
+        .condition(!forceRefresh)  // Omite la caché si forceRefresh es true
         .onCacheHit(user -> log.info("Cache hit for user: {}", userId))
         .onCacheMiss(user -> log.info("Cache miss for user: {}", userId))
         .cacheable();
 }
 ```
 
-Builder Methods:
+Métodos del constructor:
 
-- `cacheName(String)`: Set the cache name
-- `key(String)`: Set the cache key
-- `loader(Supplier<T>)`: Set the data loader function
-- `ttl(Duration)`: Set the TTL duration
-- `condition(boolean)`: Conditional caching
-- `onCacheHit(Consumer<T>)`: Callback on cache hit
-- `onCacheMiss(Consumer<T>)`: Callback on cache miss
-- `cacheable()`: Execute as cacheable operation
-- `cachePut()`: Execute as cache put operation
-- `cacheEvict()`: Execute as cache evict operation
-- `cacheEvictAll()`: Execute as cache evict all operation (removes all entries for the cache name)
+- `cacheName(String)`: establece el nombre de la caché
+- `key(String)`: establece la clave de la caché
+- `loader(Supplier<T>)`: establece la función que carga los datos
+- `ttl(Duration)`: establece el tiempo de vida
+- `condition(boolean)`: caché condicional
+- `onCacheHit(Consumer<T>)`: retrollamada ante un acierto de caché
+- `onCacheMiss(Consumer<T>)`: retrollamada ante un fallo de caché
+- `cacheable()`: ejecuta la operación como cacheable
+- `cachePut()`: ejecuta la operación como guardado en caché
+- `cacheEvict()`: ejecuta la operación como invalidación
+- `cacheEvictAll()`: ejecuta la invalidación de todo (elimina todas las entradas de ese nombre de caché)
 
-### Health Checking
+### Verificación de salud
 
-Monitor Redis connection health with detailed metrics:
+Monitoree la salud de la conexión con Redis con métricas detalladas:
 
 ```java
 @Autowired
@@ -401,7 +401,7 @@ public RedisStatusDto checkRedisHealth() {
 }
 ```
 
-Response structure:
+Estructura de la respuesta:
 
 ```json
 {
@@ -415,18 +415,18 @@ Response structure:
 }
 ```
 
-The health checker provides comprehensive metrics including:
-- **connected**: Connection status (true/false)
-- **responseTime**: Response time in milliseconds
-- **errorMessage**: Status or error message
-- **usedMemory**: Current memory usage in bytes
-- **maxMemory**: Maximum memory limit in bytes
-- **connectedClients**: Number of connected clients
-- **redisVersion**: Redis server version
+El verificador de salud ofrece métricas completas:
+- **connected**: estado de la conexión (true/false)
+- **responseTime**: tiempo de respuesta en milisegundos
+- **errorMessage**: mensaje de estado o de error
+- **usedMemory**: uso actual de memoria en bytes
+- **maxMemory**: límite máximo de memoria en bytes
+- **connectedClients**: cantidad de clientes conectados
+- **redisVersion**: versión del servidor Redis
 
-### Request Coalescing (High-Concurrency Caching)
+### Coalescencia de peticiones (caché con alta concurrencia)
 
-For high-concurrency scenarios where multiple threads may request the same data simultaneously, use the coalesce annotations:
+En escenarios de alta concurrencia, donde varios hilos pueden pedir los mismos datos a la vez, use las anotaciones de coalescencia:
 
 #### @CoalesceCacheable
 
@@ -435,12 +435,12 @@ For high-concurrency scenarios where multiple threads may request the same data 
 public class UserService {
 
     @CoalesceCacheable(
-        value = "users",           // Cache name/prefix
-        key = "#userId",           // SpEL expression for dynamic key
-        ttl = 300,                 // TTL in seconds (5 minutes)
-        condition = "#userId != null",  // SpEL condition for caching
-        cacheNull = false,         // Whether to cache null results
-        coalesce = true            // Enable request coalescing
+        value = "users",           // Nombre o prefijo de la caché
+        key = "#userId",           // Expresión SpEL para la clave dinámica
+        ttl = 300,                 // TTL en segundos (5 minutos)
+        condition = "#userId != null",  // Condición SpEL para guardar en caché
+        cacheNull = false,         // Si se guardan los resultados nulos
+        coalesce = true            // Activa la coalescencia de peticiones
     )
     public User getUserById(String userId) {
         return userRepository.findById(userId);
@@ -465,14 +465,14 @@ public void deleteUser(String userId) {
     userRepository.deleteById(userId);
 }
 
-// Evict all entries in the cache
+// Invalidar todas las entradas de la caché
 @CoalesceEvict(value = "users", allEntries = true)
 public void clearAllUsers() {
-    // This will evict all entries with the "users" prefix
+    // Esto invalidará todas las entradas con el prefijo "users"
 }
 ```
 
-#### @CoalesceCaching (Multiple Operations)
+#### @CoalesceCaching (varias operaciones)
 
 ```java
 @CoalesceCaching(
@@ -484,45 +484,45 @@ public User refreshUser(String userId) {
 }
 ```
 
-**Key Features:**
-- **Request Coalescing**: Multiple concurrent requests for the same key are coalesced, executing the underlying method only once
-- **SpEL Support**: Dynamic key generation using Spring Expression Language
-- **Distributed Eviction**: Cache eviction events are published via Redis pub/sub to notify all application instances
-- **Separate Cache Namespace**: Uses `coalesce:cache:` prefix to avoid conflicts with standard caching
+**Características principales:**
+- **Coalescencia de peticiones**: varias peticiones concurrentes por la misma clave se unifican y el método subyacente se ejecuta una sola vez
+- **Soporte de SpEL**: generación dinámica de claves con Spring Expression Language
+- **Invalidación distribuida**: los eventos de invalidación se publican por pub/sub de Redis para avisar a todas las instancias de la aplicación
+- **Espacio de nombres propio**: usa el prefijo `coalesce:cache:` para evitar conflictos con la caché estándar
 
-**When to Use Coalesce Annotations:**
-- Methods with expensive operations (database queries, external API calls)
-- High-concurrency scenarios where multiple threads may request the same data simultaneously
-- Need for SpEL-based dynamic key generation
-- Distributed applications requiring cache eviction synchronization across instances
+**Cuándo usar las anotaciones de coalescencia:**
+- Métodos con operaciones costosas (consultas a la base de datos, llamadas a APIs externas)
+- Escenarios de alta concurrencia donde varios hilos pueden pedir los mismos datos a la vez
+- Necesidad de generar claves dinámicas con SpEL
+- Aplicaciones distribuidas que requieren sincronizar la invalidación de la caché entre instancias
 
-## Caching Approaches Comparison
+## Comparación de enfoques de caché
 
-The library provides **three different caching approaches** - choose based on your use case:
+La librería ofrece **tres enfoques de caché distintos**; elija según su caso de uso:
 
-| Approach | Use Case | Features | Thread Safety |
+| Enfoque | Caso de uso | Características | Seguridad en hilos |
 |----------|----------|----------|---------------|
-| **RedisCacheService** | Programmatic caching with full control | Direct API calls, custom TTL, eviction patterns, callback support via builder | Thread-safe singleton |
-| **Spring @Cacheable** | Standard Spring declarative caching | Standard Spring Cache abstraction, TTL via `@TTLEntry`, works with any cache provider | Thread-safe |
-| **@CoalesceCacheable** | High-concurrency scenarios with request coalescing | SpEL-based keys, request coalescing, distributed eviction via pub/sub, conditional caching | Thread-safe |
+| **RedisCacheService** | Caché programática con control total | Llamadas directas a la API, TTL propio, patrones de invalidación, retrollamadas mediante el constructor | Singleton seguro para hilos |
+| **Spring @Cacheable** | Caché declarativa estándar de Spring | Abstracción estándar de Spring Cache, TTL mediante `@TTLEntry`, funciona con cualquier proveedor de caché | Seguro para hilos |
+| **@CoalesceCacheable** | Alta concurrencia con coalescencia de peticiones | Claves con SpEL, coalescencia de peticiones, invalidación distribuida por pub/sub, caché condicional | Seguro para hilos |
 
-**Decision Matrix:**
-- **Need programmatic control or callbacks?** Use `RedisCacheService` or `CacheOperationBuilder`
-- **Standard Spring caching with minimal configuration?** Use `@Cacheable` with `@TTLEntry`
-- **High concurrency + expensive operations + need SpEL?** Use `@CoalesceCacheable`
-- **Distributed eviction across instances?** Use `@CoalesceEvict` (publishes to Redis pub/sub)
-- **Dynamic conditional caching at runtime?** Use `CacheOperationBuilder.condition()` or `@CoalesceCacheable(condition=...)`
+**Matriz de decisión:**
+- **¿Necesita control programático o retrollamadas?** Use `RedisCacheService` o `CacheOperationBuilder`
+- **¿Caché estándar de Spring con poca configuración?** Use `@Cacheable` con `@TTLEntry`
+- **¿Alta concurrencia + operaciones costosas + necesidad de SpEL?** Use `@CoalesceCacheable`
+- **¿Invalidación distribuida entre instancias?** Use `@CoalesceEvict` (publica en pub/sub de Redis)
+- **¿Caché condicional dinámica en tiempo de ejecución?** Use `CacheOperationBuilder.condition()` o `@CoalesceCacheable(condition=...)`
 
-**Cache Key Namespaces:**
+**Espacios de nombres de las claves:**
 - `RedisCacheService`: `{cacheName}:{key}`
-- Spring `@Cacheable`: Configured via `RedisCacheManager` (default: `{cacheName}::{key}`)
+- Spring `@Cacheable`: se configura con `RedisCacheManager` (por defecto: `{cacheName}::{key}`)
 - `@CoalesceCacheable`: `coalesce:cache:{value}:{key}`
 
-## Security
+## Seguridad
 
-### SSL/TLS Encryption
+### Cifrado SSL/TLS
 
-Enable secure connections to Redis using SSL/TLS:
+Habilite conexiones seguras con Redis mediante SSL/TLS:
 
 ```java
 @EnableRedisLibrary(
@@ -530,80 +530,80 @@ Enable secure connections to Redis using SSL/TLS:
         @HostEntry(host = "secure-redis.example.com", port = 6380)
     },
     useSsl = true,
-    userName = "${redis.username}",  // Use environment variables
+    userName = "${redis.username}",  // Use variables de entorno
     pwd = "${redis.password}"
 )
 ```
 
-**Best Practices:**
-- Always use SSL/TLS for production environments
-- Store credentials in environment variables or secure vaults
-- Never hardcode passwords in source code
-- Use strong authentication credentials
-- Configure appropriate timeout values to prevent blocking
+**Buenas prácticas:**
+- Use siempre SSL/TLS en producción
+- Guarde las credenciales en variables de entorno o en almacenes seguros
+- Nunca escriba contraseñas directamente en el código fuente
+- Use credenciales de autenticación robustas
+- Configure tiempos de espera adecuados para evitar bloqueos
 
-### Parameter Validation
+### Validación de parámetros
 
-The library includes comprehensive validation for all inputs:
+La librería valida de forma completa todas las entradas:
 
-**Connection Parameters:**
-- Host names cannot be empty
-- Ports must be between 1 and 65535
-- Connection timeout must be > 0
-- Read timeout must be > 0
+**Parámetros de conexión:**
+- Los nombres de host no pueden estar vacíos
+- Los puertos deben estar entre 1 y 65535
+- El tiempo de espera de conexión debe ser > 0
+- El tiempo de espera de lectura debe ser > 0
 
-**Cache Parameters:**
-- Cache names cannot contain `:` or `*` characters
-- Keys cannot contain `*` character
-- TTL must be positive (> 0)
-- All required parameters are validated for null values
+**Parámetros de caché:**
+- Los nombres de caché no pueden contener los caracteres `:` ni `*`
+- Las claves no pueden contener el carácter `*`
+- El TTL debe ser positivo (> 0)
+- Todos los parámetros obligatorios se validan contra valores nulos
 
-**Example Validation Errors:**
+**Ejemplos de errores de validación:**
 ```java
-// Invalid - will throw IllegalArgumentException
+// Inválido: lanza IllegalArgumentException
 cacheService.cacheable("test:cache", "key", loader, ttl);
 // Error: cacheName cannot contain ':' or '*' characters
 
-// Invalid - will throw IllegalArgumentException
+// Inválido: lanza IllegalArgumentException
 cacheService.cacheable("cache", "key*", loader, ttl);
 // Error: key cannot contain '*' character
 
-// Invalid - will throw IllegalArgumentException
+// Inválido: lanza IllegalArgumentException
 cacheService.cacheable("cache", "key", loader, Duration.ZERO);
 // Error: ttl must be positive
 
-// Valid
+// Válido
 cacheService.cacheable("cache", "key", loader, Duration.ofMinutes(10));
 ```
 
-### Error Handling
+### Manejo de errores
 
-The library implements graceful error handling:
+La librería maneja los errores con elegancia:
 
-- **Cache Fallback**: On Redis errors, `cacheable()` returns the loader result
-- **Non-Blocking Errors**: Evict operations don't throw exceptions on failure
-- **Detailed Logging**: All errors are logged with context information
-- **Health Checks**: Use `RedisHealthChecker` to monitor connectivity
+- **Respaldo de la caché**: ante errores de Redis, `cacheable()` devuelve el resultado del cargador
+- **Errores que no bloquean**: las operaciones de invalidación no lanzan excepciones si fallan
+- **Registro detallado**: todos los errores se registran con información de contexto
+- **Verificaciones de salud**: use `RedisHealthChecker` para monitorear la conectividad
 
-## Thread Safety
+## Seguridad en hilos
 
-### Fully Thread-Safe Design
+### Diseño totalmente seguro para hilos
 
-All components are designed for **safe concurrent access** in multi-threaded environments:
+Todos los componentes están diseñados para un **acceso concurrente seguro** en entornos multihilo:
 
-| Component | Thread Safety | Scope | Notes |
+| Componente | Seguridad en hilos | Alcance | Notas |
 |-----------|-------------|-------|-------|
-| `RedisCacheService` | Thread-Safe | Singleton | Immutable state, safe for concurrent use |
-| `RedisHealthChecker` | Thread-Safe | Singleton | Immutable state, safe for concurrent use |
-| `CacheOperationBuilder.Factory` | Thread-Safe | Singleton | Factory creates new builders safely |
-| `CacheOperationBuilder` | Not Thread-Safe | Per-operation | Use factory.create() each time |
-| `RedisTemplate` | Thread-Safe | Singleton | Spring managed, connection pooled |
+| `RedisCacheService` | Segura | Singleton | Estado inmutable, segura para uso concurrente |
+| `RedisHealthChecker` | Segura | Singleton | Estado inmutable, segura para uso concurrente |
+| `CacheOperationBuilder.Factory` | Segura | Singleton | La fábrica crea constructores nuevos de forma segura |
+| `CacheOperationBuilder` | No segura | Por operación | Use factory.create() cada vez |
+| `RedisTemplate` | Segura | Singleton | Administrado por Spring, con conexiones en grupo |
 
-### CacheOperationBuilder - Factory Pattern
+### CacheOperationBuilder: patrón fábrica
 
-**Important:** The `CacheOperationBuilder` itself is NOT thread-safe and should not be shared across threads. Always create a new instance for each operation using the factory.
+**Importante:** el propio `CacheOperationBuilder` NO es seguro para hilos y no debe compartirse entre hilos. Cree siempre una instancia nueva por operación con la fábrica.
 
-**Correct Usage:**
+**Uso correcto:**
 ```java
 @Service
 public class UserService {
@@ -611,7 +611,7 @@ public class UserService {
     private CacheOperationBuilder.Factory builderFactory;
 
     public User getUser(String userId) {
-        // Create a NEW builder for each operation
+        // Cree un constructor NUEVO por cada operación
         return builderFactory.create()
             .cacheName("users")
             .key(userId)
@@ -622,14 +622,14 @@ public class UserService {
 }
 ```
 
-**Incorrect Usage:**
+**Uso incorrecto:**
 ```java
 @Service
 public class UserService {
     @Autowired
     private CacheOperationBuilder.Factory builderFactory;
 
-    // DON'T DO THIS - Reusing builders causes race conditions!
+    // NO HAGA ESTO: reutilizar constructores provoca condiciones de carrera
     private CacheOperationBuilder<User> reusedBuilder;
 
     @PostConstruct
@@ -638,7 +638,7 @@ public class UserService {
     }
 
     public User getUser(String userId) {
-        // UNSAFE - Multiple threads will share the same builder
+        // INSEGURO: varios hilos compartirán el mismo constructor
         return reusedBuilder
             .cacheName("users")
             .key(userId)
@@ -648,58 +648,58 @@ public class UserService {
 }
 ```
 
-**Key Points:**
-- Factory is thread-safe and can be injected as singleton
-- Call `factory.create()` for each cache operation
-- Each builder instance is isolated and independent
-- Never store and reuse builder instances across requests
+**Puntos clave:**
+- La fábrica es segura para hilos y se puede inyectar como singleton
+- Llame a `factory.create()` en cada operación de caché
+- Cada instancia del constructor es aislada e independiente
+- Nunca guarde ni reutilice instancias del constructor entre peticiones
 
-### Why This Design Is Thread-Safe
+### Por qué este diseño es seguro para hilos
 
-1. **Factory Pattern**: Creates new builder instances on demand
-2. **Immutable Services**: All singleton services use `final` fields
-3. **Constructor Injection**: Ensures safe publication (Java Memory Model)
-4. **Connection Pooling**: RedisTemplate manages thread-safe connections
-5. **No Shared State**: Each builder operates independently
+1. **Patrón fábrica**: crea instancias nuevas del constructor cuando se necesitan
+2. **Servicios inmutables**: todos los servicios singleton usan campos `final`
+3. **Inyección por constructor**: garantiza una publicación segura (modelo de memoria de Java)
+4. **Grupo de conexiones**: RedisTemplate administra conexiones seguras para hilos
+5. **Sin estado compartido**: cada constructor opera de forma independiente
 
-## API Reference
+## Referencia de la API
 
 ### RedisCacheService
 
-| Method | Parameters | Return Type | Description |
+| Método | Parámetros | Tipo de retorno | Descripción |
 |--------|-----------|-------------|-------------|
-| `cacheable` | `cacheName, key, loader, ttl` | `T` | Get from cache or execute loader |
-| `cacheable` | `cacheName, key, loader` | `T` | Get from cache with default TTL |
-| `cachePut` | `cacheName, key, loader, ttl` | `T` | Update cache entry |
-| `cachePut` | `cacheName, key, loader` | `T` | Update cache with default TTL |
-| `cacheEvict` | `cacheName, key` | `void` | Remove single cache entry |
-| `cacheEvictAll` | `cacheName` | `void` | Remove all entries in cache |
-| `cacheEvictMultiple` | `cacheName, keys...` | `void` | Remove multiple entries |
-| `cacheEvictByPattern` | `pattern` | `void` | Remove entries matching pattern |
-| `exists` | `cacheName, key` | `boolean` | Check if key exists |
-| `getTTL` | `cacheName, key` | `Long` | Get remaining TTL in seconds |
+| `cacheable` | `cacheName, key, loader, ttl` | `T` | Obtiene de la caché o ejecuta el cargador |
+| `cacheable` | `cacheName, key, loader` | `T` | Obtiene de la caché con el TTL predeterminado |
+| `cachePut` | `cacheName, key, loader, ttl` | `T` | Actualiza una entrada de la caché |
+| `cachePut` | `cacheName, key, loader` | `T` | Actualiza la caché con el TTL predeterminado |
+| `cacheEvict` | `cacheName, key` | `void` | Elimina una entrada de la caché |
+| `cacheEvictAll` | `cacheName` | `void` | Elimina todas las entradas de la caché |
+| `cacheEvictMultiple` | `cacheName, keys...` | `void` | Elimina varias entradas |
+| `cacheEvictByPattern` | `pattern` | `void` | Elimina las entradas que coinciden con el patrón |
+| `exists` | `cacheName, key` | `boolean` | Comprueba si existe la clave |
+| `getTTL` | `cacheName, key` | `Long` | Obtiene el TTL restante en segundos |
 
 ### RedisHealthChecker
 
-| Method | Parameters | Return Type | Description |
+| Método | Parámetros | Tipo de retorno | Descripción |
 |--------|-----------|-------------|-------------|
-| `isRedisActive` | - | `RedisStatusDto` | Check Redis connection status |
+| `isRedisActive` | - | `RedisStatusDto` | Comprueba el estado de la conexión con Redis |
 
 ### RedisStatusDto
 
-| Field | Type | Description |
+| Campo | Tipo | Descripción |
 |-------|------|-------------|
-| `connected` | boolean | Connection status |
-| `responseTime` | long | Response time in milliseconds |
-| `errorMessage` | String | Status or error message |
-| `usedMemory` | long | Current memory usage in bytes |
-| `maxMemory` | long | Maximum memory limit in bytes |
-| `connectedClients` | int | Number of connected clients |
-| `redisVersion` | String | Redis server version |
+| `connected` | boolean | Estado de la conexión |
+| `responseTime` | long | Tiempo de respuesta en milisegundos |
+| `errorMessage` | String | Mensaje de estado o de error |
+| `usedMemory` | long | Uso actual de memoria en bytes |
+| `maxMemory` | long | Límite máximo de memoria en bytes |
+| `connectedClients` | int | Cantidad de clientes conectados |
+| `redisVersion` | String | Versión del servidor Redis |
 
-## Examples
+## Ejemplos
 
-### Example 1: E-commerce Product Cache
+### Ejemplo 1: caché de productos de una tienda en línea
 
 ```java
 @Service
@@ -742,7 +742,7 @@ public class ProductService {
 }
 ```
 
-### Example 2: User Session Management
+### Ejemplo 2: administración de sesiones de usuario
 
 ```java
 @Service
@@ -770,7 +770,7 @@ public class SessionService {
 }
 ```
 
-### Example 3: Conditional Caching
+### Ejemplo 3: caché condicional
 
 ```java
 @Service
@@ -785,14 +785,14 @@ public class ReportService {
             .key(reportId)
             .loader(() -> generateReport(reportId))
             .ttl(Duration.ofMinutes(15))
-            .condition(!realtime)  // Only cache if not realtime
+            .condition(!realtime)  // Solo se guarda en caché si no es en tiempo real
             .onCacheMiss(report -> log.info("Generated new report: {}", reportId))
             .cacheable();
     }
 }
 ```
 
-### Example 4: Health Check Endpoint
+### Ejemplo 4: endpoint de verificación de salud
 
 ```java
 @RestController
@@ -816,47 +816,47 @@ public class HealthController {
 }
 ```
 
-## Architecture
+## Arquitectura
 
-### Key Components
+### Componentes principales
 
-- **@EnableRedisLibrary**: Main annotation to enable the library
-- **CacheConfig**: Auto-configuration class for Redis setup
-- **RedisCacheService**: Core service for cache operations
-- **CacheOperationBuilder**: Fluent API for advanced operations
-- **RedisHealthChecker**: Health monitoring service
-- **ObjectMapperConfig**: Interface for custom JSON serialization
-- **CoalesceCacheManager**: Dedicated cache manager for request coalescing with pub/sub support
-- **@CoalesceCacheable/@CoalescePut/@CoalesceEvict**: AOP annotations for high-concurrency caching
+- **@EnableRedisLibrary**: anotación principal que habilita la librería
+- **CacheConfig**: clase de autoconfiguración de Redis
+- **RedisCacheService**: servicio central de las operaciones de caché
+- **CacheOperationBuilder**: API fluida para operaciones avanzadas
+- **RedisHealthChecker**: servicio de monitoreo de salud
+- **ObjectMapperConfig**: interfaz para la serialización JSON personalizada
+- **CoalesceCacheManager**: administrador de caché dedicado a la coalescencia de peticiones, con soporte de pub/sub
+- **@CoalesceCacheable/@CoalescePut/@CoalesceEvict**: anotaciones AOP para caché con alta concurrencia
 
-### Connection Modes
+### Modos de conexión
 
-- **STANDALONE**: Single Redis instance (for development and small-scale deployments)
-- **CLUSTER**: Redis Cluster with multiple nodes (for horizontal scaling and partitioning)
-- **SENTINEL**: Redis Sentinel with automatic failover (for high availability)
+- **STANDALONE**: una sola instancia de Redis (para desarrollo e instalaciones pequeñas)
+- **CLUSTER**: Redis Cluster con varios nodos (para escalado horizontal y particionado)
+- **SENTINEL**: Redis Sentinel con conmutación automática por fallo (para alta disponibilidad)
 
-### Serialization
+### Serialización
 
-The library uses **Jackson 3** (`tools.jackson`, the version that ships with Spring Boot 4) for JSON serialization, through `CustomJacksonJsonRedisSerializer`, with the following default configuration (`DefaultObjectMapperConfig`):
+La librería usa **Jackson 3** (`tools.jackson`, la versión que trae Spring Boot 4) para la serialización JSON, mediante `CustomJacksonJsonRedisSerializer`, con esta configuración por defecto (`DefaultObjectMapperConfig`):
 
-- Java 8 date/time and `Optional` support (built into Jackson 3, no modules to register)
-- Dates written as ISO-8601 text, not as timestamps
-- Field-based visibility
-- Polymorphic type information (`@class`) so objects are rebuilt with their original class
-- Ignores unknown properties
-- Handles empty beans gracefully
+- Soporte de fecha y hora de Java 8 y de `Optional` (integrado en Jackson 3, sin módulos que registrar)
+- Fechas escritas como texto ISO-8601, no como marcas de tiempo
+- Visibilidad basada en campos
+- Información de tipo polimórfico (`@class`) para reconstruir los objetos con su clase original
+- Ignora las propiedades desconocidas
+- Maneja con elegancia los beans vacíos
 
-Jackson annotations (`@JsonFormat`, `@JsonIgnore`, ...) are still the `com.fasterxml.jackson.annotation` ones: Jackson 3 keeps using the 2.x annotations package.
+Las anotaciones de Jackson (`@JsonFormat`, `@JsonIgnore`, ...) siguen siendo las de `com.fasterxml.jackson.annotation`: Jackson 3 sigue usando el paquete de anotaciones de la versión 2.x.
 
-## UML Diagrams
+## Diagramas UML
 
-The diagrams are written in [Mermaid](https://mermaid.js.org/), which GitHub renders directly in the browser.
+Los diagramas están escritos en [Mermaid](https://mermaid.js.org/), que GitHub muestra directamente en el navegador.
 
-### 1. Packages and dependencies
+### 1. Paquetes y dependencias
 
 ```mermaid
 flowchart LR
-    APP["Your Spring Boot application<br/>@EnableRedisLibrary"]
+    APP["Su aplicación Spring Boot<br/>@EnableRedisLibrary"]
 
     subgraph LIB["com.juniverse.redis"]
         direction TB
@@ -872,11 +872,11 @@ flowchart LR
     SPR["Spring Data Redis (Lettuce) + Spring AOP (AspectJ)"]
     JKS["Jackson 3 (tools.jackson)"]
 
-    APP -->|imports| ANN
+    APP -->|importa| ANN
     ANN -->|"@Import(CacheConfig)"| CFG
-    CFG -->|creates beans| SVC
-    CFG -->|creates beans| ASP
-    ASP -->|uses| SVC
+    CFG -->|crea beans| SVC
+    CFG -->|crea beans| ASP
+    ASP -->|usa| SVC
     SVC --> DTO
     SVC --> UTL
     CFG --> UTL
@@ -886,7 +886,7 @@ flowchart LR
     SPR --> REDIS
 ```
 
-### 2. Class diagram: configuration and annotations
+### 2. Diagrama de clases: configuración y anotaciones
 
 ```mermaid
 classDiagram
@@ -963,14 +963,14 @@ classDiagram
     EnableRedisLibrary --> Mode
     EnableRedisLibrary ..> ObjectMapperConfig : mapperConfig
     CacheConfig ..|> ImportAware
-    CacheConfig ..> Validator : validates
-    CacheConfig ..> ObjectMapperConfig : instantiates
+    CacheConfig ..> Validator : valida
+    CacheConfig ..> ObjectMapperConfig : instancia
     DefaultObjectMapperConfig ..|> ObjectMapperConfig
-    CacheConfig ..> CustomJacksonJsonRedisSerializer : value serializer
+    CacheConfig ..> CustomJacksonJsonRedisSerializer : serializador de valores
     CustomJacksonJsonRedisSerializer ..|> RedisSerializer
 ```
 
-### 3. Class diagram: services and data
+### 3. Diagrama de clases: servicios y datos
 
 ```mermaid
 classDiagram
@@ -1053,20 +1053,20 @@ classDiagram
         <<Spring Data Redis>>
     }
 
-    CacheOperationBuilder o-- RedisCacheService : delegates to
-    Factory ..> CacheOperationBuilder : creates
+    CacheOperationBuilder o-- RedisCacheService : delega en
+    Factory ..> CacheOperationBuilder : crea
     Factory --> RedisCacheService
     RedisCacheService --> RedisTemplate
-    RedisCacheService ..> CacheResult : returns
+    RedisCacheService ..> CacheResult : devuelve
     CoalesceCacheManager --> RedisTemplate
-    CoalesceCacheManager ..> CoalescedResponseDto : publishes
-    CoalesceCacheManager ..> EvictionEventDto : publishes
-    CoalesceCacheManager ..> CoalesceException : throws
+    CoalesceCacheManager ..> CoalescedResponseDto : publica
+    CoalesceCacheManager ..> EvictionEventDto : publica
+    CoalesceCacheManager ..> CoalesceException : lanza
     RedisHealthChecker --> RedisTemplate
-    RedisHealthChecker ..> RedisStatusDto : returns
+    RedisHealthChecker ..> RedisStatusDto : devuelve
 ```
 
-### 4. Class diagram: AOP annotations and aspects
+### 4. Diagrama de clases: anotaciones AOP y aspectos
 
 ```mermaid
 classDiagram
@@ -1128,32 +1128,32 @@ classDiagram
     CoalesceCaching o-- CoalesceCacheable
     CoalesceCaching o-- CoalescePut
     CoalesceCaching o-- CoalesceEvict
-    CoalesceCachingAspect ..> CoalesceCacheable : intercepts
-    CoalesceCachingAspect ..> CoalesceCaching : intercepts
-    CoalescePutAspect ..> CoalescePut : intercepts
-    CoalesceEvictAspect ..> CoalesceEvict : intercepts
+    CoalesceCachingAspect ..> CoalesceCacheable : intercepta
+    CoalesceCachingAspect ..> CoalesceCaching : intercepta
+    CoalescePutAspect ..> CoalescePut : intercepta
+    CoalesceEvictAspect ..> CoalesceEvict : intercepta
     CoalesceCachingAspect --> CoalesceCacheManager
     CoalescePutAspect --> CoalesceCacheManager
     CoalesceEvictAspect --> CoalesceCacheManager
 ```
 
-### 5. Sequence: application start-up
+### 5. Secuencia: arranque de la aplicación
 
 ```mermaid
 sequenceDiagram
     autonumber
-    participant App as Spring Boot application
+    participant App as Aplicación Spring Boot
     participant Ann as @EnableRedisLibrary
     participant Cfg as CacheConfig
     participant Val as Validator
     participant Omc as ObjectMapperConfig
-    participant Ctx as Spring context
+    participant Ctx as Contexto de Spring
 
-    App->>Ann: starts with the annotation
+    App->>Ann: arranca con la anotación
     Ann->>Cfg: @Import(CacheConfig)
-    Ctx->>Cfg: setImportMetadata(annotation attributes)
+    Ctx->>Cfg: setImportMetadata(atributos de la anotación)
     Ctx->>Cfg: createRedisConnectionFactory()
-    Cfg->>Val: validate hosts and timeouts
+    Cfg->>Val: valida servidores y tiempos de espera
     alt mode = STANDALONE
         Cfg->>Cfg: createStandaloneConfig()
     else mode = SENTINEL
@@ -1164,80 +1164,80 @@ sequenceDiagram
     end
     Cfg-->>Ctx: LettuceConnectionFactory
     Ctx->>Cfg: createRedisTemplate(connectionFactory)
-    Cfg->>Omc: configure() (Jackson 3 ObjectMapper)
-    Cfg-->>Ctx: RedisTemplate (String keys, JSON values)
+    Cfg->>Omc: configure() (ObjectMapper de Jackson 3)
+    Cfg-->>Ctx: RedisTemplate (claves String, valores JSON)
     Ctx->>Cfg: cacheManager(), redisCacheService(), coalesceCacheManager(), redisHealthChecker()
-    Cfg-->>Ctx: beans ready (TTL per cache from ttlEntries)
+    Cfg-->>Ctx: beans listos (TTL por caché según ttlEntries)
 ```
 
-### 6. Sequence: `RedisCacheService.cacheable`
+### 6. Secuencia: `RedisCacheService.cacheable`
 
 ```mermaid
 sequenceDiagram
     autonumber
-    participant Svc as Your service
+    participant Svc as Su servicio
     participant Rcs as RedisCacheService
     participant Val as Validator
     participant Red as Redis
-    participant Ldr as Loader (database)
+    participant Ldr as Cargador (base de datos)
 
     Svc->>Rcs: cacheable(cacheName, key, loader, ttl)
     Rcs->>Val: validateCacheable(...)
     Rcs->>Red: GET cacheName:key
-    alt cache hit
-        Red-->>Rcs: JSON value
-        Rcs-->>Svc: deserialized value
-    else cache miss
+    alt acierto de caché
+        Red-->>Rcs: valor JSON
+        Rcs-->>Svc: valor deserializado
+    else fallo de caché
         Red-->>Rcs: null
         Rcs->>Ldr: loader.get()
-        Ldr-->>Rcs: value
-        Rcs->>Red: SET cacheName:key value EX ttl
-        Rcs-->>Svc: value
+        Ldr-->>Rcs: valor
+        Rcs->>Red: SET cacheName:key valor EX ttl
+        Rcs-->>Svc: valor
     end
 ```
 
-### 7. Sequence: request coalescing (`@CoalesceCacheable`)
+### 7. Secuencia: coalescencia de peticiones (`@CoalesceCacheable`)
 
-Ten concurrent requests for the same key produce **one** call to the database: the first request takes a lock, the rest wait for its result through Redis pub/sub.
+Diez peticiones concurrentes por la misma clave producen **una sola** llamada a la base de datos: la primera petición toma un bloqueo y las demás esperan su resultado mediante pub/sub de Redis.
 
 ```mermaid
 sequenceDiagram
     autonumber
-    participant A as Request A (first)
-    participant B as Requests B..N
+    participant A as Petición A (la primera)
+    participant B as Peticiones B..N
     participant Asp as CoalesceCachingAspect
     participant Mgr as CoalesceCacheManager
     participant Red as Redis
-    participant Db as Database
+    participant Db as Base de datos
 
-    A->>Asp: call to a @CoalesceCacheable method
-    B->>Asp: same call, same key
+    A->>Asp: llamada a un método @CoalesceCacheable
+    B->>Asp: misma llamada, misma clave
     Asp->>Mgr: getOrLoad(key, loader, ttl, cacheNull)
     Mgr->>Red: GET coalesce:cache:key
-    Red-->>Mgr: null (cache miss)
+    Red-->>Mgr: null (fallo de caché)
     Mgr->>Red: SET coalesce:lock:key NX EX 30
-    alt A acquires the lock
+    alt A obtiene el bloqueo
         Red-->>Mgr: OK
-        Mgr->>Db: loader.get() (original method)
-        Db-->>Mgr: result
-        Mgr->>Red: SET coalesce:cache:key result EX ttl
+        Mgr->>Db: loader.get() (método original)
+        Db-->>Mgr: resultado
+        Mgr->>Red: SET coalesce:cache:key resultado EX ttl
         Mgr->>Red: PUBLISH coalesce:ready (CoalescedResponseDto)
         Mgr->>Red: DEL coalesce:lock:key
-        Mgr-->>A: result
-    else B..N do not get the lock
-        Red-->>Mgr: lock already taken
+        Mgr-->>A: resultado
+    else B..N no obtienen el bloqueo
+        Red-->>Mgr: el bloqueo ya está tomado
         Mgr->>Mgr: waitForResult(key, timeout)
-        Red-->>Mgr: message on coalesce:ready
-        Mgr-->>B: the same result (no database call)
+        Red-->>Mgr: mensaje en coalesce:ready
+        Mgr-->>B: el mismo resultado (sin llamar a la base de datos)
     end
 ```
 
-### 8. Sequence: eviction across instances
+### 8. Secuencia: invalidación entre instancias
 
 ```mermaid
 sequenceDiagram
     autonumber
-    participant S1 as Instance 1
+    participant S1 as Instancia 1
     participant Mgr1 as CoalesceCacheManager 1
     participant Red as Redis
     participant Mgr2 as CoalesceCacheManager 2
@@ -1245,69 +1245,69 @@ sequenceDiagram
     S1->>Mgr1: evict(key) (@CoalesceEvict)
     Mgr1->>Red: DEL coalesce:cache:key
     Mgr1->>Red: PUBLISH coalesce:evict (EvictionEventDto)
-    Red-->>Mgr2: message on coalesce:evict
+    Red-->>Mgr2: mensaje en coalesce:evict
     Mgr2->>Mgr2: handleEvictionEvent()
-    Note over Mgr2: the other instance learns the entry is gone
+    Note over Mgr2: la otra instancia se entera de que la entrada ya no existe
 ```
 
-### 9. Choosing the connection mode
+### 9. Elección del modo de conexión
 
 ```mermaid
 flowchart TD
-    S([Start: @EnableRedisLibrary]) --> M{mode}
-    M -->|STANDALONE| A["Exactly one hostEntry"]
-    M -->|SENTINEL| B["Several hostEntries (sentinels)<br/>+ sentinelMaster"]
-    M -->|CLUSTER| C["Several hostEntries (nodes)"]
-    A --> V["Validator checks hosts and timeouts"]
+    S([Inicio: @EnableRedisLibrary]) --> M{mode}
+    M -->|STANDALONE| A["Exactamente un hostEntry"]
+    M -->|SENTINEL| B["Varios hostEntries (sentinels)<br/>+ sentinelMaster"]
+    M -->|CLUSTER| C["Varios hostEntries (nodos)"]
+    A --> V["Validator revisa servidores y tiempos de espera"]
     B --> V
     C --> V
-    V -->|valid| F["LettuceConnectionFactory<br/>(optional SSL/TLS, user and password)"]
-    V -->|invalid| E["IllegalArgumentException<br/>at start-up"]
-    F --> T["RedisTemplate: String keys, JSON values"]
+    V -->|válido| F["LettuceConnectionFactory<br/>(SSL/TLS opcional, usuario y contraseña)"]
+    V -->|inválido| E["IllegalArgumentException<br/>al arrancar"]
+    F --> T["RedisTemplate: claves String, valores JSON"]
 ```
 
 
-## Migrating from 1.x to 2.0 (Jackson 3)
+## Migración de 1.x a 2.0 (Jackson 3)
 
-Version 2.0.0 moves the library from Jackson 2 to **Jackson 3**, the default in Spring Boot 4. It is a breaking release:
+La versión 2.0.0 pasa la librería de Jackson 2 a **Jackson 3**, el valor por defecto en Spring Boot 4. Es una versión con cambios incompatibles:
 
 | 1.x (Jackson 2) | 2.0 (Jackson 3) |
 |---|---|
-| `com.fasterxml.jackson.databind.ObjectMapper` | `tools.jackson.databind.ObjectMapper` (build it with `JsonMapper.builder()`; it is immutable) |
-| `ObjectMapperConfig.configure()` returned a Jackson 2 `ObjectMapper` | it returns a Jackson 3 `ObjectMapper` |
-| `JavaTimeModule` and `Jdk8Module` (`jackson-datatype-jsr310` / `-jdk8`) | built into Jackson 3: remove those two dependencies |
+| `com.fasterxml.jackson.databind.ObjectMapper` | `tools.jackson.databind.ObjectMapper` (se construye con `JsonMapper.builder()`; es inmutable) |
+| `ObjectMapperConfig.configure()` devolvía un `ObjectMapper` de Jackson 2 | devuelve un `ObjectMapper` de Jackson 3 |
+| `JavaTimeModule` y `Jdk8Module` (`jackson-datatype-jsr310` / `-jdk8`) | integrados en Jackson 3: elimine esas dos dependencias |
 | `SerializationFeature.WRITE_DATES_AS_TIMESTAMPS` | `DateTimeFeature.WRITE_DATES_AS_TIMESTAMPS` |
 | `DeserializationFeature.READ_ENUMS_USING_TO_STRING`, `SerializationFeature.WRITE_ENUMS_USING_TO_STRING` | `EnumFeature.READ_ENUMS_USING_TO_STRING`, `EnumFeature.WRITE_ENUMS_USING_TO_STRING` |
 | `CustomJackson2JsonRedisSerializer` | `CustomJacksonJsonRedisSerializer` |
-| `JsonProcessingException` / `IOException` (checked) | `tools.jackson.core.JacksonException` (unchecked) |
-| `spring-boot-starter-aop` (Spring Boot 3 artifact) | `spring-boot-starter-aspectj` |
+| `JsonProcessingException` / `IOException` (comprobadas) | `tools.jackson.core.JacksonException` (no comprobada) |
+| `spring-boot-starter-aop` (artefacto de Spring Boot 3) | `spring-boot-starter-aspectj` |
 
-The JSON stored in Redis keeps the same shape (`@class` plus the fields). Cached values are temporary by nature, so if you have doubts when upgrading, flush the library's caches once.
+El JSON guardado en Redis conserva la misma forma (`@class` más los campos). Los valores en caché son temporales por naturaleza, así que, si tiene dudas al actualizar, vacíe una vez las cachés de la librería.
 
-## Troubleshooting
+## Solución de problemas
 
-### Common Issues
+### Problemas comunes
 
-**Connection Timeout**
+**Tiempo de espera de conexión agotado**
 ```
-Increase connectionTimeout and readTimeout values in @EnableRedisLibrary
-```
-
-**Serialization Errors**
-```
-Implement a custom ObjectMapperConfig (Jackson 3, tools.jackson) to handle specific types
+Aumente los valores de connectionTimeout y readTimeout en @EnableRedisLibrary
 ```
 
-**Cache Not Working**
+**Errores de serialización**
 ```
-Verify Redis is running and accessible
-Check health endpoint: /api/health/redis
-Review logs for connection errors
+Implemente un ObjectMapperConfig propio (Jackson 3, tools.jackson) para manejar tipos concretos
 ```
 
-## License
+**La caché no funciona**
+```
+Verifique que Redis esté en ejecución y accesible
+Revise el endpoint de salud: /api/health/redis
+Revise los logs en busca de errores de conexión
+```
 
-This project is licensed under the Apache License, Version 2.0.
+## Licencia
+
+Este proyecto se distribuye bajo la licencia Apache, versión 2.0.
 
 ```
 Copyright 2025 AJuarez
@@ -1325,26 +1325,26 @@ See the License for the specific language governing permissions and
 limitations under the License.
 ```
 
-## Author
+## Autor
 
-**AJuarez** (ajuarez0021)
-- Email: programacion0025@gmail.com
-- GitHub: [@ajuarez0021](https://github.com/ajuarez0021)
+**AJuarez** (programming0026)
+- Correo: programacion0026@gmail.com
+- GitHub: [@programming0026](https://github.com/programming0026)
 
-## Contributing
+## Contribuciones
 
-Contributions, issues, and feature requests are welcome!
+¡Las contribuciones, los reportes de errores y las solicitudes de funciones son bienvenidos!
 
-## Project Stats
+## Estadísticas del proyecto
 
-- **Test Coverage**: 85%+ code coverage
-- **Total Tests**: 260+ unit tests
-- **Build Status**: All tests passing
-- **Thread Safety**: Fully verified
-- **Supported Modes**: Standalone, Cluster, Sentinel
-- **Java Version**: 21
+- **Cobertura de pruebas**: más del 85 %
+- **Total de pruebas**: más de 260 pruebas unitarias
+- **Estado de la compilación**: todas las pruebas pasan
+- **Seguridad en hilos**: verificada por completo
+- **Modos admitidos**: Standalone, Cluster, Sentinel
+- **Versión de Java**: 21
 - **Spring Boot**: 4.0.1
 
 ---
 
-For more information, issues, or contributions, please visit the project repository.
+Para más información, reportes de errores o contribuciones, visite el repositorio del proyecto.

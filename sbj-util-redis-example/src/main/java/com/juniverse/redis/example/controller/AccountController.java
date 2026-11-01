@@ -18,7 +18,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
- * Account Controller demonstrating CacheOperationBuilder usage
+ * Controlador de cuentas que muestra el uso de CacheOperationBuilder
  *
  * @author linux
  */
@@ -31,16 +31,16 @@ public class AccountController {
     private final AccountService accountService;
 
     /**
-     * Constructor for dependency injection
-     * @param accountService the account service
+     * Constructor para la inyección de dependencias
+     * @param accountService servicio de cuentas
      */
     public AccountController(AccountService accountService) {
         this.accountService = accountService;
     }
 
     /**
-     * Get all accounts
-     * @return ResponseEntity with list of accounts
+     * Obtiene todas las cuentas
+     * @return ResponseEntity con la lista de cuentas
      */
     @GetMapping(produces = {MediaType.APPLICATION_JSON_VALUE})
     public ResponseEntity<List<AccountDTO>> getAccounts() {
@@ -50,10 +50,10 @@ public class AccountController {
     }
 
     /**
-     * Get account by ID
-     * @param id the account ID
-     * @param forceRefresh force cache refresh
-     * @return ResponseEntity with account data or NOT_FOUND
+     * Obtiene una cuenta por su identificador
+     * @param id identificador de la cuenta
+     * @param forceRefresh fuerza la actualización de la caché
+     * @return ResponseEntity con la cuenta o NOT_FOUND
      */
     @GetMapping(path = "/{id}", produces = {MediaType.APPLICATION_JSON_VALUE})
     public ResponseEntity<AccountDTO> getAccount(
@@ -68,8 +68,8 @@ public class AccountController {
     }
 
     /**
-     * Clear entire accounts cache
-     * @return ResponseEntity with OK status
+     * Limpia toda la caché de cuentas
+     * @return ResponseEntity con estado OK
      */
     @GetMapping(path = "/refresh", produces = {MediaType.APPLICATION_JSON_VALUE})
     public ResponseEntity<Void> refreshAll() {
@@ -79,9 +79,9 @@ public class AccountController {
     }
 
     /**
-     * Delete account by ID
-     * @param id the account ID
-     * @return ResponseEntity with NO_CONTENT or NOT_FOUND
+     * Elimina una cuenta por su identificador
+     * @param id identificador de la cuenta
+     * @return ResponseEntity con NO_CONTENT o NOT_FOUND
      */
     @DeleteMapping(path = "/{id}", produces = {MediaType.APPLICATION_JSON_VALUE})
     public ResponseEntity<Void> delete(@PathVariable("id") Long id) {
@@ -94,9 +94,9 @@ public class AccountController {
     }
 
     /**
-     * Create or update account
-     * @param account the account data
-     * @return ResponseEntity with created/updated account
+     * Crea o actualiza una cuenta
+     * @param account datos de la cuenta
+     * @return ResponseEntity con la cuenta creada o actualizada
      */
     @PostMapping(produces = {MediaType.APPLICATION_JSON_VALUE})
     public ResponseEntity<AccountDTO> save(@RequestBody AccountDTO account) {

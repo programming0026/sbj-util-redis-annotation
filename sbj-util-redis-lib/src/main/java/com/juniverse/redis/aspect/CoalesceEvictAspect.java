@@ -18,8 +18,6 @@ import org.springframework.expression.spel.support.StandardEvaluationContext;
 import org.springframework.stereotype.Component;
 
 /**
- * The Class CoalesceEvictAspect.
- *
  * @author ajuar
  */
 @Aspect
@@ -28,29 +26,24 @@ import org.springframework.stereotype.Component;
 @Order(3)
 public class CoalesceEvictAspect {
 
-    /** The cache manager. */
+    /** Administrador de caché. */
     private final CoalesceCacheManager cacheManager;
     
-    /** The parser. */
+    /** Analizador de expresiones. */
     private final SpelExpressionParser parser;
 
-    /**
-     * Instantiates a new coalesce evict aspect.
-     *
-     * @param cacheManager the cache manager
-     */
     public CoalesceEvictAspect(CoalesceCacheManager cacheManager) {
         this.cacheManager = cacheManager;
         this.parser = new SpelExpressionParser();
     }
 
     /**
-     * Handle single evict.
+     * Procesa una invalidación.
      *
-     * @param joinPoint the join point
-     * @param evict the evict
-     * @return the object
-     * @throws Throwable the throwable
+     * @param joinPoint punto de unión del aspecto
+     * @param evict anotación de invalidación
+     * @return objeto
+     * @throws Throwable si falla el método interceptado
      */
     @Around("@annotation(evict)")
     public Object handleSingleEvict(
@@ -61,12 +54,12 @@ public class CoalesceEvictAspect {
     }
 
     /**
-     * Handle multiple evicts.
+     * Procesa varias invalidaciones.
      *
-     * @param joinPoint the join point
-     * @param evicts the evicts
-     * @return the object
-     * @throws Throwable the throwable
+     * @param joinPoint punto de unión del aspecto
+     * @param evicts anotación que agrupa invalidaciones
+     * @return objeto
+     * @throws Throwable si falla el método interceptado
      */
     @Around("@annotation(evicts)")
     public Object handleMultipleEvicts(
@@ -77,12 +70,12 @@ public class CoalesceEvictAspect {
     }
 
     /**
-     * Process eviction.
+     * Ejecuta la invalidación.
      *
-     * @param joinPoint the join point
-     * @param evicts the evicts
-     * @return the object
-     * @throws Throwable the throwable
+     * @param joinPoint punto de unión del aspecto
+     * @param evicts anotación que agrupa invalidaciones
+     * @return objeto
+     * @throws Throwable si falla el método interceptado
      */
     private Object processEviction(
             ProceedingJoinPoint joinPoint,
@@ -124,10 +117,10 @@ public class CoalesceEvictAspect {
     }
 
     /**
-     * Perform eviction.
+     * Realiza la invalidación.
      *
-     * @param joinPoint the join point
-     * @param evict the evict
+     * @param joinPoint punto de unión del aspecto
+     * @param evict anotación de invalidación
      */
     private void performEviction(ProceedingJoinPoint joinPoint, CoalesceEvict evict) {
         if (evict.allEntries()) {
@@ -150,11 +143,11 @@ public class CoalesceEvictAspect {
     }
 
     /**
-     * Generate cache key.
+     * Genera clave de caché.
      *
-     * @param joinPoint the join point
-     * @param evict the evict
-     * @return the string
+     * @param joinPoint punto de unión del aspecto
+     * @param evict anotación de invalidación
+     * @return cadena
      */
     private String generateCacheKey(ProceedingJoinPoint joinPoint, CoalesceEvict evict) {
         String baseKey = evict.value().length > 0
@@ -170,11 +163,11 @@ public class CoalesceEvictAspect {
     }
 
     /**
-     * Evaluate condition.
+     * Evalúa la condición.
      *
-     * @param joinPoint the join point
-     * @param condition the condition
-     * @return true, if successful
+     * @param joinPoint punto de unión del aspecto
+     * @param condition expresión de la condición
+     * @return {@code true} si la operación tuvo éxito
      */
     private boolean evaluateCondition(ProceedingJoinPoint joinPoint, String condition) {
         if (condition.isEmpty()) {
@@ -185,13 +178,13 @@ public class CoalesceEvictAspect {
     }
 
     /**
-     * Evaluate expression.
+     * Evalúa la expresión.
      *
-     * @param <T> the generic type
-     * @param joinPoint the join point
-     * @param expression the expression
-     * @param resultType the result type
-     * @return the t
+     * @param <T> tipo genérico
+     * @param joinPoint punto de unión del aspecto
+     * @param expression expresión que se evalúa
+     * @param resultType tipo de resultado
+     * @return resultado de la evaluación
      */
     private <T> T evaluateExpression(
             ProceedingJoinPoint joinPoint,
@@ -204,10 +197,10 @@ public class CoalesceEvictAspect {
     }
 
     /**
-     * Creates the evaluation context.
+     * Crea el contexto de evaluación.
      *
-     * @param joinPoint the join point
-     * @return the standard evaluation context
+     * @param joinPoint punto de unión del aspecto
+     * @return contexto de evaluación estándar
      */
     private StandardEvaluationContext createEvaluationContext(ProceedingJoinPoint joinPoint) {
         StandardEvaluationContext context = new StandardEvaluationContext();

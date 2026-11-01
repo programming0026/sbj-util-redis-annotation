@@ -4,42 +4,42 @@ import com.juniverse.redis.example.dto.AccountDTO;
 import java.util.List;
 
 /**
- * Account Service Interface
+ * Interfaz del servicio de cuentas
  *
  * @author linux
  */
 public interface AccountService {
 
     /**
-     * Get account by ID with optional force refresh
-     * @param id the account ID
-     * @param forceRefresh force cache refresh
-     * @return AccountDto the account data
+     * Obtiene una cuenta por identificador, con actualización forzada opcional
+     * @param id identificador de la cuenta
+     * @param forceRefresh fuerza la actualización de la caché
+     * @return AccountDto con los datos de la cuenta
      */
     AccountDTO getAccountById(Long id, boolean forceRefresh);
 
     /**
-     * Get all accounts
-     * @return List of all accounts
+     * Obtiene todas las cuentas
+     * @return lista de todas las cuentas
      */
     List<AccountDTO> getAccounts();
 
     /**
-     * Delete account by ID
-     * @param id the account ID
-     * @return true if account was deleted, false if account did not exist
+     * Elimina una cuenta por su identificador
+     * @param id identificador de la cuenta
+     * @return {@code true} si se eliminó la cuenta; {@code false} si no existía
      */
     boolean deleteAccount(Long id);
 
     /**
-     * Save or update account
-     * @param account the account data
-     * @return AccountDto the saved/updated account
+     * Guarda o actualiza una cuenta
+     * @param account datos de la cuenta
+     * @return AccountDto con la cuenta guardada o actualizada
      */
     AccountDTO saveOrUpdateAccount(AccountDTO account);
 
     /**
-     * Clear entire accounts cache
+     * Limpia toda la caché de cuentas
      */
     void clearCache();
 }

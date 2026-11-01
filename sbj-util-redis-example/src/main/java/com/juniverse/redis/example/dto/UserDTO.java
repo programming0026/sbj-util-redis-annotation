@@ -10,7 +10,7 @@ import lombok.AllArgsConstructor;
 import lombok.NoArgsConstructor;
 
 /**
- * User Data Transfer Object
+ * Objeto de transferencia de usuario
  *
  * @author linux
  */

@@ -5,8 +5,6 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * The Interface HostEntry.
- *
  * @author ajuar
  */
 @Retention(RetentionPolicy.RUNTIME)
@@ -14,16 +12,16 @@ import java.lang.annotation.Target;
 public @interface HostEntry {
 
     /**
-     * Host.
+     * Servidor.
      *
-     * @return the string
+     * @return cadena
      */
     String host();
 
     /**
-     * Port.
+     * Puerto.
      *
-     * @return the int
+     * @return entero
      */
     int port() default 6379;
 }

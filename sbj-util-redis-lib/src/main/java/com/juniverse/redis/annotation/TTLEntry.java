@@ -5,8 +5,6 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * The Interface TTLEntry.
- *
  * @author ajuar
  */
 @Retention(RetentionPolicy.RUNTIME)
@@ -14,16 +12,16 @@ import java.lang.annotation.Target;
 public @interface TTLEntry {
 
     /**
-     * Name.
+     * Nombre.
      *
-     * @return the string
+     * @return cadena
      */
     String name();
 
     /**
-     * Ttl.
+     * Tiempo de vida (TTL).
      *
-     * @return the long
+     * @return valor entero largo
      */
     long ttl();
 }

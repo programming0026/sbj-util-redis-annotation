@@ -7,8 +7,6 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * The Interface CoalesceCaching.
- *
  * @author ajuar
  */
 @Target(ElementType.METHOD)
@@ -19,21 +17,21 @@ public @interface CoalesceCaching {
     /**
      * Array de anotaciones CoalesceEvict.
      *
-     * @return the coalesce evict[]
+     * @return anotaciones de invalidación con coalescencia
      */
     CoalesceEvict[] evict() default {};
 
     /**
      * Array de anotaciones CoalescePut.
      *
-     * @return the coalesce put[]
+     * @return anotaciones de guardado con coalescencia
      */
     CoalescePut[] put() default {};
 
     /**
      * Array de anotaciones CoalesceCacheable.
      *
-     * @return the coalesce cacheable[]
+     * @return anotaciones de caché con coalescencia
      */
     CoalesceCacheable[] cacheable() default {};
 }

@@ -17,7 +17,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
- * Product Controller demonstrating Spring Cache annotations
+ * Controlador de productos que muestra las anotaciones de Spring Cache
  *
  * @author linux
  */
@@ -30,16 +30,16 @@ public class ProductController {
     private final ProductService productService;
 
     /**
-     * Constructor for dependency injection
-     * @param productService the product service
+     * Constructor para la inyección de dependencias
+     * @param productService servicio de productos
      */
     public ProductController(ProductService productService) {
         this.productService = productService;
     }
 
     /**
-     * Get all products
-     * @return ResponseEntity with list of products
+     * Obtiene todos los productos
+     * @return ResponseEntity con la lista de productos
      */
     @GetMapping(produces = {MediaType.APPLICATION_JSON_VALUE})
     public ResponseEntity<List<ProductDTO>> getProducts() {
@@ -48,9 +48,9 @@ public class ProductController {
     }
 
     /**
-     * Get product by ID
-     * @param id the product ID
-     * @return ResponseEntity with product data or NOT_FOUND
+     * Obtiene un producto por su identificador
+     * @param id identificador del producto
+     * @return ResponseEntity con el producto o NOT_FOUND
      */
     @GetMapping(path = "/{id}", produces = {MediaType.APPLICATION_JSON_VALUE})
     public ResponseEntity<ProductDTO> getProduct(@PathVariable("id") Long id) {
@@ -62,8 +62,8 @@ public class ProductController {
     }
 
     /**
-     * Clear entire products cache
-     * @return ResponseEntity with OK status
+     * Limpia toda la caché de productos
+     * @return ResponseEntity con estado OK
      */
     @GetMapping(path = "/refresh", produces = {MediaType.APPLICATION_JSON_VALUE})
     public ResponseEntity<Void> refreshAll() {
@@ -72,9 +72,9 @@ public class ProductController {
     }
 
     /**
-     * Delete product by ID
-     * @param id the product ID
-     * @return ResponseEntity with NO_CONTENT or NOT_FOUND
+     * Elimina un producto por su identificador
+     * @param id identificador del producto
+     * @return ResponseEntity con NO_CONTENT o NOT_FOUND
      */
     @DeleteMapping(path = "/{id}", produces = {MediaType.APPLICATION_JSON_VALUE})
     public ResponseEntity<Void> delete(@PathVariable("id") Long id) {
@@ -86,9 +86,9 @@ public class ProductController {
     }
 
     /**
-     * Create or update product
-     * @param product the product data
-     * @return ResponseEntity with created/updated product
+     * Crea o actualiza un producto
+     * @param product datos del producto
+     * @return ResponseEntity con el producto creado o actualizado
      */
     @PostMapping(produces = {MediaType.APPLICATION_JSON_VALUE})
     public ResponseEntity<ProductDTO> save(@RequestBody ProductDTO product) {

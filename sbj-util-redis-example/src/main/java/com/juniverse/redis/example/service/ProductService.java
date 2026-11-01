@@ -4,41 +4,41 @@ import com.juniverse.redis.example.dto.ProductDTO;
 import java.util.List;
 
 /**
- * Product Service Interface
+ * Interfaz del servicio de productos
  *
  * @author linux
  */
 public interface ProductService {
 
     /**
-     * Get product by ID
-     * @param id the product ID
-     * @return ProductDto the product data
+     * Obtiene un producto por su identificador
+     * @param id identificador del producto
+     * @return ProductDto con los datos del producto
      */
     ProductDTO getProductById(Long id);
 
     /**
-     * Get all products
-     * @return List of all products
+     * Obtiene todos los productos
+     * @return lista de todos los productos
      */
     List<ProductDTO> getProducts();
 
     /**
-     * Delete product by ID
-     * @param id the product ID
-     * @return true if product was deleted, false if product did not exist
+     * Elimina un producto por su identificador
+     * @param id identificador del producto
+     * @return {@code true} si se eliminó el producto; {@code false} si no existía
      */
     boolean deleteProduct(Long id);
 
     /**
-     * Save or update product
-     * @param product the product data
-     * @return ProductDto the saved/updated product
+     * Guarda o actualiza un producto
+     * @param product datos del producto
+     * @return ProductDto con el producto guardado o actualizado
      */
     ProductDTO saveOrUpdateProduct(ProductDTO product);
 
     /**
-     * Clear entire products cache
+     * Limpia toda la caché de productos
      */
     void clearCache();
 }

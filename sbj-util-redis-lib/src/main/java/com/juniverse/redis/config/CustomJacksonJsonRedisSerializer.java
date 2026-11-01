@@ -7,41 +7,34 @@ import tools.jackson.databind.ObjectMapper;
 
 
 /**
- * The Class CustomJacksonJsonRedisSerializer.
  *
- * <p>Serializes values to JSON with a Jackson 3 {@link ObjectMapper}. In Jackson 3 the exceptions are unchecked
- * ({@link JacksonException}); they are wrapped in a {@link SerializationException}.
+ * <p>Serializa valores a JSON con un {@link ObjectMapper} de Jackson 3. En Jackson 3 las excepciones no son comprobadas
+ * ({@link JacksonException}); se envuelven en una {@link SerializationException}.
  *
  * @author ajuar
- * @param <T> The object
+ * @param <T> objeto
  */
 public class CustomJacksonJsonRedisSerializer<T> implements RedisSerializer<T> {
 
-    /** The object mapper. */
+    /** Conversor de objeto. */
     private final ObjectMapper objectMapper;
 
     /**
-     * The class type.
+     * Tipo de clase.
      */
     private final Class<T> type;
 
-    /**
-     * Instantiates a new custom jackson json redis serializer.
-     *
-     * @param objectMapper the object mapper
-     * @param type the type
-     */
     public CustomJacksonJsonRedisSerializer(ObjectMapper objectMapper, Class<T> type) {
         this.objectMapper = objectMapper;
         this.type = type;
     }
 
     /**
-     * Serialize.
+     * Serializa el objeto.
      *
-     * @param value the value
-     * @return the byte[]
-     * @throws SerializationException the serialization exception
+     * @param value valor
+     * @return bytes serializados
+     * @throws SerializationException si falla la serialización
      */
     @Override
     public byte[] serialize(T value) throws SerializationException {
@@ -56,11 +49,11 @@ public class CustomJacksonJsonRedisSerializer<T> implements RedisSerializer<T> {
     }
 
     /**
-     * Deserialize.
+     * Deserializa los bytes.
      *
-     * @param bytes the bytes
-     * @return the t
-     * @throws SerializationException the serialization exception
+     * @param bytes bytes
+     * @return resultado de la evaluación
+     * @throws SerializationException si falla la serialización
      */
     @Override
     public T deserialize(byte[] bytes) throws SerializationException {

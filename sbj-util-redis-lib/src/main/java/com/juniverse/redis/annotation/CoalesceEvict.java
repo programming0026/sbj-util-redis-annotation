@@ -8,8 +8,6 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * The Interface CoalesceEvict.
- *
  * @author ajuar
  */
 @Target(ElementType.METHOD)
@@ -21,42 +19,42 @@ public @interface CoalesceEvict {
     /**
      * Prefijo de las claves a eliminar.
      *
-     * @return the string[]
+     * @return cadena
      */
     String[] value() default {};
 
     /**
      * Expresión SpEL para generar la clave dinámica.
      *
-     * @return the string
+     * @return cadena
      */
     String key() default "";
 
     /**
      * Si debe eliminar todas las claves que coincidan con el patrón.
      *
-     * @return true, if successful
+     * @return {@code true} si la operación tuvo éxito
      */
     boolean allEntries() default false;
 
     /**
      * Patrón para eliminar múltiples claves.
      *
-     * @return the string
+     * @return cadena
      */
     String pattern() default "";
 
     /**
      * Si la evicción debe ocurrir antes de la ejecución del método.
      *
-     * @return true, if successful
+     * @return {@code true} si la operación tuvo éxito
      */
     boolean beforeInvocation() default false;
 
     /**
      * Condición SpEL para ejecutar la evicción.
      *
-     * @return the string
+     * @return cadena
      */
     String condition() default "";
 }

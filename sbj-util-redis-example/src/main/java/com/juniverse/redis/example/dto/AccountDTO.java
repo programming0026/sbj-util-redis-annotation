@@ -11,7 +11,7 @@ import lombok.Setter;
 import lombok.AllArgsConstructor;
 import lombok.NoArgsConstructor;
 /**
- * Account Data Transfer Object
+ * Objeto de transferencia de cuenta
  *
  * @author linux
  */

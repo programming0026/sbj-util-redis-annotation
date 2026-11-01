@@ -21,8 +21,6 @@ import org.springframework.expression.spel.standard.SpelExpressionParser;
 import org.springframework.expression.spel.support.StandardEvaluationContext;
 
 /**
- * The Class CoalesceCachingAspect.
- *
  * @author ajuar
  */
 @Aspect
@@ -30,17 +28,12 @@ import org.springframework.expression.spel.support.StandardEvaluationContext;
 @Order(1)
 public class CoalesceCachingAspect {
 
-    /** The cache manager. */
+    /** Administrador de caché. */
     private final CoalesceCacheManager cacheManager;
     
-    /** The parser. */
+    /** Analizador de expresiones. */
     private final SpelExpressionParser parser;
 
-    /**
-     * Instantiates a new coalesce caching aspect.
-     *
-     * @param cacheManager the cache manager
-     */
     public CoalesceCachingAspect(
             CoalesceCacheManager cacheManager) {
         this.cacheManager = cacheManager;
@@ -49,12 +42,12 @@ public class CoalesceCachingAspect {
     }
 
     /**
-     * Handle cacheable.
+     * Procesa una anotación de caché.
      *
-     * @param joinPoint the join point
-     * @param cacheable the cacheable annotation
-     * @return the object
-     * @throws Throwable the throwable
+     * @param joinPoint punto de unión del aspecto
+     * @param cacheable anotación de caché
+     * @return objeto
+     * @throws Throwable si falla el método interceptado
      */
     @Around("@annotation(cacheable)")
     public Object handleCacheable(
@@ -101,12 +94,12 @@ public class CoalesceCachingAspect {
     }
 
     /**
-     * Handle caching.
+     * Procesa varias anotaciones de caché.
      *
-     * @param joinPoint the join point
-     * @param caching the caching
-     * @return the object
-     * @throws Throwable the throwable
+     * @param joinPoint punto de unión del aspecto
+     * @param caching anotación que agrupa varias operaciones
+     * @return objeto
+     * @throws Throwable si falla el método interceptado
      */
     @Around("@annotation(caching)")
     public Object handleCaching(
@@ -169,11 +162,11 @@ public class CoalesceCachingAspect {
     }
 
     /**
-     * Generate cache key.
+     * Genera clave de caché.
      *
-     * @param joinPoint the join point
-     * @param cacheable the cacheable
-     * @return the string
+     * @param joinPoint punto de unión del aspecto
+     * @param cacheable anotación de caché
+     * @return cadena
      */
     private String generateCacheKey(ProceedingJoinPoint joinPoint, CoalesceCacheable cacheable) {
         String baseKey = cacheable.value().isEmpty()
@@ -189,11 +182,11 @@ public class CoalesceCachingAspect {
     }
 
     /**
-     * Generate cache key.
+     * Genera clave de caché.
      *
-     * @param joinPoint the join point
-     * @param put the put
-     * @return the string
+     * @param joinPoint punto de unión del aspecto
+     * @param put anotación de guardado
+     * @return cadena
      */
     private String generateCacheKey(ProceedingJoinPoint joinPoint, CoalescePut put) {
         String baseKey = put.value().isEmpty()
@@ -209,10 +202,10 @@ public class CoalesceCachingAspect {
     }
 
     /**
-     * Perform eviction.
+     * Realiza la invalidación.
      *
-     * @param joinPoint the join point
-     * @param evict the evict
+     * @param joinPoint punto de unión del aspecto
+     * @param evict anotación de invalidación
      */
     private void performEviction(ProceedingJoinPoint joinPoint, CoalesceEvict evict) {
         if (evict.allEntries()) {
@@ -232,11 +225,11 @@ public class CoalesceCachingAspect {
     }
 
     /**
-     * Generate cache key for evict.
+     * Genera la clave de caché para invalidar.
      *
-     * @param joinPoint the join point
-     * @param evict the evict
-     * @return the string
+     * @param joinPoint punto de unión del aspecto
+     * @param evict anotación de invalidación
+     * @return cadena
      */
     private String generateCacheKeyForEvict(ProceedingJoinPoint joinPoint, CoalesceEvict evict) {
         String baseKey = evict.value().length > 0
@@ -252,23 +245,23 @@ public class CoalesceCachingAspect {
     }
 
     /**
-     * Evaluate condition.
+     * Evalúa la condición.
      *
-     * @param joinPoint the join point
-     * @param condition the condition
-     * @return true, if successful
+     * @param joinPoint punto de unión del aspecto
+     * @param condition expresión de la condición
+     * @return {@code true} si la operación tuvo éxito
      */
     private boolean evaluateCondition(ProceedingJoinPoint joinPoint, String condition) {
         return evaluateCondition(joinPoint, condition, null);
     }
 
     /**
-     * Evaluate condition.
+     * Evalúa la condición.
      *
-     * @param joinPoint the join point
-     * @param condition the condition
-     * @param result the result
-     * @return true, if successful
+     * @param joinPoint punto de unión del aspecto
+     * @param condition expresión de la condición
+     * @param result resultado
+     * @return {@code true} si la operación tuvo éxito
      */
     private boolean evaluateCondition(
             ProceedingJoinPoint joinPoint,
@@ -282,14 +275,14 @@ public class CoalesceCachingAspect {
     }
 
     /**
-     * Evaluate expression.
+     * Evalúa la expresión.
      *
-     * @param <T> the generic type
-     * @param joinPoint the join point
-     * @param expression the expression
-     * @param result the result
-     * @param resultType the result type
-     * @return the t
+     * @param <T> tipo genérico
+     * @param joinPoint punto de unión del aspecto
+     * @param expression expresión que se evalúa
+     * @param result resultado
+     * @param resultType tipo de resultado
+     * @return resultado de la evaluación
      */
     private <T> T evaluateExpression(
             ProceedingJoinPoint joinPoint,

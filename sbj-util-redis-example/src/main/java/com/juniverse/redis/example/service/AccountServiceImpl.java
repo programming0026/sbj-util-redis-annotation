@@ -20,8 +20,8 @@ import org.springframework.cache.CacheManager;
 import org.springframework.stereotype.Service;
 
 /**
- * Account Service implementation demonstrating CacheOperationBuilder<T> usage from sbj-util-redis library
- * This service showcases the fluent builder pattern with Factory for Redis caching operations
+ * Implementación del servicio de cuentas que muestra el uso de CacheOperationBuilder<T> de la librería sbj-util-redis
+ * Este servicio muestra el patrón constructor fluido con fábrica para las operaciones de caché en Redis
  *
  * @author linux
  */
@@ -36,9 +36,9 @@ public class AccountServiceImpl implements AccountService {
     private static final AtomicLong idGenerator = new AtomicLong(10);
 
     /**
-     * Constructor for dependency injection
-     * @param cacheManager the cache manager
-     * @param builderFactory the cache operation builder factory
+     * Constructor para la inyección de dependencias
+     * @param cacheManager administrador de caché
+     * @param builderFactory fábrica de constructor de operación de caché
      */
     public AccountServiceImpl(CacheManager cacheManager, CacheOperationBuilder.Factory builderFactory) {
         this.cacheManager = cacheManager;
@@ -47,7 +47,7 @@ public class AccountServiceImpl implements AccountService {
     }
 
     /**
-     * Initialize sample accounts in memory
+     * Inicializa cuentas de ejemplo en memoria
      */
     private void createAccounts() {
         String[] accountTypes = {"SAVINGS", "CHECKING", "INVESTMENT"};
@@ -64,10 +64,10 @@ public class AccountServiceImpl implements AccountService {
     }
 
     /**
-     * Get account by ID with optional force refresh
-     * Demonstrates CacheOperationBuilder.Factory usage with conditional caching and callbacks
+     * Obtiene una cuenta por identificador, con actualización forzada opcional
+     * Muestra CacheOperationBuilder.Factory con caché condicional y retrollamadas
      *
-     * Example usage from sbj-util-redis library:
+     * Ejemplo de uso de la librería sbj-util-redis:
      * return builderFactory.create()
      *   .cacheName("accounts")
      *   .key(accountId)
@@ -96,8 +96,8 @@ public class AccountServiceImpl implements AccountService {
     }
 
     /**
-     * Save or update account
-     * Demonstrates CacheOperationBuilder.Factory with cachePut operation and side effects
+     * Guarda o actualiza una cuenta
+     * Muestra CacheOperationBuilder.Factory con la operación cachePut y efectos secundarios
      */
     @Override
     public AccountDTO saveOrUpdateAccount(AccountDTO account) {
@@ -134,9 +134,9 @@ public class AccountServiceImpl implements AccountService {
     }
 
     /**
-     * Delete account
-     * Demonstrates CacheOperationBuilder.Factory with cacheEvict operation
-     * @return true if account was deleted, false if account did not exist
+     * Elimina una cuenta
+     * Muestra CacheOperationBuilder.Factory con la operación cacheEvict
+     * @return {@code true} si se eliminó la cuenta; {@code false} si no existía
      */
     @Override
     public boolean deleteAccount(Long id) {
@@ -162,7 +162,7 @@ public class AccountServiceImpl implements AccountService {
     }
 
     /**
-     * Clear all accounts cache using CacheManager
+     * Limpia toda la caché de cuentas con CacheManager
      */
     @Override
     public void clearCache() {
@@ -171,8 +171,8 @@ public class AccountServiceImpl implements AccountService {
     }
 
     /**
-     * Get all accounts
-     * Demonstrates CacheOperationBuilder.Factory for list operations with multiple callbacks
+     * Obtiene todas las cuentas
+     * Muestra CacheOperationBuilder.Factory en operaciones de lista con varias retrollamadas
      */
     @Override
     public List<AccountDTO> getAccounts() {

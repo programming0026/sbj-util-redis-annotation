@@ -5,12 +5,12 @@ import lombok.Getter;
 import lombok.ToString;
 
 /**
- * Result wrapper for cache operations that includes metadata about cache hit/miss.
+ * Envoltorio del resultado de las operaciones de caché, con información de acierto o fallo.
  *
- * <p>This class is used to safely determine whether a value came from cache (hit)
- * or from the data source (miss) without race conditions.</p>
+ * <p>Esta clase permite saber de forma segura si un valor vino de la caché (acierto)
+ * o de la fuente de datos (fallo), sin condiciones de carrera.</p>
  *
- * @param <T> the type of the cached value
+ * @param <T> tipo del valor en caché
  * @author ajuar
  */
 @Getter
@@ -18,39 +18,34 @@ import lombok.ToString;
 @AllArgsConstructor
 public class CacheResult<T> {
 
-    /** The cached or loaded value. */
+    /** Valor obtenido de la caché o cargado. */
     private final T value;
 
-    /** Indicates whether this was a cache hit (true) or miss (false). */
+    /** Indica si fue un acierto de caché (true) o un fallo (false). */
     private final boolean cacheHit;
 
 
-    /**
-     * Checks if this was a cache miss.
-     *
-     * @return true if the value was loaded from source, false if came from cache
-     */
     public boolean isCacheMiss() {
         return !cacheHit;
     }
 
     /**
-     * Creates a cache hit result.
+     * Crea un resultado de acierto de caché.
      *
-     * @param <T> the value type
-     * @param value the cached value
-     * @return a CacheResult indicating a cache hit
+     * @param <T> tipo de valor
+     * @param value valor obtenido de la caché
+     * @return CacheResult que indica un acierto
      */
     public static <T> CacheResult<T> hit(T value) {
         return new CacheResult<>(value, true);
     }
 
     /**
-     * Creates a cache miss result.
+     * Crea un resultado de fallo de caché.
      *
-     * @param <T> the value type
-     * @param value the loaded value
-     * @return a CacheResult indicating a cache miss
+     * @param <T> tipo de valor
+     * @param value valor cargado de la fuente
+     * @return CacheResult que indica un fallo
      */
     public static <T> CacheResult<T> miss(T value) {
         return new CacheResult<>(value, false);

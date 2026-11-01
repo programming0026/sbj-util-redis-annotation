@@ -25,38 +25,26 @@ import org.springframework.data.redis.listener.RedisMessageListenerContainer;
 import org.springframework.data.redis.serializer.SerializationException;
 
 /**
- * The Class CoalesceCacheManager.
- *
  * @author ajuar
  */
 @Slf4j
 public class CoalesceCacheManager {
 
-    /** The redis template. */
+    /** Plantilla de Redis. */
     private final RedisTemplate<String, Object> redisTemplate;
 
-    /** The Constant CACHE_PREFIX. */
     private static final String CACHE_PREFIX = "coalesce:cache:";
 
-    /** The Constant LOCK_PREFIX. */
     private static final String LOCK_PREFIX = "coalesce:lock:";
 
-    /** The Constant EVICT_CHANNEL. */
     private static final String EVICT_CHANNEL = "coalesce:evict";
 
-    /** The Constant COALESCE_CHANNEL. */
     private static final String COALESCE_CHANNEL = "coalesce:ready";
 
-    /** The pending requests map for local waiting. */
+    /** Mapa de peticiones pendientes para la espera local. */
     private final ConcurrentHashMap<String, CompletableFuture<Object>> pendingRequests =
             new ConcurrentHashMap<>();
 
-    /**
-     * Instantiates a new coalesce cache manager.
-     *
-     * @param redisTemplate the redis template
-     * @param listenerContainer the listener container
-     */
     public CoalesceCacheManager(
             RedisTemplate<String, Object> redisTemplate,
             RedisMessageListenerContainer listenerContainer) {
@@ -74,11 +62,11 @@ public class CoalesceCacheManager {
     }
 
     /**
-     * Put.
+     * Guarda un valor.
      *
-     * @param key the key
-     * @param value the value
-     * @param ttlSeconds the ttl seconds
+     * @param key clave
+     * @param value valor
+     * @param ttlSeconds tiempo de vida en segundos
      */
     public void put(String key, Object value, long ttlSeconds) {
         String fullKey = CACHE_PREFIX + key;
@@ -95,10 +83,10 @@ public class CoalesceCacheManager {
     }
 
     /**
-     * Gets the.
+     * Obtiene.
      *
-     * @param key the key
-     * @return the optional
+     * @param key clave
+     * @return opcional
      */
     public Optional<Object> get(String key) {
         String fullKey = CACHE_PREFIX + key;
@@ -112,9 +100,9 @@ public class CoalesceCacheManager {
     }
 
     /**
-     * Evict.
+     * Invalida una clave.
      *
-     * @param key the key
+     * @param key clave
      */
     public void evict(String key) {
         String fullKey = CACHE_PREFIX + key;
@@ -125,9 +113,9 @@ public class CoalesceCacheManager {
     }
 
     /**
-     * Evict all.
+     * Invalida todas las entradas de una caché.
      *
-     * @param prefix the prefix
+     * @param prefix prefijo
      */
     public void evictAll(String prefix) {
         String pattern = CACHE_PREFIX + prefix + "*";
@@ -142,9 +130,9 @@ public class CoalesceCacheManager {
     }
 
     /**
-     * Evict pattern.
+     * Invalida las claves que coinciden con un patrón.
      *
-     * @param pattern the pattern
+     * @param pattern patrón de claves
      */
     public void evictPattern(String pattern) {
         String fullPattern = CACHE_PREFIX + pattern;
@@ -159,9 +147,9 @@ public class CoalesceCacheManager {
     }
 
     /**
-     * Evict multiple.
+     * Invalida varias claves.
      *
-     * @param keys the keys
+     * @param keys claves
      */
     public void evictMultiple(Collection<String> keys) {
         List<String> fullKeys = keys.stream()
@@ -176,19 +164,13 @@ public class CoalesceCacheManager {
         }
     }
 
-    /**
-     * Exists.
-     *
-     * @param key the key
-     * @return true, if successful
-     */
     public boolean exists(String key) {
         String fullKey = CACHE_PREFIX + key;
         return Boolean.TRUE.equals(redisTemplate.hasKey(fullKey));
     }
 
     /**
-     * Clear.
+     * Limpia.
      */
     public void clear() {
         String pattern = CACHE_PREFIX + "*";
@@ -201,10 +183,10 @@ public class CoalesceCacheManager {
     }
 
     /**
-     * Gets the time to live.
+     * Obtiene el tiempo de vida restante.
      *
-     * @param key the key
-     * @return the time to live
+     * @param key clave
+     * @return tiempo de vida restante
      */
     public long getTimeToLive(String key) {
         String fullKey = CACHE_PREFIX + key;
@@ -213,10 +195,10 @@ public class CoalesceCacheManager {
     }
 
     /**
-     * Expire.
+     * Establece la expiración.
      *
-     * @param key the key
-     * @param ttlSeconds the ttl seconds
+     * @param key clave
+     * @param ttlSeconds tiempo de vida en segundos
      */
     public void expire(String key, long ttlSeconds) {
         String fullKey = CACHE_PREFIX + key;
@@ -225,14 +207,14 @@ public class CoalesceCacheManager {
     }
 
     /**
-     * Gets or loads a value with request coalescing using Redis pub/sub.
-     * Only one instance will execute the loader, others wait for the result.
+     * Obtiene o carga un valor con coalescencia de peticiones mediante pub/sub de Redis.
+     * Solo una instancia ejecuta el cargador; las demás esperan el resultado.
      *
-     * @param key the cache key
-     * @param loader the supplier to load the value if not cached
-     * @param ttlSeconds the TTL in seconds
-     * @param cacheNull whether to cache null results
-     * @return the cached or loaded value
+     * @param key clave de caché
+     * @param loader proveedor que carga el valor si no está en caché
+     * @param ttlSeconds TTL en segundos
+     * @param cacheNull indica si se guardan los resultados nulos
+     * @return valor de la caché o cargado
      */
     public Object getOrLoad(String key, Supplier<Object> loader, long ttlSeconds, boolean cacheNull) {
         String fullKey = CACHE_PREFIX + key;
@@ -278,11 +260,11 @@ public class CoalesceCacheManager {
     }
 
     /**
-     * Waits for a coalesced result from pub/sub.
+     * Espera un resultado coalescido por pub/sub.
      *
-     * @param key the cache key
-     * @param timeoutSeconds the maximum time to wait
-     * @return the loaded value
+     * @param key clave de caché
+     * @param timeoutSeconds tiempo máximo de espera
+     * @return valor cargado
      */
     private Object waitForResult(String key, long timeoutSeconds) {
         CompletableFuture<Object> future = new CompletableFuture<>();
@@ -309,11 +291,11 @@ public class CoalesceCacheManager {
     }
 
     /**
-     * Publishes the coalesced result to all waiting subscribers.
+     * Publica el resultado coalescido a todos los suscriptores en espera.
      *
-     * @param key the cache key
-     * @param result the result
-     * @param error the error if any
+     * @param key clave de caché
+     * @param result resultado
+     * @param error error ocurrido, si lo hubo
      */
     private void publishCoalesceResult(String key, Object result, Throwable error) {
         CoalescedResponseDto response = new CoalescedResponseDto(
@@ -328,10 +310,10 @@ public class CoalesceCacheManager {
     }
 
     /**
-     * Handles coalesce events from pub/sub.
+     * Procesa los eventos de coalescencia de pub/sub.
      *
-     * @param message the message
-     * @param pattern the pattern
+     * @param message mensaje
+     * @param pattern patrón de claves
      */
     private void handleCoalesceEvent(Message message, byte[] pattern) {
         try {
@@ -357,9 +339,9 @@ public class CoalesceCacheManager {
     }
 
     /**
-     * Publish eviction.
+     * Publica la invalidación.
      *
-     * @param key the key
+     * @param key clave
      */
     private void publishEviction(String key) {
         EvictionEventDto event = new EvictionEventDto(key, LocalDateTime.now());
@@ -367,10 +349,10 @@ public class CoalesceCacheManager {
     }
 
     /**
-     * Handle eviction event.
+     * Procesa el evento de invalidación.
      *
-     * @param message the message
-     * @param pattern the pattern
+     * @param message mensaje
+     * @param pattern patrón de claves
      */
     private void handleEvictionEvent(Message message, byte[] pattern) {
         try {

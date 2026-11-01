@@ -7,8 +7,6 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * The Interface CoalescePuts.
- *
  * @author ajuar
  */
 @Target(ElementType.METHOD)
@@ -17,9 +15,9 @@ import java.lang.annotation.Target;
 public @interface CoalescePuts {
 
     /**
-     * Value.
+     * Valor.
      *
-     * @return the coalesce put[]
+     * @return anotaciones de guardado con coalescencia
      */
     CoalescePut[] value();
 }

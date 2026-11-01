@@ -4,7 +4,7 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 /**
- * Spring Boot application demonstrating sbj-util-redis library usage
+ * Aplicación Spring Boot que muestra el uso de la librería sbj-util-redis
  *
  * @author linux
  */
@@ -12,8 +12,8 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 public class SbjUtilRedisExampleApplication {
 
 	/**
-	 * Main method to start the Spring Boot application
-	 * @param args command line arguments
+	 * Método principal que arranca la aplicación Spring Boot
+	 * @param args argumentos de la línea de comandos
 	 */
 	public static void main(String[] args) {
 		SpringApplication.run(SbjUtilRedisExampleApplication.class, args);

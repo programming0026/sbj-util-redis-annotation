@@ -11,7 +11,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 /**
- * Order Data Transfer Object
+ * Objeto de transferencia de pedido
  *
  * @author ajuar
  */

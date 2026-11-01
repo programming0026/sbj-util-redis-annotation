@@ -19,7 +19,7 @@ import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
 
 /**
- * Unit tests for CoalescePutAspect.
+ * Pruebas unitarias de CoalescePutAspect.
  *
  * @author ajuar
  */
@@ -27,23 +27,23 @@ import org.mockito.quality.Strictness;
 @MockitoSettings(strictness = Strictness.LENIENT)
 class CoalescePutAspectTest {
 
-    /** The cache manager. */
+    /** Administrador de caché. */
     @Mock
     private CoalesceCacheManager cacheManager;
 
-    /** The join point. */
+    /** Punto de unión simulado. */
     @Mock
     private ProceedingJoinPoint joinPoint;
 
-    /** The method signature. */
+    /** Firma del método simulada. */
     @Mock
     private MethodSignature methodSignature;
 
-    /** The aspect. */
+    /** Aspecto bajo prueba. */
     private CoalescePutAspect aspect;
 
     /**
-     * Sets up the test environment before each test.
+     * Prepara el entorno antes de cada prueba.
      */
     @BeforeEach
     void setUp() {
@@ -51,17 +51,17 @@ class CoalescePutAspectTest {
     }
 
     /**
-     * Test method for mocking.
+     * Método de apoyo para las simulaciones.
      *
-     * @param id the id
-     * @return the string
+     * @param id identificador
+     * @return cadena
      */
     public String testMethod(String id) {
         return "result";
     }
 
     /**
-     * Handle single put with condition false should not cache.
+     * Un guardado con condición falsa no debe guardar en caché.
      */
     @Test
     void handleSinglePut_WithConditionFalse_ShouldNotCache() throws Throwable {
@@ -77,7 +77,7 @@ class CoalescePutAspectTest {
 
 
     /**
-     * Handle single put with unless true should not cache.
+     * Un guardado con «unless» verdadero no debe guardar en caché.
      */
     @Test
     void handleSinglePut_WithUnlessTrue_ShouldNotCache() throws Throwable {
@@ -92,7 +92,7 @@ class CoalescePutAspectTest {
     }
 
     /**
-     * Handle single put with unless false should cache.
+     * Un guardado con «unless» falso debe guardar en caché.
      */
     @Test
     void handleSinglePut_WithUnlessFalse_ShouldCache() throws Throwable {
@@ -108,7 +108,7 @@ class CoalescePutAspectTest {
 
 
     /**
-     * Handle single put with unless null check should not cache null.
+     * Un guardado con comprobación de nulo en «unless» no debe guardar nulos.
      */
     @Test
     void handleSinglePut_WithUnlessNullCheck_ShouldNotCacheNull() throws Throwable {
@@ -123,7 +123,7 @@ class CoalescePutAspectTest {
     }
 
     /**
-     * Handle single put with condition and unless both true should not cache.
+     * Un guardado con condición y «unless» verdaderos no debe guardar en caché.
      */
     @Test
     void handleSinglePut_WithConditionAndUnlessBothTrue_ShouldNotCache() throws Throwable {
@@ -143,7 +143,7 @@ class CoalescePutAspectTest {
 
 
     /**
-     * Setup join point with default values.
+     * Prepara el punto de unión con valores predeterminados.
      */
     private void setupJoinPoint() {
         when(joinPoint.getSignature()).thenReturn(methodSignature);
@@ -153,14 +153,14 @@ class CoalescePutAspectTest {
     }
 
     /**
-     * Creates mock put annotation.
+     * Crea una anotación de guardado simulada.
      *
-     * @param value the value
-     * @param key the key
-     * @param ttl the ttl
-     * @param condition the condition
-     * @param unless the unless
-     * @return the coalesce put
+     * @param value valor
+     * @param key clave
+     * @param ttl tiempo de vida
+     * @param condition expresión de la condición
+     * @param unless condición que evita guardar
+     * @return anotación de guardado con coalescencia
      */
     private CoalescePut createMockPut(
             String value, String key, long ttl, String condition, String unless) {
@@ -174,9 +174,9 @@ class CoalescePutAspectTest {
     }
 
     /**
-     * Gets the test method.
+     * Obtiene método de prueba.
      *
-     * @return the test method
+     * @return método de prueba
      */
     private Method getTestMethod() {
         try {

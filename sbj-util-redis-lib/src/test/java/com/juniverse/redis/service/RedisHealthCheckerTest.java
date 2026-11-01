@@ -21,39 +21,39 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 /**
- * Unit tests for RedisHealthChecker.
+ * Pruebas unitarias de RedisHealthChecker.
  *
  * @author ajuar
  */
 @ExtendWith(MockitoExtension.class)
 class RedisHealthCheckerTest {
 
-    /** The connection factory. */
+    /** Fábrica de conexiones simulada. */
     @Mock
     private RedisConnectionFactory connectionFactory;
 
-    /** The connection. */
+    /** Conexión simulada. */
     @Mock
     private RedisConnection connection;
 
-    /** The redis async commands. */
+    /** Comandos asíncronos de Redis simulados. */
     @Mock
     private RedisAsyncCommands<Object, Object> asyncCommands;
 
-    /** The redis future. */
+    /** Futuro de Redis. */
     @Mock
     private RedisFuture<String> redisFuture;
 
-    /** The redis template. */
+    /** Plantilla de Redis. */
     @Mock
     private RedisTemplate<String, Object> redisTemplate;
 
-    /** The health checker. */
+    /** Verificador de salud bajo prueba. */
     @InjectMocks
     private RedisHealthChecker healthChecker;
 
     /**
-     * Sets the up.
+     * Prepara la prueba.
      */
     @BeforeEach
     void setUp() {
@@ -62,9 +62,9 @@ class RedisHealthCheckerTest {
     }
 
     /**
-     * Creates the mock redis info string.
+     * Crea cadena de información de Redis de simulado.
      *
-     * @return the info string
+     * @return cadena de información
      */
     private String createMockRedisInfoString() {
         return """
@@ -93,7 +93,7 @@ class RedisHealthCheckerTest {
 
 
     /**
-     * Checks if is redis active when redis is up should return connected true.
+     * Con Redis activo debe indicar que está conectado.
      */
     @Test
     void isRedisActive_WhenRedisIsUp_ShouldReturnConnectedTrue() throws Exception {
@@ -115,7 +115,7 @@ class RedisHealthCheckerTest {
     }
 
     /**
-     * Checks if is redis active when redis is up should measure response time.
+     * Con Redis activo debe medir el tiempo de respuesta.
      */
     @Test
     void isRedisActive_WhenRedisIsUp_ShouldMeasureResponseTime() throws Exception {
@@ -132,7 +132,7 @@ class RedisHealthCheckerTest {
     }
 
     /**
-     * Checks if is redis active when ping succeeds should return success message.
+     * Cuando el PING tiene éxito debe devolver un mensaje de éxito.
      */
     @Test
     void isRedisActive_WhenPingSucceeds_ShouldReturnSuccessMessage() throws Exception {
@@ -153,7 +153,7 @@ class RedisHealthCheckerTest {
     }
 
     /**
-     * Checks if is redis active when redis template is null should return not connected.
+     * Con la plantilla de Redis nula debe indicar que no está conectado.
      */
     @Test
     void isRedisActive_WhenRedisTemplateIsNull_ShouldReturnNotConnected() {
@@ -167,7 +167,7 @@ class RedisHealthCheckerTest {
     }
 
     /**
-     * Checks if is redis active when connection factory is null should return not connected.
+     * Con la fábrica de conexiones nula debe indicar que no está conectado.
      */
     @Test
     void isRedisActive_WhenConnectionFactoryIsNull_ShouldReturnNotConnected() {
@@ -181,7 +181,7 @@ class RedisHealthCheckerTest {
     }
 
     /**
-     * Checks if is redis active when redis is down should return connected false.
+     * Con Redis caído debe indicar que no está conectado.
      */
     @SuppressWarnings("serial")
 	@Test
@@ -195,7 +195,7 @@ class RedisHealthCheckerTest {
     }
 
     /**
-     * Checks if is redis active when redis is down should include error message.
+     * Con Redis caído debe incluir el mensaje de error.
      */
     @SuppressWarnings("serial")
 	@Test
@@ -212,7 +212,7 @@ class RedisHealthCheckerTest {
     }
 
     /**
-     * Checks if is redis active when exception thrown should return zero response time.
+     * Cuando se lanza una excepción debe devolver tiempo de respuesta cero.
      */
     @SuppressWarnings("serial")
 	@Test
@@ -227,7 +227,7 @@ class RedisHealthCheckerTest {
     }
 
     /**
-     * Checks if is redis active when ping returns non pong should return not connected.
+     * Cuando el PING devuelve algo distinto de PONG debe indicar que no está conectado.
      */
     @Test
     void isRedisActive_WhenPingReturnsNonPong_ShouldReturnNotConnected() throws Exception {
@@ -244,7 +244,7 @@ class RedisHealthCheckerTest {
     }
 
     /**
-     * Checks if is redis active when ping returns null should handle gracefully.
+     * Cuando el PING devuelve nulo debe manejarlo sin fallar.
      */
     @Test
     void isRedisActive_WhenPingReturnsNull_ShouldHandleGracefully() throws Exception {
@@ -260,7 +260,7 @@ class RedisHealthCheckerTest {
     }
 
     /**
-     * Checks if is redis active when ping returns empty string should handle gracefully.
+     * Cuando el PING devuelve una cadena vacía debe manejarlo sin fallar.
      */
     @Test
     void isRedisActive_WhenPingReturnsEmptyString_ShouldHandleGracefully() throws Exception {
@@ -276,7 +276,7 @@ class RedisHealthCheckerTest {
     }
 
     /**
-     * Checks if is redis active when ping returns pong lowercase should return connected.
+     * Cuando el PING devuelve pong en minúsculas debe indicar que está conectado.
      */
     @Test
     void isRedisActive_WhenPingReturnsPongLowercase_ShouldReturnConnected() throws Exception {
@@ -292,7 +292,7 @@ class RedisHealthCheckerTest {
     }
 
     /**
-     * Checks if is redis active when redis info has invalid memory values should handle gracefully.
+     * Cuando INFO trae valores de memoria inválidos debe manejarlo sin fallar.
      */
     @Test
     void isRedisActive_WhenRedisInfoHasInvalidMemoryValues_ShouldHandleGracefully() throws Exception {
@@ -323,7 +323,7 @@ class RedisHealthCheckerTest {
     }
 
     /**
-     * Checks if is redis active when redis info has malformed lines should handle gracefully.
+     * Cuando INFO trae líneas mal formadas debe manejarlo sin fallar.
      */
     @Test
     void isRedisActive_WhenRedisInfoHasMalformedLines_ShouldHandleGracefully() throws Exception {
@@ -357,7 +357,7 @@ class RedisHealthCheckerTest {
     }
 
     /**
-     * Checks if is redis active when redis info is empty string should handle gracefully.
+     * Cuando INFO está vacío debe manejarlo sin fallar.
      */
     @Test
     void isRedisActive_WhenRedisInfoIsEmptyString_ShouldHandleGracefully() throws Exception {
@@ -377,7 +377,7 @@ class RedisHealthCheckerTest {
     }
 
     /**
-     * Checks if is redis active when native connection info times out should handle gracefully.
+     * Cuando INFO con la conexión nativa agota el tiempo debe manejarlo sin fallar.
      */
     @Test
     void isRedisActive_WhenNativeConnectionInfoTimesOut_ShouldHandleGracefully() throws Exception {
@@ -396,8 +396,8 @@ class RedisHealthCheckerTest {
     }
 
     /**
-     * Checks if is redis active when native connection info throws execution exception
-     * should handle gracefully.
+     * Cuando INFO con la conexión nativa lanza ExecutionException
+     * debe manejarlo sin fallar.
      */
     @Test
     void isRedisActive_WhenNativeConnectionInfoThrowsExecutionException_ShouldHandleGracefully()

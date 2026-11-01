@@ -6,8 +6,6 @@ import lombok.Getter;
 import lombok.ToString;
 
 /**
- * The Class HostsDto.
- *
  * @author ajuar
  */
 @Builder
@@ -16,9 +14,9 @@ import lombok.ToString;
 @EqualsAndHashCode
 public class HostsDto {
 
-    /** The host name. */
+    /** Nombre de servidor. */
     private String hostName;
 
-    /** The port. */
+    /** Puerto. */
     private int port;
 }

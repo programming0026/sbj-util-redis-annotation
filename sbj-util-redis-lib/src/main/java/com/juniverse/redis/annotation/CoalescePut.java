@@ -8,8 +8,6 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * The Interface CoalescePut.
- *
  * @author ajuar
  */
 @Target(ElementType.METHOD)
@@ -21,35 +19,35 @@ public @interface CoalescePut {
     /**
      * Prefijo para la clave de caché.
      *
-     * @return the string
+     * @return cadena
      */
     String value() default "";
 
     /**
      * Expresión SpEL para generar la clave dinámica.
      *
-     * @return the string
+     * @return cadena
      */
     String key() default "";
 
     /**
      * Tiempo de expiración en segundos.
      *
-     * @return the long
+     * @return valor entero largo
      */
     long ttl() default 300;
 
     /**
      * Condición SpEL para ejecutar el cacheo.
      *
-     * @return the string
+     * @return cadena
      */
     String condition() default "";
 
     /**
      * Condición SpEL para decidir si cachear el resultado.
      *
-     * @return the string
+     * @return cadena
      */
     String unless() default "";
 }

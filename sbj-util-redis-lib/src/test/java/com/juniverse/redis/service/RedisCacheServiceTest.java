@@ -20,28 +20,28 @@ import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
 /**
- * Unit tests for RedisCacheService.
+ * Pruebas unitarias de RedisCacheService.
  *
  * @author ajuar
  */
 @ExtendWith(MockitoExtension.class)
 class RedisCacheServiceTest {
 
-    /** The redis template. */
+    /** Plantilla de Redis. */
     @Mock
     private RedisTemplate<String, Object> redisTemplate;
 
-    /** The value operations. */
+    /** Operaciones de valores simuladas. */
     @Mock
     private ValueOperations<String, Object> valueOperations;
 
-    /** The cache service. */
+    /** Servicio de caché. */
     @InjectMocks
     private RedisCacheService cacheService;
 
    
     /**
-     * Cacheable with null cache name should throw illegal state exception.
+     * Obtener de caché con nombre de caché nulo debe lanzar IllegalStateException.
      */
     @Test
     void cacheable_WithNullCacheName_ShouldThrowNullPointerException() {
@@ -55,7 +55,7 @@ class RedisCacheServiceTest {
     }
 
     /**
-     * Cacheable with null key should throw illegal state exception.
+     * Obtener de caché con clave nula debe lanzar IllegalStateException.
      */
     @Test
     void cacheable_WithNullKey_ShouldThrowNullPointerException() {
@@ -69,7 +69,7 @@ class RedisCacheServiceTest {
     }
 
     /**
-     * Cacheable with null loader should throw illegal state exception.
+     * Obtener de caché con cargador nulo debe lanzar IllegalStateException.
      */
     @Test
     void cacheable_WithNullLoader_ShouldThrowNullPointerException() {
@@ -83,7 +83,7 @@ class RedisCacheServiceTest {
     }
 
     /**
-     * Cacheable with null ttl should throw illegal state exception.
+     * Obtener de caché con TTL nulo debe lanzar IllegalStateException.
      */
     @Test
     void cacheable_WithNullTtl_ShouldThrowNullPointerException() {
@@ -97,7 +97,7 @@ class RedisCacheServiceTest {
     }
 
     /**
-     * Cacheable when cache hit should return cached value.
+     * Obtener de caché ante un acierto debe devolver el valor en caché.
      */
     @Test
     void cacheable_WhenCacheHit_ShouldReturnCachedValue() {
@@ -118,7 +118,7 @@ class RedisCacheServiceTest {
     }
 
     /**
-     * Cacheable when cache miss should load and cache.
+     * Obtener de caché ante un fallo debe cargar y guardar el valor.
      */
     @Test
     void cacheable_WhenCacheMiss_ShouldLoadAndCache() {
@@ -140,7 +140,7 @@ class RedisCacheServiceTest {
     }
 
     /**
-     * Cacheable when loader returns null should not cache.
+     * Obtener de caché cuando el cargador devuelve nulo no debe guardar en caché.
      */
     @Test
     void cacheable_WhenLoaderReturnsNull_ShouldNotCache() {
@@ -160,7 +160,7 @@ class RedisCacheServiceTest {
     }
 
     /**
-     * Cacheable with default ttl should use 10 minutes.
+     * Obtener de caché con TTL predeterminado debe usar 10 minutos.
      */
     @Test
     void cacheable_WithDefaultTtl_ShouldUse10Minutes() {
@@ -179,7 +179,7 @@ class RedisCacheServiceTest {
     }
 
     /**
-     * Cacheable when redis throws exception should fallback to loader.
+     * Obtener de caché cuando Redis lanza una excepción debe recurrir al cargador.
      */
     @Test
     void cacheable_WhenRedisThrowsException_ShouldFallbackToLoader() {
@@ -198,7 +198,7 @@ class RedisCacheServiceTest {
     }
 
     /**
-     * Cacheable with result with null cache name should throw illegal state exception.
+     * Obtener con resultado y nombre de caché nulo debe lanzar IllegalStateException.
      */
     @Test
     void cacheableWithResult_WithNullCacheName_ShouldThrowIllegalStateException() {
@@ -212,7 +212,7 @@ class RedisCacheServiceTest {
     }
 
     /**
-     * Cacheable with result with null key should throw illegal state exception.
+     * Obtener con resultado y clave nula debe lanzar IllegalStateException.
      */
     @Test
     void cacheableWithResult_WithNullKey_ShouldThrowIllegalStateException() {
@@ -226,7 +226,7 @@ class RedisCacheServiceTest {
     }
 
     /**
-     * Cacheable with result with null loader should throw illegal state exception.
+     * Obtener con resultado y cargador nulo debe lanzar IllegalStateException.
      */
     @Test
     void cacheableWithResult_WithNullLoader_ShouldThrowIllegalStateException() {
@@ -240,7 +240,7 @@ class RedisCacheServiceTest {
     }
 
     /**
-     * Cacheable with result with null ttl should throw illegal state exception.
+     * Obtener con resultado y TTL nulo debe lanzar IllegalStateException.
      */
     @Test
     void cacheableWithResult_WithNullTtl_ShouldThrowIllegalStateException() {
@@ -254,7 +254,7 @@ class RedisCacheServiceTest {
     }
 
     /**
-     * Cacheable with result when cache hit should return cache hit result.
+     * Obtener con resultado ante un acierto debe devolver un resultado de acierto.
      */
     @Test
     void cacheableWithResult_WhenCacheHit_ShouldReturnCacheHitResult() {
@@ -277,7 +277,7 @@ class RedisCacheServiceTest {
     }
 
     /**
-     * Cacheable with result when cache miss should return cache miss result.
+     * Obtener con resultado ante un fallo debe devolver un resultado de fallo.
      */
     @Test
     void cacheableWithResult_WhenCacheMiss_ShouldReturnCacheMissResult() {
@@ -300,7 +300,7 @@ class RedisCacheServiceTest {
     }
 
     /**
-     * Cacheable with result when loader returns null should not cache.
+     * Obtener con resultado cuando el cargador devuelve nulo no debe guardar en caché.
      */
     @Test
     void cacheableWithResult_WhenLoaderReturnsNull_ShouldNotCache() {
@@ -321,7 +321,7 @@ class RedisCacheServiceTest {
     }
 
     /**
-     * Cacheable with result with default ttl should use 10 minutes.
+     * Obtener con resultado y TTL predeterminado debe usar 10 minutos.
      */
     @Test
     void cacheableWithResult_WithDefaultTtl_ShouldUse10Minutes() {
@@ -341,7 +341,7 @@ class RedisCacheServiceTest {
     }
 
     /**
-     * Cacheable with result when redis throws exception should fallback to loader.
+     * Obtener con resultado cuando Redis lanza una excepción debe recurrir al cargador.
      */
     @Test
     void cacheableWithResult_WhenRedisThrowsException_ShouldFallbackToLoader() {
@@ -363,7 +363,7 @@ class RedisCacheServiceTest {
 
 
     /**
-     * Cache put should always execute loader and update cache.
+     * Guardar en caché siempre debe ejecutar el cargador y actualizar la caché.
      */
     @Test
     void cachePut_ShouldAlwaysExecuteLoaderAndUpdateCache() {
@@ -383,7 +383,7 @@ class RedisCacheServiceTest {
     }
 
     /**
-     * Cache put when result is null should evict key.
+     * Guardar en caché cuando el resultado es nulo debe invalidar la clave.
      */
     @Test
     void cachePut_WhenResultIsNull_ShouldEvictKey() {
@@ -402,7 +402,7 @@ class RedisCacheServiceTest {
     }
 
     /**
-     * Cache put with default ttl should use 10 minutes.
+     * Guardar en caché con TTL predeterminado debe usar 10 minutos.
      */
     @Test
     void cachePut_WithDefaultTtl_ShouldUse10Minutes() {
@@ -420,7 +420,7 @@ class RedisCacheServiceTest {
     }
 
     /**
-     * Cache put when redis throws exception should still return loader result.
+     * Guardar en caché cuando Redis lanza una excepción debe devolver igualmente el resultado del cargador.
      */
     @Test
     void cachePut_WhenRedisThrowsException_ShouldStillReturnLoaderResult() {
@@ -439,7 +439,7 @@ class RedisCacheServiceTest {
     }
 
     /**
-     * Cache evict should delete key.
+     * Invalidar la caché debe eliminar la clave.
      */
     @Test
     void cacheEvict_ShouldDeleteKey() {
@@ -454,7 +454,7 @@ class RedisCacheServiceTest {
     }
 
     /**
-     * Cache evict when key does not exist should not throw exception.
+     * Invalidar cuando la clave no existe no debe lanzar excepción.
      */
     @Test
     void cacheEvict_WhenKeyDoesNotExist_ShouldNotThrowException() {
@@ -468,7 +468,7 @@ class RedisCacheServiceTest {
     }
 
     /**
-     * Cache evict when redis throws exception should not throw exception.
+     * Invalidar cuando Redis lanza una excepción no debe propagarla.
      */
     @Test
     void cacheEvict_WhenRedisThrowsException_ShouldNotThrowException() {
@@ -481,7 +481,7 @@ class RedisCacheServiceTest {
     }
 
     /**
-     * Cache evict all should execute redis callback.
+     * Invalidar todo debe ejecutar la retrollamada de Redis.
      */
     @SuppressWarnings("unchecked")
 	@Test
@@ -496,7 +496,7 @@ class RedisCacheServiceTest {
     }
 
     /**
-     * Cache evict all when redis throws exception should not throw exception.
+     * Invalidar todo cuando Redis lanza una excepción no debe propagarla.
      */
     @SuppressWarnings("unchecked")
 	@Test
@@ -511,7 +511,7 @@ class RedisCacheServiceTest {
 
 
     /**
-     * Cache evict multiple should delete multiple keys.
+     * Invalidar varias claves debe eliminarlas todas.
      */
     @Test
     void cacheEvictMultiple_ShouldDeleteMultipleKeys() {
@@ -527,7 +527,7 @@ class RedisCacheServiceTest {
 
 
     /**
-     * Cache evict by pattern should execute redis callback.
+     * Invalidar por patrón debe ejecutar la retrollamada de Redis.
      */
     @SuppressWarnings("unchecked")
 	@Test
@@ -542,7 +542,7 @@ class RedisCacheServiceTest {
     }
 
     /**
-     * Cache evict by pattern when redis throws exception should not throw exception.
+     * Invalidar por patrón cuando Redis lanza una excepción no debe propagarla.
      */
     @SuppressWarnings("unchecked")
 	@Test
@@ -556,7 +556,7 @@ class RedisCacheServiceTest {
     }
 
     /**
-     * Cache evict by pattern with complex pattern should execute redis callback.
+     * Invalidar por un patrón complejo debe ejecutar la retrollamada de Redis.
      */
     @SuppressWarnings("unchecked")
 	@Test
@@ -571,7 +571,7 @@ class RedisCacheServiceTest {
     }
 
     /**
-     * Exists when key exists should return true.
+     * Existe cuando la clave existe debe devolver verdadero.
      */
     @Test
     void exists_WhenKeyExists_ShouldReturnTrue() {
@@ -587,7 +587,7 @@ class RedisCacheServiceTest {
     }
 
     /**
-     * Exists when key does not exist should return false.
+     * Existe cuando la clave no existe debe devolver falso.
      */
     @Test
     void exists_WhenKeyDoesNotExist_ShouldReturnFalse() {
@@ -603,7 +603,7 @@ class RedisCacheServiceTest {
     }
 
     /**
-     * Exists when redis throws exception should return false.
+     * Existe cuando Redis lanza una excepción debe devolver falso.
      */
     @Test
     void exists_WhenRedisThrowsException_ShouldReturnFalse() {
@@ -619,7 +619,7 @@ class RedisCacheServiceTest {
 
 
     /**
-     * Cacheable with empty cache name should throw illegal state exception.
+     * Obtener de caché con nombre de caché vacío debe lanzar IllegalStateException.
      */
     @Test
     void cacheable_WithEmptyCacheName_ShouldThrowException() {
@@ -633,7 +633,7 @@ class RedisCacheServiceTest {
     }
 
     /**
-     * Cacheable with empty key should throw illegal state exception.
+     * Obtener de caché con clave vacía debe lanzar IllegalStateException.
      */
     @Test
     void cacheable_WithEmptyKey_ShouldThrowException() {
@@ -647,7 +647,7 @@ class RedisCacheServiceTest {
     }
 
     /**
-     * Cacheable with negative TT L should throw exception.
+     * Obtener de caché con TTL negativo debe lanzar una excepción.
      */
     @Test
     void cacheable_WithNegativeTTL_ShouldThrowException() {
@@ -662,15 +662,15 @@ class RedisCacheServiceTest {
 
     
     /**
-     * Gets the TT L should return remaining seconds.
+     * Obtener el TTL debe devolver los segundos restantes.
      *
-     * @return the TT L should return remaining seconds
+     * @return segundos restantes del TTL
      */
     @Test
     void getTTL_ShouldReturnRemainingSeconds() {
         String cacheName = "users";
         String key = "user1";
-        Long expectedTtl = 600L; // 10 minutes in seconds
+        Long expectedTtl = 600L; // 10 minutos en segundos
 
         when(redisTemplate.getExpire("users:user1", TimeUnit.SECONDS)).thenReturn(expectedTtl);
 
@@ -681,9 +681,9 @@ class RedisCacheServiceTest {
     }
 
     /**
-     * Gets the TT L when key does not exist should return negative.
+     * Obtener el TTL cuando la clave no existe debe devolver un valor negativo.
      *
-     * @return the TT L when key does not exist should return negative
+     * @return valor negativo si la clave no existe
      */
     @Test
     void getTTL_WhenKeyDoesNotExist_ShouldReturnNegative() {
@@ -698,9 +698,9 @@ class RedisCacheServiceTest {
     }
 
     /**
-     * Gets the TT L when redis throws exception should return null.
+     * Obtener el TTL cuando Redis lanza una excepción debe devolver nulo.
      *
-     * @return the TT L when redis throws exception should return null
+     * @return nulo si Redis lanza una excepción
      */
     @Test
     void getTTL_WhenRedisThrowsException_ShouldReturnNull() {
@@ -717,7 +717,7 @@ class RedisCacheServiceTest {
 
 
     /**
-     * Cacheable with cache name containing colon should throw exception.
+     * Obtener de caché con un nombre que contiene dos puntos debe lanzar una excepción.
      */
     @Test
     void cacheable_WithCacheNameContainingColon_ShouldThrowException() {
@@ -732,7 +732,7 @@ class RedisCacheServiceTest {
     }
 
     /**
-     * Cacheable with cache name containing asterisk should throw exception.
+     * Obtener de caché con un nombre que contiene asterisco debe lanzar una excepción.
      */
     @Test
     void cacheable_WithCacheNameContainingAsterisk_ShouldThrowException() {
@@ -747,7 +747,7 @@ class RedisCacheServiceTest {
     }
 
     /**
-     * Cacheable with key containing asterisk should throw exception.
+     * Obtener de caché con una clave que contiene asterisco debe lanzar una excepción.
      */
     @Test
     void cacheable_WithKeyContainingAsterisk_ShouldThrowException() {
@@ -762,7 +762,7 @@ class RedisCacheServiceTest {
     }
 
     /**
-     * Cacheable with zero TT L should throw exception.
+     * Obtener de caché con TTL cero debe lanzar una excepción.
      */
     @Test
     void cacheable_WithZeroTTL_ShouldThrowException() {
@@ -778,7 +778,7 @@ class RedisCacheServiceTest {
 
 
     /**
-     * Cache evict multiple when redis throws exception should not throw exception.
+     * Invalidar varias claves cuando Redis lanza una excepción no debe propagarla.
      */
     @Test
     void cacheEvictMultiple_WhenRedisThrowsException_ShouldNotThrowException() {
@@ -791,7 +791,7 @@ class RedisCacheServiceTest {
     }
 
     /**
-     * Cache evict multiple with empty keys should not call redis.
+     * Invalidar varias claves con lista vacía no debe llamar a Redis.
      */
     @Test
     void cacheEvictMultiple_WithEmptyKeys_ShouldNotCallRedis() {
@@ -804,7 +804,7 @@ class RedisCacheServiceTest {
     }
 
     /**
-     * Cache evict multiple with null keys should not call redis.
+     * Invalidar varias claves con lista nula no debe llamar a Redis.
      */
     @Test
     void cacheEvictMultiple_WithNullKeys_ShouldNotCallRedis() {
@@ -816,7 +816,7 @@ class RedisCacheServiceTest {
     }
 
     /**
-     * Cache put with null cache name should throw exception.
+     * Guardar en caché con nombre de caché nulo debe lanzar una excepción.
      */
     @Test
     void cachePut_WithNullCacheName_ShouldThrowException() {
@@ -826,7 +826,7 @@ class RedisCacheServiceTest {
     }
 
     /**
-     * Cache put with null key should throw exception.
+     * Guardar en caché con clave nula debe lanzar una excepción.
      */
     @Test
     void cachePut_WithNullKey_ShouldThrowException() {
@@ -836,7 +836,7 @@ class RedisCacheServiceTest {
     }
 
     /**
-     * Cache put with null loader should throw exception.
+     * Guardar en caché con cargador nulo debe lanzar una excepción.
      */
     @Test
     void cachePut_WithNullLoader_ShouldThrowException() {
@@ -846,7 +846,7 @@ class RedisCacheServiceTest {
     }
 
     /**
-     * Cache evict with null cache name should throw exception.
+     * Invalidar con nombre de caché nulo debe lanzar una excepción.
      */
     @Test
     void cacheEvict_WithNullCacheName_ShouldThrowException() {
@@ -856,7 +856,7 @@ class RedisCacheServiceTest {
     }
 
     /**
-     * Cache evict with null key should throw exception.
+     * Invalidar con clave nula debe lanzar una excepción.
      */
     @Test
     void cacheEvict_WithNullKey_ShouldThrowException() {
@@ -866,7 +866,7 @@ class RedisCacheServiceTest {
     }
 
     /**
-     * Cache evict all with null cache name should throw exception.
+     * Invalidar todo con nombre de caché nulo debe lanzar una excepción.
      */
     @Test
     void cacheEvictAll_WithNullCacheName_ShouldThrowException() {
@@ -876,7 +876,7 @@ class RedisCacheServiceTest {
     }
 
     /**
-     * Cache evict all with empty cache name should throw exception.
+     * Invalidar todo con nombre de caché vacío debe lanzar una excepción.
      */
     @Test
     void cacheEvictAll_WithEmptyCacheName_ShouldThrowException() {
@@ -886,7 +886,7 @@ class RedisCacheServiceTest {
     }
 
     /**
-     * Cache evict multiple with null cache name should throw exception.
+     * Invalidar varias claves con nombre de caché nulo debe lanzar una excepción.
      */
     @Test
     void cacheEvictMultiple_WithNullCacheName_ShouldThrowException() {
@@ -896,7 +896,7 @@ class RedisCacheServiceTest {
     }
 
     /**
-     * Cache evict multiple with null element in keys array should throw exception.
+     * Invalidar varias claves con un elemento nulo en el arreglo debe lanzar una excepción.
      */
     @Test
     void cacheEvictMultiple_WithNullElementInArray_ShouldThrowException() {
@@ -906,7 +906,7 @@ class RedisCacheServiceTest {
     }
 
     /**
-     * Cache evict by pattern with null pattern should throw exception.
+     * Invalidar por patrón con patrón nulo debe lanzar una excepción.
      */
     @Test
     void cacheEvictByPattern_WithNullPattern_ShouldThrowException() {
@@ -916,7 +916,7 @@ class RedisCacheServiceTest {
     }
 
     /**
-     * Cache evict by pattern with empty pattern should throw exception.
+     * Invalidar por patrón con patrón vacío debe lanzar una excepción.
      */
     @Test
     void cacheEvictByPattern_WithEmptyPattern_ShouldThrowException() {
@@ -926,7 +926,7 @@ class RedisCacheServiceTest {
     }
 
     /**
-     * Exists with null cache name should throw exception.
+     * Existe con nombre de caché nulo debe lanzar una excepción.
      */
     @Test
     void exists_WithNullCacheName_ShouldThrowException() {
@@ -936,7 +936,7 @@ class RedisCacheServiceTest {
     }
 
     /**
-     * Exists with null key should throw exception.
+     * Existe con clave nula debe lanzar una excepción.
      */
     @Test
     void exists_WithNullKey_ShouldThrowException() {
@@ -946,7 +946,7 @@ class RedisCacheServiceTest {
     }
 
     /**
-     * Get TT L with null cache name should throw exception.
+     * Obtener el TTL con nombre de caché nulo debe lanzar una excepción.
      */
     @Test
     void getTTL_WithNullCacheName_ShouldThrowException() {
@@ -956,7 +956,7 @@ class RedisCacheServiceTest {
     }
 
     /**
-     * Get TT L with null key should throw exception.
+     * Obtener el TTL con clave nula debe lanzar una excepción.
      */
     @Test
     void getTTL_WithNullKey_ShouldThrowException() {

@@ -14,9 +14,9 @@ public final class Validator {
 
     }
     /**
-     * Validate hosts.
+     * Valida los servidores.
      *
-     * @param hosts the hosts
+     * @param hosts servidores
      */
     public static void validateHosts(List<HostsDto> hosts) {
         if (hosts == null || hosts.isEmpty()) {
@@ -35,10 +35,10 @@ public final class Validator {
     }
 
     /**
-     * Validate timeout.
+     * Valida tiempo de espera.
      *
-     * @param connectionTimeout the connection timeout
-     * @param readTimeout       the read timeout
+     * @param connectionTimeout tiempo de espera de conexión
+     * @param readTimeout       tiempo de espera de lectura
      */
     public static void validateTimeout(Long connectionTimeout, Long readTimeout) {
 
@@ -58,9 +58,9 @@ public final class Validator {
     }
 
     /**
-     * Validate standalone hosts.
+     * Valida los servidores del modo standalone.
      *
-     * @param hosts the hosts
+     * @param hosts servidores
      */
     public static void validateStandaloneHosts(List<HostsDto> hosts) {
         validateHosts(hosts);
@@ -72,9 +72,9 @@ public final class Validator {
     }
 
     /**
-     * Validate cluster hosts.
+     * Valida los servidores del modo clúster.
      *
-     * @param hosts the hosts
+     * @param hosts servidores
      */
     public static void validateClusterHosts(List<HostsDto> hosts) {
         validateHosts(hosts);
@@ -87,10 +87,10 @@ public final class Validator {
     }
 
     /**
-     * Validate sentinel hosts.
+     * Valida los servidores del modo sentinel.
      *
-     * @param hosts the hosts
-     * @param sentinelMaster the sentinel master
+     * @param hosts servidores
+     * @param sentinelMaster nombre del maestro de sentinel
      */
     public static void validateSentinelHosts(List<HostsDto> hosts, String sentinelMaster) {
         validateHosts(hosts);
@@ -107,11 +107,11 @@ public final class Validator {
         );
     }
     /**
-     * Validate required fields.
-     * @param cacheName The cacheName
-     * @param key The key
-     * @param loader The object
-     * @param <T> The generic type
+     * Valida los campos obligatorios.
+     * @param cacheName nombre de la caché
+     * @param key clave
+     * @param loader objeto
+     * @param <T> tipo genérico
      */
     public static <T> void validateRequiredFields(String cacheName, String key, Supplier<T> loader) {
         if (!StringUtils.hasText(cacheName)) {
@@ -126,10 +126,10 @@ public final class Validator {
     }
 
     /**
-     * Validate ttl.
+     * Valida tiempo de vida.
      *
-     * @param cacheName The cache name
-     * @param ttl       The ttl
+     * @param cacheName nombre de caché
+     * @param ttl       tiempo de vida
      */
     public static void validateTTL(String cacheName, Long ttl) {
         if (!StringUtils.hasText(cacheName)) {
@@ -141,13 +141,13 @@ public final class Validator {
         }
     }
     /**
-     * Validate cacheable.
+     * Valida los parámetros de la operación de caché.
      *
-     * @param <T> the generic type
-     * @param cacheName the cache name
-     * @param key the key
-     * @param loader the loader
-     * @param ttl the ttl
+     * @param <T> tipo genérico
+     * @param cacheName nombre de caché
+     * @param key clave
+     * @param loader función que carga el valor
+     * @param ttl tiempo de vida
      */
     public static <T> void validateCacheable(String cacheName, String key, Supplier<T> loader, Duration ttl) {
         if (ttl == null) {
@@ -164,10 +164,10 @@ public final class Validator {
     }
 
     /**
-     * Validate cache evict parameters.
+     * Valida los parámetros de invalidación.
      *
-     * @param cacheName the cache name
-     * @param key the key
+     * @param cacheName nombre de caché
+     * @param key clave
      */
     public static void validateCacheEvict(String cacheName, String key) {
         if (!StringUtils.hasText(cacheName)) {
@@ -180,9 +180,9 @@ public final class Validator {
     }
 
     /**
-     * Validate cache name for evict all operations.
+     * Valida el nombre de la caché para invalidar todo.
      *
-     * @param cacheName the cache name
+     * @param cacheName nombre de caché
      */
     public static void validateCacheEvict(String cacheName) {
         if (!StringUtils.hasText(cacheName)) {
@@ -196,9 +196,9 @@ public final class Validator {
     }
 
     /**
-     * Validate pattern for evict by pattern operations.
+     * Valida el patrón para invalidar por patrón.
      *
-     * @param pattern the pattern
+     * @param pattern patrón de claves
      */
     public static void validatePattern(String pattern) {
         if (!StringUtils.hasText(pattern)) {
@@ -207,10 +207,10 @@ public final class Validator {
     }
 
     /**
-     * Validate key format.
+     * Valida formato de clave.
      *
-     * @param cacheName the cache name
-     * @param key the key
+     * @param cacheName nombre de caché
+     * @param key clave
      */
     private static void validateKeyFormat(String cacheName, String key) {
         if (cacheName.contains(":") || cacheName.contains("*")) {

@@ -8,8 +8,6 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * The Interface CoalesceEvicts.
- *
  * @author ajuar
  */
 @Target(ElementType.METHOD)
@@ -18,9 +16,9 @@ import java.lang.annotation.Target;
 public @interface CoalesceEvicts {
 
     /**
-     * Value.
+     * Valor.
      *
-     * @return the coalesce evict[]
+     * @return anotaciones de invalidación con coalescencia
      */
     CoalesceEvict[] value();
 }

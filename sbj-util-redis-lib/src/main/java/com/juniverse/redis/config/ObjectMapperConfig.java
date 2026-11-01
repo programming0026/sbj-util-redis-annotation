@@ -4,16 +4,14 @@ import tools.jackson.databind.ObjectMapper;
 
 
 /**
- * The Interface ObjectMapperConfig.
- *
  * @author ajuar
  */
 public interface ObjectMapperConfig {
 
     /**
-     * Configure.
+     * Configura.
      *
-     * @return the object mapper
+     * @return conversor de objeto
      */
     ObjectMapper configure();
 }
