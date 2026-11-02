@@ -1328,7 +1328,7 @@ limitations under the License.
 ## Autor
 
 **AJuarez** (programming0026)
-- Correo: programacion0026@gmail.com
+- Correo: contacto@javauniverse.dev
 - GitHub: [@programming0026](https://github.com/programming0026)
 
 ## Contribuciones
