@@ -16,8 +16,9 @@
     <url/>
     <licenses>
         <license>
-            <name>Apache License, Version 2.0</name>
-            <url>https://www.apache.org/licenses/LICENSE-2.0</url>
+            <name>Licencia de uso personal de Java Universe 1.0 (LicenseRef-JavaUniverse-Personal-1.0)</name>
+            <distribution>manual</distribution>
+            <comments>No es una licencia de código abierto. Ver el archivo LICENSE en la raíz del repositorio.</comments>
         </license>
     </licenses>
     <developers>

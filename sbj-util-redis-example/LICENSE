@@ -1,21 +1,157 @@
-MIT License
+LICENCIA DE USO PERSONAL DE JAVA UNIVERSE (CONTENIDO PREMIUM)
+Versión 1.0 — 2 de noviembre de 2026
+Identificador: LicenseRef-JavaUniverse-Personal-1.0
 
-Copyright (c) 2026 programming0026
+Copyright (c) 2026 AJuarez (programming0026), que publica como Java Universe
+(https://javauniverse.dev). Todos los derechos reservados.
 
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
+Esta licencia regula el uso del código fuente, la documentación, las imágenes y los demás
+archivos de este repositorio (el «Material»). El Material se entrega únicamente a personas con
+una membresía activa en la página de Patreon de Java Universe.
 
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
+ESTA NO ES UNA LICENCIA DE CÓDIGO ABIERTO. Al descargar, copiar o usar el Material aceptas
+estas condiciones. Si no estás de acuerdo, no lo uses y elimina todas las copias.
 
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
+
+1. DEFINICIONES
+
+- «Licenciante»: AJuarez (programming0026), titular de los derechos de autor sobre el Material,
+  que publica como Java Universe.
+- «Licenciatario» o «tú»: la persona física que recibió el Material por tener una membresía
+  activa y que lo usa en su propio nombre.
+- «Código fuente»: el Material en la forma en que se entrega, incluidas las partes que se
+  copien, modifiquen, adapten o traduzcan a otro lenguaje.
+- «Aplicación»: un programa, servicio o sistema que desarrolles tú y que incorpore el Material,
+  o una parte de él, como un componente más.
+
+
+2. QUÉ PUEDES HACER
+
+El Licenciante te concede una licencia mundial, personal, no exclusiva, intransferible, no
+sublicenciable y gratuita (más allá de tu membresía) para:
+
+2.1. Estudiar el Material y ejecutarlo en tus equipos.
+
+2.2. Copiarlo para tu propio uso, incluidas copias de seguridad, y modificarlo.
+
+2.3. Usarlo dentro de tus propias Aplicaciones, incluidas las comerciales, sin pagar regalías.
+
+2.4. Usarlo en un proyecto que desarrolles para un cliente o para tu empleador, siempre que lo
+     entregues como parte integrada de ese proyecto y no como un componente independiente que
+     el cliente pueda reutilizar, revender o distribuir por separado.
+
+2.5. Distribuir tus Aplicaciones en forma compilada o desplegada (por ejemplo, un archivo
+     ejecutable, una imagen de contenedor sin código fuente o un servicio web), siempre que no
+     permitan obtener el Código fuente del Material.
+
+
+3. QUÉ NO PUEDES HACER
+
+3.1. Publicar o compartir el Código fuente, original o modificado, con terceros: subirlo a
+     repositorios públicos o a repositorios privados a los que accedan otras personas, enviarlo
+     por correo o mensajería, o ponerlo en servicios de descarga, foros, grupos o redes sociales.
+     Puedes compartir fragmentos breves para pedir ayuda o comentar un error, siempre que no
+     permitan reconstruir una parte sustancial del Material.
+
+3.2. Vender, alquilar, prestar, sublicenciar, ceder ni regalar el Código fuente, ni cobrar por
+     darlo a terceros, tal cual o con cambios.
+
+3.3. Convertirlo en un producto: ofrecerlo, solo o junto con otros materiales, como plantilla,
+     «starter kit», biblioteca de código fuente, curso, tutorial, libro o repositorio de
+     ejemplo, aunque cambies los nombres o la estructura.
+
+3.4. Competir con el Licenciante ofreciendo un producto o servicio cuya parte principal sea el
+     Material o una versión muy parecida a él.
+
+3.5. Usar el Material para entrenar, ajustar o evaluar modelos de inteligencia artificial que
+     se distribuyan o se ofrezcan a terceros.
+
+3.6. Quitar, ocultar o alterar los avisos de derechos de autor, de licencia o de autoría del
+     Material.
+
+3.7. Eludir las medidas que limitan el acceso al Material, o dar acceso a él a personas sin una
+     membresía activa.
+
+
+4. SEGURIDAD DE TU COPIA
+
+Eres responsable de que tu copia no llegue a terceros por tu descuido (por ejemplo, un
+repositorio mal configurado o una carpeta compartida). Si descubres que se filtró, retírala en
+cuanto puedas y avisa al Licenciante.
+
+
+5. TITULARIDAD
+
+El Material es y sigue siendo propiedad del Licenciante. Esta licencia no te transfiere ningún
+derecho de propiedad ni te autoriza a usar el nombre «Java Universe» ni sus logotipos. Las partes
+de tus Aplicaciones que escribas por tu cuenta, sin copiar el Material, son tuyas.
+
+
+6. COMPONENTES DE TERCEROS
+
+El Material usa bibliotecas, imágenes de contenedor y herramientas de terceros (por ejemplo,
+Spring, React, Maven o npm), que se rigen por sus propias licencias. Esta licencia no las cubre y
+debes cumplirlas. Si un archivo indica expresamente otra licencia, esa licencia se aplica a ese
+archivo.
+
+
+7. VERSIONES ANTERIORES
+
+Esta licencia se aplica a las versiones del Material publicadas desde el 2 de noviembre de 2026.
+Las copias de versiones anteriores que hayas recibido con otra licencia conservan esa licencia;
+las versiones nuevas que recibas se rigen por esta.
+
+
+8. MEMBRESÍA Y ACTUALIZACIONES
+
+El acceso al Material y a sus actualizaciones depende de que tu membresía siga activa. Si la
+cancelas, conservas el derecho a usar las versiones que ya recibiste, con las condiciones de esta
+licencia, pero no recibes versiones nuevas.
+
+
+9. SIN GARANTÍA
+
+El Material se entrega «TAL CUAL», con fines didácticos, sin garantía de ningún tipo, expresa ni
+implícita, incluidas las de comerciabilidad, idoneidad para un fin concreto y ausencia de errores
+o de infracciones. Revísalo y pruébalo antes de usarlo en producción.
+
+
+10. LIMITACIÓN DE RESPONSABILIDAD
+
+En la medida que permita la ley, el Licenciante no responde de los daños directos, indirectos,
+incidentales o consecuentes derivados del uso del Material o de la imposibilidad de usarlo.
+
+
+11. TERMINACIÓN
+
+Si incumples esta licencia, tus derechos terminan automáticamente y sin aviso, y debes dejar de
+usar el Material y eliminar todas las copias que tengas o controles. Las Aplicaciones que ya
+hayas distribuido de buena fe conforme a la cláusula 2 no se ven afectadas. La terminación no
+limita las acciones que el Licenciante pueda ejercer por el incumplimiento, entre ellas pedir la
+retirada de cualquier copia publicada.
+
+
+12. DISPOSICIONES GENERALES
+
+12.1. Si alguna cláusula no pudiera aplicarse conforme a la ley, se aplicará en la medida
+      permitida y las demás seguirán vigentes.
+
+12.2. Que el Licenciante no exija en algún momento el cumplimiento de una cláusula no significa
+      que renuncie a ella.
+
+12.3. No puedes ceder esta licencia a otra persona sin autorización por escrito del Licenciante.
+
+12.4. Esta licencia se rige por las leyes de los Estados Unidos Mexicanos, en particular la Ley
+      Federal del Derecho de Autor. Para cualquier controversia, las partes se someten a los
+      tribunales competentes de México, sin perjuicio de los derechos irrenunciables que la ley de
+      tu país te reconozca como consumidor.
+
+12.5. Esta licencia está redactada en español. Si existe una traducción, prevalece la versión en
+      español.
+
+
+13. CONTACTO Y OTROS PERMISOS
+
+Para pedir un permiso distinto (por ejemplo, una licencia para un equipo o una empresa, o para
+publicar un fragmento en un curso), escribe por el formulario de contacto de
+https://javauniverse.dev/contacto.
