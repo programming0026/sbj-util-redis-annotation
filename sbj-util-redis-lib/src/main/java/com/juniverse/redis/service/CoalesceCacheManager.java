@@ -33,12 +33,16 @@ public class CoalesceCacheManager {
     /** Plantilla de Redis. */
     private final RedisTemplate<String, Object> redisTemplate;
 
+    /** Prefijo de las claves de los valores en caché. */
     private static final String CACHE_PREFIX = "coalesce:cache:";
 
+    /** Prefijo de las claves del bloqueo que evita calcular el mismo valor dos veces. */
     private static final String LOCK_PREFIX = "coalesce:lock:";
 
+    /** Canal pub/sub por el que se avisa a las demás instancias de que borren una entrada. */
     private static final String EVICT_CHANNEL = "coalesce:evict";
 
+    /** Canal pub/sub por el que se avisa de que un valor ya está calculado. */
     private static final String COALESCE_CHANNEL = "coalesce:ready";
 
     /** Mapa de peticiones pendientes para la espera local. */

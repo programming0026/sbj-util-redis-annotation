@@ -15,7 +15,8 @@ import tools.jackson.databind.jsontype.PolymorphicTypeValidator;
 
 /**
  *
- * <p>Construye un {@link JsonMapper} de Jackson 3. Los mappers de Jackson 3 son inmutables, así que todo se configura en el constructor.
+ * <p>Construye un {@link JsonMapper} de Jackson 3. Los mappers de Jackson 3 son inmutables, así que todo se
+ * configura en el constructor.
  * El soporte de {@code java.time} y {@code Optional} viene integrado en Jackson 3 (no hay módulo que registrar).
  *
  * @author ajuar

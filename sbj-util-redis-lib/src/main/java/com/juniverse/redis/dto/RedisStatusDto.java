@@ -11,6 +11,7 @@ import lombok.Getter;
 @Getter
 public class RedisStatusDto {
 
+    /** Si la conexión con Redis responde. */
     private boolean connected;
     
     /** Tiempo de respuesta. */
