@@ -30,7 +30,7 @@ jobs:
           cache: maven
           cache-dependency-path: sbj-util-redis-*/pom.xml
       - name: Compilar, probar e instalar la librería
-        working-directory: sbj-util-redis-lib
+        working-directory: sbj-util-redis
         run: mvn -B -ntp install
       - name: Compilar y probar el ejemplo (usa la librería instalada)
         working-directory: sbj-util-redis-example
