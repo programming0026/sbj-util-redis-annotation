@@ -4,7 +4,7 @@ Una **librería** para Spring Boot 4 que simplifica el uso de Redis (caché con 
 
 | Módulo | Qué es | Paquete |
 |--------|--------|---------|
-| [`sbj-util-redis`](sbj-util-redis/README.md) | La librería (`com.juniverse.redis:sbj-util-redis:2.0.0`, sobre Jackson 3), con 278 pruebas y diagramas UML | `com.juniverse.redis` |
+| [`sbj-util-redis`](sbj-util-redis/README.md) | La librería (`com.juniverse.redis:sbj-util-redis:2.0.1`, sobre Jackson 3), con 278 pruebas y diagramas UML | `com.juniverse.redis` |
 | [`sbj-util-redis-example`](sbj-util-redis-example/README.md) | API REST de ejemplo (modo Standalone) que usa la librería: productos, usuarios, cuentas y pedidos, con 59 pruebas | `com.juniverse.redis.example` |
 
 ## Cómo se usa
@@ -26,4 +26,4 @@ mvn spring-boot:run
 
 ## Licencia
 
-Este proyecto es **contenido premium** de Java Universe y se entrega a las personas con una membresía activa en Patreon bajo la [Licencia de uso personal de Java Universe](LICENSE), que **no es de código abierto**. Puedes estudiarlo, modificarlo y usarlo en tus propios proyectos, incluidos los comerciales y los que desarrolles para un cliente, pero **no puedes compartir, publicar ni revender el código fuente**. Las condiciones completas están en [LICENSE](LICENSE).
+Este proyecto es **libre y gratuito**, y se publica bajo la [Licencia de uso personal de Java Universe](LICENSE), que **no es de código abierto**. Puedes estudiarlo, modificarlo y usarlo en tus propios proyectos, incluidos los comerciales y los que desarrolles para un cliente, pero **no puedes compartir, publicar ni revender el código fuente**. Las condiciones completas están en [LICENSE](LICENSE).

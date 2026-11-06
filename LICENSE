@@ -1,13 +1,13 @@
-LICENCIA DE USO PERSONAL DE JAVA UNIVERSE (CONTENIDO PREMIUM)
-Versión 1.0 — 2 de noviembre de 2026
-Identificador: LicenseRef-JavaUniverse-Personal-1.0
+LICENCIA DE USO PERSONAL DE JAVA UNIVERSE
+Versión 1.1 — 6 de noviembre de 2026
+Identificador: LicenseRef-JavaUniverse-Personal-1.1
 
 Copyright (c) 2026 AJuarez (programming0026), que publica como Java Universe
 (https://javauniverse.dev). Todos los derechos reservados.
 
 Esta licencia regula el uso del código fuente, la documentación, las imágenes y los demás
-archivos de este repositorio (el «Material»). El Material se entrega únicamente a personas con
-una membresía activa en la página de Patreon de Java Universe.
+archivos de este repositorio (el «Material»). El Material se publica de forma gratuita en el
+repositorio oficial de Java Universe en GitHub (https://github.com/programming0026).
 
 ESTA NO ES UNA LICENCIA DE CÓDIGO ABIERTO. Al descargar, copiar o usar el Material aceptas
 estas condiciones. Si no estás de acuerdo, no lo uses y elimina todas las copias.
@@ -17,8 +17,8 @@ estas condiciones. Si no estás de acuerdo, no lo uses y elimina todas las copia
 
 - «Licenciante»: AJuarez (programming0026), titular de los derechos de autor sobre el Material,
   que publica como Java Universe.
-- «Licenciatario» o «tú»: la persona física que recibió el Material por tener una membresía
-  activa y que lo usa en su propio nombre.
+- «Licenciatario» o «tú»: la persona física que obtiene el Material y lo usa en su propio
+  nombre.
 - «Código fuente»: el Material en la forma en que se entrega, incluidas las partes que se
   copien, modifiquen, adapten o traduzcan a otro lenguaje.
 - «Aplicación»: un programa, servicio o sistema que desarrolles tú y que incorpore el Material,
@@ -28,7 +28,7 @@ estas condiciones. Si no estás de acuerdo, no lo uses y elimina todas las copia
 2. QUÉ PUEDES HACER
 
 El Licenciante te concede una licencia mundial, personal, no exclusiva, intransferible, no
-sublicenciable y gratuita (más allá de tu membresía) para:
+sublicenciable y gratuita para:
 
 2.1. Estudiar el Material y ejecutarlo en tus equipos.
 
@@ -51,7 +51,9 @@ sublicenciable y gratuita (más allá de tu membresía) para:
      repositorios públicos o a repositorios privados a los que accedan otras personas, enviarlo
      por correo o mensajería, o ponerlo en servicios de descarga, foros, grupos o redes sociales.
      Puedes compartir fragmentos breves para pedir ayuda o comentar un error, siempre que no
-     permitan reconstruir una parte sustancial del Material.
+     permitan reconstruir una parte sustancial del Material, y puedes compartir libremente el
+     enlace al repositorio oficial. Si haces un fork del repositorio oficial dentro de GitHub,
+     esa copia sigue sujeta a esta licencia.
 
 3.2. Vender, alquilar, prestar, sublicenciar, ceder ni regalar el Código fuente, ni cobrar por
      darlo a terceros, tal cual o con cambios.
@@ -69,15 +71,12 @@ sublicenciable y gratuita (más allá de tu membresía) para:
 3.6. Quitar, ocultar o alterar los avisos de derechos de autor, de licencia o de autoría del
      Material.
 
-3.7. Eludir las medidas que limitan el acceso al Material, o dar acceso a él a personas sin una
-     membresía activa.
-
 
 4. SEGURIDAD DE TU COPIA
 
-Eres responsable de que tu copia no llegue a terceros por tu descuido (por ejemplo, un
-repositorio mal configurado o una carpeta compartida). Si descubres que se filtró, retírala en
-cuanto puedas y avisa al Licenciante.
+Eres responsable de que tus copias, sobre todo las que hayas modificado, no lleguen a terceros por
+tu descuido (por ejemplo, un repositorio mal configurado o una carpeta compartida). Si descubres
+que se publicó una, retírala en cuanto puedas y avisa al Licenciante.
 
 
 5. TITULARIDAD
@@ -97,16 +96,15 @@ archivo.
 
 7. VERSIONES ANTERIORES
 
-Esta licencia se aplica a las versiones del Material publicadas desde el 2 de noviembre de 2026.
+Esta licencia se aplica a las versiones del Material publicadas desde el 6 de noviembre de 2026.
 Las copias de versiones anteriores que hayas recibido con otra licencia conservan esa licencia;
 las versiones nuevas que recibas se rigen por esta.
 
 
-8. MEMBRESÍA Y ACTUALIZACIONES
+8. ACTUALIZACIONES
 
-El acceso al Material y a sus actualizaciones depende de que tu membresía siga activa. Si la
-cancelas, conservas el derecho a usar las versiones que ya recibiste, con las condiciones de esta
-licencia, pero no recibes versiones nuevas.
+El Licenciante puede publicar versiones nuevas del Material o dejar de publicarlo. Conservas el
+derecho a usar las versiones que ya obtuviste, con las condiciones de esta licencia.
 
 
 9. SIN GARANTÍA

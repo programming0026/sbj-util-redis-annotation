@@ -10,14 +10,14 @@
     </parent>
     <groupId>com.juniverse.redis</groupId>
     <artifactId>sbj-util-redis</artifactId>
-    <version>2.0.0</version>
+    <version>2.0.1</version>
     <name>sbj-util-redis</name>
     <description>Utility library for using Redis</description>
     <packaging>jar</packaging>
     <url/>
     <licenses>
         <license>
-            <name>Licencia de uso personal de Java Universe 1.0 (LicenseRef-JavaUniverse-Personal-1.0)</name>
+            <name>Licencia de uso personal de Java Universe 1.1 (LicenseRef-JavaUniverse-Personal-1.1)</name>
             <distribution>manual</distribution>
             <comments>No es una licencia de código abierto. Ver el archivo LICENSE en la raíz del repositorio.</comments>
         </license>

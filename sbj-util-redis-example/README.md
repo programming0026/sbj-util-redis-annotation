@@ -33,7 +33,7 @@ La aplicación administra cuatro entidades de dominio (productos, usuarios, cuen
 - **Spring Data Redis**
 - **Maven**
 - **Lombok**
-- **sbj-util-redis 2.0.0**
+- **sbj-util-redis 2.0.1**
 - **Jackson 3** (serialización JSON; el soporte de java.time viene integrado)
 
 ## Requisitos previos
@@ -92,7 +92,7 @@ La aplicación estará disponible en `http://localhost:8080`
 
 ```bash
 mvn clean package
-java -jar target/sbj-util-redis-example-1.0.0-SNAPSHOT.jar
+java -jar target/sbj-util-redis-example-1.0.1.jar
 ```
 
 ## Endpoints de la API
@@ -482,12 +482,11 @@ Los endpoints también se pueden probar a mano con:
 
 ## Licencia
 
-Este proyecto es **contenido premium** de Java Universe y se entrega a las personas con una membresía activa en Patreon bajo la [Licencia de uso personal de Java Universe](../LICENSE), que **no es de código abierto**. Puedes estudiarlo, modificarlo y usarlo en tus propios proyectos, incluidos los comerciales y los que desarrolles para un cliente, pero **no puedes compartir, publicar ni revender el código fuente**. Las condiciones completas están en [LICENSE](../LICENSE).
+Este proyecto es **libre y gratuito**, y se publica bajo la [Licencia de uso personal de Java Universe](../LICENSE), que **no es de código abierto**. Puedes estudiarlo, modificarlo y usarlo en tus propios proyectos, incluidos los comerciales y los que desarrolles para un cliente, pero **no puedes compartir, publicar ni revender el código fuente**. Las condiciones completas están en [LICENSE](../LICENSE).
 
 ## Autor
 
-**AJuarez** (programming0026)
-- Correo: contacto@javauniverse.dev
+**Java Universe**
 - GitHub: [@programming0026](https://github.com/programming0026)
 
 ## Enlaces

@@ -61,7 +61,7 @@ Después agregue la dependencia a su `pom.xml`:
 <dependency>
     <groupId>com.juniverse.redis</groupId>
     <artifactId>sbj-util-redis</artifactId>
-    <version>2.0.0</version>
+    <version>2.0.1</version>
 </dependency>
 ```
 
@@ -1284,6 +1284,8 @@ La versión 2.0.0 pasa la librería de Jackson 2 a **Jackson 3**, el valor por d
 
 El JSON guardado en Redis conserva la misma forma (`@class` más los campos). Los valores en caché son temporales por naturaleza, así que, si tiene dudas al actualizar, vacíe una vez las cachés de la librería.
 
+**2.0.1.** Sin cambios en el código ni en la API: la librería deja de ser contenido premium, se publica gratis en GitHub y pasa a la Licencia de uso personal de Java Universe 1.1.
+
 ## Solución de problemas
 
 ### Problemas comunes
@@ -1307,12 +1309,11 @@ Revise los logs en busca de errores de conexión
 
 ## Licencia
 
-Este proyecto es **contenido premium** de Java Universe y se entrega a las personas con una membresía activa en Patreon bajo la [Licencia de uso personal de Java Universe](../LICENSE), que **no es de código abierto**. Puedes estudiarlo, modificarlo y usarlo en tus propios proyectos, incluidos los comerciales y los que desarrolles para un cliente, pero **no puedes compartir, publicar ni revender el código fuente**. Las condiciones completas están en [LICENSE](../LICENSE).
+Este proyecto es **libre y gratuito**, y se publica bajo la [Licencia de uso personal de Java Universe](../LICENSE), que **no es de código abierto**. Puedes estudiarlo, modificarlo y usarlo en tus propios proyectos, incluidos los comerciales y los que desarrolles para un cliente, pero **no puedes compartir, publicar ni revender el código fuente**. Las condiciones completas están en [LICENSE](../LICENSE).
 
 ## Autor
 
-**AJuarez** (programming0026)
-- Correo: contacto@javauniverse.dev
+**Java Universe**
 - GitHub: [@programming0026](https://github.com/programming0026)
 
 ## Contribuciones
