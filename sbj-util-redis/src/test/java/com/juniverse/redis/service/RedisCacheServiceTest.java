@@ -22,7 +22,7 @@ import static org.mockito.Mockito.*;
 /**
  * Pruebas unitarias de RedisCacheService.
  *
- * @author ajuar
+ * @author Java Universe
  */
 @ExtendWith(MockitoExtension.class)
 class RedisCacheServiceTest {

@@ -11,7 +11,7 @@ import lombok.NoArgsConstructor;
 /**
  * Objeto de transferencia de producto
  *
- * @author linux
+ * @author Java Universe
  */
 @Getter
 @Setter

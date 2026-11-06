@@ -14,7 +14,7 @@ import java.time.LocalDateTime;
 /**
  * Pruebas unitarias de DefaultObjectMapperConfig.
  *
- * @author ajuar
+ * @author Java Universe
  */
 class DefaultObjectMapperConfigTest {
 

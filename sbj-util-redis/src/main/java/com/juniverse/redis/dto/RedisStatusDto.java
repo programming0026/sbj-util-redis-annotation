@@ -4,7 +4,7 @@ import lombok.Builder;
 import lombok.Getter;
 
 /**
- * @author ajuar
+ * @author Java Universe
  */
 
 @Builder

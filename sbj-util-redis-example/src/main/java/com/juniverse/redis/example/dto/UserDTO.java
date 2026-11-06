@@ -12,7 +12,7 @@ import lombok.NoArgsConstructor;
 /**
  * Objeto de transferencia de usuario
  *
- * @author linux
+ * @author Java Universe
  */
 @Getter
 @Setter

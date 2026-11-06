@@ -11,7 +11,7 @@ import lombok.ToString;
  * o de la fuente de datos (fallo), sin condiciones de carrera.</p>
  *
  * @param <T> tipo del valor en caché
- * @author ajuar
+ * @author Java Universe
  */
 @Getter
 @ToString

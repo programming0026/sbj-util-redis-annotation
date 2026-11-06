@@ -1,7 +1,7 @@
 package com.juniverse.redis.util;
 
 /**
- * @author ajuar
+ * @author Java Universe
  */
 public enum Mode {
     

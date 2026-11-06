@@ -6,7 +6,7 @@ import java.util.List;
 /**
  * Interfaz del servicio de pedidos con el patrón de caché con coalescencia
  *
- * @author ajuar
+ * @author Java Universe
  */
 public interface OrderService {
 

@@ -25,7 +25,7 @@ import org.mockito.quality.Strictness;
 /**
  * Pruebas unitarias de CoalesceCachingAspect.
  *
- * @author ajuar
+ * @author Java Universe
  */
 @ExtendWith(MockitoExtension.class)
 @MockitoSettings(strictness = Strictness.LENIENT)

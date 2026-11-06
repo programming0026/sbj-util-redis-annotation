@@ -16,7 +16,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
 /**
- * @author ajuar
+ * @author Java Universe
  */
 @Slf4j
 public class RedisHealthChecker {

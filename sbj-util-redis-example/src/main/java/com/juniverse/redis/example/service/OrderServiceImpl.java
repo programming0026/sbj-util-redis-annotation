@@ -18,7 +18,7 @@ import org.springframework.stereotype.Service;
  * Implementación del servicio de pedidos con anotaciones de caché con coalescencia.
  * Muestra la coalescencia de peticiones para evitar avalanchas de caché.
  *
- * @author ajuar
+ * @author Java Universe
  */
 @Service
 @Slf4j

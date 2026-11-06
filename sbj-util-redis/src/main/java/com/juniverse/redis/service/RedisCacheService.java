@@ -18,7 +18,7 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.ScanOptions;
 
 /**
- * @author ajuar
+ * @author Java Universe
  */
 @Slf4j
 public class RedisCacheService {

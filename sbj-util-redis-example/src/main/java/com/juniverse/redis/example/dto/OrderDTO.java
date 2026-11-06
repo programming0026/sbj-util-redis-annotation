@@ -13,7 +13,7 @@ import lombok.NoArgsConstructor;
 /**
  * Objeto de transferencia de pedido
  *
- * @author ajuar
+ * @author Java Universe
  */
 @Data
 @Builder

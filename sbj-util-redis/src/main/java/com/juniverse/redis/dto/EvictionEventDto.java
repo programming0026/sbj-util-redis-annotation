@@ -6,7 +6,7 @@ import lombok.NoArgsConstructor;
 import java.time.LocalDateTime;
 
 /**
- * @author ajuar
+ * @author Java Universe
  */
 @Data
 @AllArgsConstructor

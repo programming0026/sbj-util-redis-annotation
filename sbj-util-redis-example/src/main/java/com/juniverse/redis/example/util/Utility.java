@@ -5,7 +5,7 @@ import lombok.extern.slf4j.Slf4j;
 /**
  * Clase de utilidades para operaciones comunes
  *
- * @author linux
+ * @author Java Universe
  */
 @Slf4j
 public final class Utility {

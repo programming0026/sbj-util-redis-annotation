@@ -13,7 +13,7 @@ import lombok.NoArgsConstructor;
 /**
  * Objeto de transferencia de cuenta
  *
- * @author linux
+ * @author Java Universe
  */
 @Getter
 @Setter

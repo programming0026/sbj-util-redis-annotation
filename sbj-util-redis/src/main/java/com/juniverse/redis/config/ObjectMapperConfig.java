@@ -4,7 +4,7 @@ import tools.jackson.databind.ObjectMapper;
 
 
 /**
- * @author ajuar
+ * @author Java Universe
  */
 public interface ObjectMapperConfig {
 

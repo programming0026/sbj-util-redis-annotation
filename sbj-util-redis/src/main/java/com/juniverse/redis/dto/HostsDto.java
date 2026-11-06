@@ -6,7 +6,7 @@ import lombok.Getter;
 import lombok.ToString;
 
 /**
- * @author ajuar
+ * @author Java Universe
  */
 @Builder
 @Getter

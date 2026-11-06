@@ -7,7 +7,7 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * @author ajuar
+ * @author Java Universe
  */
 @Target(ElementType.METHOD)
 @Retention(RetentionPolicy.RUNTIME)

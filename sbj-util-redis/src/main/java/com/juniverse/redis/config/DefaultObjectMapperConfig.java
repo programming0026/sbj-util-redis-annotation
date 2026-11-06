@@ -19,7 +19,7 @@ import tools.jackson.databind.jsontype.PolymorphicTypeValidator;
  * configura en el constructor.
  * El soporte de {@code java.time} y {@code Optional} viene integrado en Jackson 3 (no hay módulo que registrar).
  *
- * @author ajuar
+ * @author Java Universe
  */
 public class DefaultObjectMapperConfig implements ObjectMapperConfig {
 

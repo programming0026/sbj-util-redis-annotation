@@ -38,7 +38,7 @@ import static org.mockito.Mockito.*;
 /**
  * Pruebas unitarias de CoalesceCacheManager.
  *
- * @author ajuar
+ * @author Java Universe
  */
 @ExtendWith(MockitoExtension.class)
 class CoalesceCacheManagerTest {

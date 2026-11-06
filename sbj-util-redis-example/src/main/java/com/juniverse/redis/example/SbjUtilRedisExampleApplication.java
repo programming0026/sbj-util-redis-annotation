@@ -6,7 +6,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 /**
  * Aplicación Spring Boot que muestra el uso de la librería sbj-util-redis
  *
- * @author linux
+ * @author Java Universe
  */
 @SpringBootApplication
 public class SbjUtilRedisExampleApplication {

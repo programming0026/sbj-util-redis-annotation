@@ -21,7 +21,7 @@ import org.springframework.stereotype.Service;
 /**
  * Implementación del servicio de usuarios que muestra el uso de RedisCacheService
  *
- * @author linux
+ * @author Java Universe
  */
 @Service
 @Slf4j

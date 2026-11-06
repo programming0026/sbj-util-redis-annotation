@@ -32,7 +32,7 @@ import java.util.function.Supplier;
  * }
  * }</pre>
  *
- * @author ajuar
+ * @author Java Universe
  * @param <T> tipo genérico
  * @see Factory
  */
@@ -242,7 +242,7 @@ public final class CacheOperationBuilder<T> {
      * }
      * }</pre>
      *
-     * @author ajuar
+     * @author Java Universe
      */
     public static class Factory {
 

@@ -6,7 +6,7 @@ import java.util.List;
 /**
  * Interfaz del servicio de productos
  *
- * @author linux
+ * @author Java Universe
  */
 public interface ProductService {
 

@@ -6,7 +6,7 @@ import java.util.List;
 /**
  * Interfaz del servicio de cuentas
  *
- * @author linux
+ * @author Java Universe
  */
 public interface AccountService {
 

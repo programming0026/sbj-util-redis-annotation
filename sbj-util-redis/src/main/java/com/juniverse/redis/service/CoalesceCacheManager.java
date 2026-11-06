@@ -25,7 +25,7 @@ import org.springframework.data.redis.listener.RedisMessageListenerContainer;
 import org.springframework.data.redis.serializer.SerializationException;
 
 /**
- * @author ajuar
+ * @author Java Universe
  */
 @Slf4j
 public class CoalesceCacheManager {

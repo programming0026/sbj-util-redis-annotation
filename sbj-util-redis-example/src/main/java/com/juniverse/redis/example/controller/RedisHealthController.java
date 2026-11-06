@@ -11,7 +11,7 @@ import org.springframework.web.bind.annotation.RestController;
  * Controlador de salud de Redis
  * Ofrece endpoints para consultar el estado de la conexión con Redis
  *
- * @author linux
+ * @author Java Universe
  */
 @RestController
 @CrossOrigin(origins = "*", allowedHeaders = "*")

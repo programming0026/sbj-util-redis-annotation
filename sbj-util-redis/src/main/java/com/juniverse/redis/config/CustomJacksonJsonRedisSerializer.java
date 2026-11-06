@@ -11,7 +11,7 @@ import tools.jackson.databind.ObjectMapper;
  * <p>Serializa valores a JSON con un {@link ObjectMapper} de Jackson 3. En Jackson 3 las excepciones no son comprobadas
  * ({@link JacksonException}); se envuelven en una {@link SerializationException}.
  *
- * @author ajuar
+ * @author Java Universe
  * @param <T> objeto
  */
 public class CustomJacksonJsonRedisSerializer<T> implements RedisSerializer<T> {

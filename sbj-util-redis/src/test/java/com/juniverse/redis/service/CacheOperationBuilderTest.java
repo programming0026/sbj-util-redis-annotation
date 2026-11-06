@@ -19,7 +19,7 @@ import static org.mockito.Mockito.*;
 /**
  * Pruebas unitarias de CacheOperationBuilder.
  *
- * @author ajuar
+ * @author Java Universe
  */
 @ExtendWith(MockitoExtension.class)
 class CacheOperationBuilderTest {

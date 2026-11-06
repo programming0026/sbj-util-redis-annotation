@@ -14,7 +14,7 @@ import static org.junit.jupiter.api.Assertions.*;
 /**
  * Pruebas unitarias de Validator.
  *
- * @author ajuar
+ * @author Java Universe
  */
 class ValidatorTest {
 

@@ -23,7 +23,7 @@ import static org.mockito.Mockito.*;
 /**
  * Pruebas unitarias de RedisHealthChecker.
  *
- * @author ajuar
+ * @author Java Universe
  */
 @ExtendWith(MockitoExtension.class)
 class RedisHealthCheckerTest {

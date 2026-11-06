@@ -17,7 +17,7 @@ import org.springframework.web.bind.annotation.RestController;
 /**
  * Controlador REST de pedidos con el patrón de caché con coalescencia
  *
- * @author ajuar
+ * @author Java Universe
  */
 @RestController
 @CrossOrigin(origins = "*", allowedHeaders = "*")

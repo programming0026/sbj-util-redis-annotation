@@ -12,7 +12,7 @@ import java.lang.annotation.Target;
 import org.springframework.context.annotation.Import;
 
 /**
- * @author ajuar
+ * @author Java Universe
  */
 @Target({ElementType.TYPE})
 @Retention(RetentionPolicy.RUNTIME)

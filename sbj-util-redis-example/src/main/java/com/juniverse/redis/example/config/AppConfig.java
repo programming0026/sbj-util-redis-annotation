@@ -11,7 +11,7 @@ import org.springframework.context.annotation.Configuration;
  * Configura Redis en modo STANDALONE (un solo servidor en localhost:6379) con entradas de TTL para distintas cachés.
  * Las configuraciones SENTINEL y CLUSTER se conservan abajo, comentadas, para cambiar de modo.
  *
- * @author ajuar
+ * @author Java Universe
  */
 @Configuration
 @EnableRedisLibrary(

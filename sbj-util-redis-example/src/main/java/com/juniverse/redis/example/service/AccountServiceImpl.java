@@ -23,7 +23,7 @@ import org.springframework.stereotype.Service;
  * Implementación del servicio de cuentas que muestra el uso de CacheOperationBuilder<T> de la librería sbj-util-redis
  * Este servicio muestra el patrón constructor fluido con fábrica para las operaciones de caché en Redis
  *
- * @author linux
+ * @author Java Universe
  */
 @Service
 @Slf4j

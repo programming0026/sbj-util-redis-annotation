@@ -19,7 +19,7 @@ import org.springframework.web.bind.annotation.RestController;
 /**
  * Controlador de productos que muestra las anotaciones de Spring Cache
  *
- * @author linux
+ * @author Java Universe
  */
 @RestController
 @CrossOrigin(origins = "*", allowedHeaders = "*")

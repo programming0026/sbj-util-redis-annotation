@@ -17,7 +17,7 @@ import static org.mockito.Mockito.*;
 /**
  * Pruebas unitarias de CustomJacksonJsonRedisSerializer.
  *
- * @author ajuar
+ * @author Java Universe
  */
 @ExtendWith(MockitoExtension.class)
 class CustomJacksonJsonRedisSerializerTest {
