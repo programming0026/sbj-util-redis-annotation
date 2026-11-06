@@ -51,7 +51,7 @@ Librería de utilidades para Spring Boot, potente y flexible, que simplifica la 
 Esta copia de la librería usa el grupo `com.juniverse.redis`, que no está publicado en Maven Central, así que primero instálela en su repositorio local de Maven:
 
 ```bash
-cd sbj-util-redis-lib
+cd sbj-util-redis
 mvn install
 ```
 

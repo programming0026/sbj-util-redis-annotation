@@ -66,10 +66,10 @@ Para cambiar a SENTINEL o CLUSTER, edite `src/main/java/com/juniverse/redis/exam
 
 ### 3. Instalar la librería
 
-El ejemplo depende de `com.juniverse.redis:sbj-util-redis`, que es el módulo `sbj-util-redis-lib` de este repositorio (no está publicado en Maven Central). Instálela una vez en su repositorio local de Maven:
+El ejemplo depende de `com.juniverse.redis:sbj-util-redis`, que es el módulo `sbj-util-redis` de este repositorio (no está publicado en Maven Central). Instálela una vez en su repositorio local de Maven:
 
 ```bash
-cd ../sbj-util-redis-lib
+cd ../sbj-util-redis
 mvn install
 cd ../sbj-util-redis-example
 ```
@@ -492,7 +492,7 @@ Este proyecto es **contenido premium** de Java Universe y se entrega a las perso
 
 ## Enlaces
 
-- `sbj-util-redis-lib` (en este repositorio): instálela con `mvn install` antes de compilar este ejemplo
+- `sbj-util-redis` (en este repositorio): instálela con `mvn install` antes de compilar este ejemplo
 - [Documentación de Spring Boot](https://spring.io/projects/spring-boot)
 - [Spring Data Redis](https://spring.io/projects/spring-data-redis)
 

@@ -30,9 +30,9 @@
         </developer>
     </developers>
     <scm>
-        <connection>scm:git:git://github.com/programming0026/sbj-util-redis.git</connection>
-        <developerConnection>scm:git:ssh://github.com:programming0026/sbj-util-redis.git</developerConnection>
-        <url>https://github.com/programming0026/sbj-util-redis</url>
+        <connection>scm:git:git://github.com/programming0026/sbj-util-redis-annotation.git</connection>
+        <developerConnection>scm:git:ssh://github.com:programming0026/sbj-util-redis-annotation.git</developerConnection>
+        <url>https://github.com/programming0026/sbj-util-redis-annotation</url>
     </scm>
     <properties>
         <java.version>21</java.version>
