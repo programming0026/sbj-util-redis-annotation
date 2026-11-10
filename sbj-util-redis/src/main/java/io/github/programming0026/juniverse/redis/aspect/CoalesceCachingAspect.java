@@ -93,16 +93,17 @@ public class CoalesceCachingAspect {
      * Procesa una anotación de caché.
      *
      * @param joinPoint punto de unión del aspecto
-     * @param original anotación de caché, antes de resolver placeholders
+     * @param cacheable anotación de caché
      * @return objeto
      * @throws Throwable si falla el método interceptado
      */
     @Around("@annotation(cacheable)")
     public Object handleCacheable(
             ProceedingJoinPoint joinPoint,
-            CoalesceCacheable original) throws Throwable {
+            CoalesceCacheable cacheable) throws Throwable {
 
-        CoalesceCacheable cacheable = resolvePlaceholders(original);
+        // El nombre del parámetro debe coincidir con el del pointcut @annotation(cacheable).
+        cacheable = resolvePlaceholders(cacheable);
 
         if (!evaluateCondition(joinPoint, cacheable.condition())) {
             log.debug("Condition not met for @CoalesceCacheable, skipping cache");
@@ -146,16 +147,17 @@ public class CoalesceCachingAspect {
      * Procesa varias anotaciones de caché.
      *
      * @param joinPoint punto de unión del aspecto
-     * @param original anotación que agrupa varias operaciones, antes de resolver placeholders
+     * @param caching anotación que agrupa varias operaciones
      * @return objeto
      * @throws Throwable si falla el método interceptado
      */
     @Around("@annotation(caching)")
     public Object handleCaching(
             ProceedingJoinPoint joinPoint,
-            CoalesceCaching original) throws Throwable {
+            CoalesceCaching caching) throws Throwable {
 
-        CoalesceCaching caching = resolvePlaceholders(original);
+        // El nombre del parámetro debe coincidir con el del pointcut @annotation(caching).
+        caching = resolvePlaceholders(caching);
 
         CoalesceCacheable[] cacheables = caching.cacheable();
 

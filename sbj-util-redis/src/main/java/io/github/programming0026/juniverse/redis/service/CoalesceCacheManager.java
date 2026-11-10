@@ -39,6 +39,9 @@ public class CoalesceCacheManager {
     /** Prefijo de las claves del bloqueo que evita calcular el mismo valor dos veces. */
     private static final String LOCK_PREFIX = "coalesce:lock:";
 
+    /** Duración del bloqueo y tiempo máximo que una petición espera el resultado coalescido. */
+    private static final Duration LOCK_TIMEOUT = Duration.ofSeconds(30);
+
     /** Canal pub/sub por el que se avisa a las demás instancias de que borren una entrada. */
     private static final String EVICT_CHANNEL = "coalesce:evict";
 
@@ -234,7 +237,7 @@ public class CoalesceCacheManager {
         Boolean acquired = redisTemplate.opsForValue().setIfAbsent(
                 lockKey,
                 requestId,
-                Duration.ofSeconds(30)
+                LOCK_TIMEOUT
         );
 
         if (Boolean.TRUE.equals(acquired)) {
@@ -265,24 +268,31 @@ public class CoalesceCacheManager {
 
     /**
      * Espera un resultado coalescido por pub/sub.
+     * Todas las peticiones que esperan la misma clave comparten un único future, de modo que
+     * el aviso del resultado las despierta a todas. La espera nunca supera la duración del bloqueo.
      *
      * @param key clave de caché
-     * @param timeoutSeconds tiempo máximo de espera
+     * @param ttlSeconds TTL en segundos; acota la espera cuando es menor que el bloqueo
      * @return valor cargado
      */
-    private Object waitForResult(String key, long timeoutSeconds) {
-        CompletableFuture<Object> future = new CompletableFuture<>();
-        pendingRequests.put(key, future);
+    private Object waitForResult(String key, long ttlSeconds) {
+        long lockSeconds = LOCK_TIMEOUT.toSeconds();
+        long timeout = ttlSeconds > 0 ? Math.min(ttlSeconds, lockSeconds) : lockSeconds;
+        CompletableFuture<Object> future = pendingRequests.computeIfAbsent(key, k -> new CompletableFuture<>());
+        String fullKey = CACHE_PREFIX + key;
 
         try {
-            long timeout = timeoutSeconds > 0 ? timeoutSeconds : 30;
+            // El resultado pudo publicarse antes de registrar el future: se revisa la caché otra vez.
+            Object cached = redisTemplate.opsForValue().get(fullKey);
+            if (cached != null) {
+                return cached;
+            }
             return future.get(timeout, TimeUnit.SECONDS);
         } catch(InterruptedException e) {
             Thread.currentThread().interrupt();
             throw new CoalesceException("Failed to get coalesced result for key: " + key, e);
         } catch (ExecutionException | TimeoutException e) {
             log.warn("Timeout or error waiting for coalesced result for key {} {}", key, e.getMessage());
-            String fullKey = CACHE_PREFIX + key;
             Object cached = redisTemplate.opsForValue().get(fullKey);
 
             if (cached != null) {
@@ -290,7 +300,8 @@ public class CoalesceCacheManager {
             }
             throw new CoalesceException("Failed to get coalesced result for key: " + key, e);
         } finally {
-            pendingRequests.remove(key);
+            // Solo se quita si sigue siendo el mismo future; los demás que esperan ya tienen su referencia.
+            pendingRequests.remove(key, future);
         }
     }
 

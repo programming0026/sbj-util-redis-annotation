@@ -8,7 +8,11 @@ import org.springframework.context.annotation.Configuration;
 
 /**
  * Configuración de Redis con la librería sbj-util-redis
- * Configura Redis en modo STANDALONE (un solo servidor en localhost:6379) con entradas de TTL para distintas cachés.
+ * Configura Redis en modo STANDALONE (un solo servidor en el puerto 6379) con entradas de TTL para distintas cachés.
+ * Los atributos de texto admiten placeholders {@code ${...}}: el host, el usuario, la contraseña y el nombre
+ * de la caché se leen de {@code application.properties} y se pueden sobrescribir con variables de entorno
+ * o argumentos de línea de comandos (por ejemplo {@code --redis.host=redis.internal}).
+ * Los atributos numéricos (puerto, TTL) no admiten placeholders porque Java exige constantes.
  * Las configuraciones SENTINEL y CLUSTER se conservan abajo, comentadas, para cambiar de modo.
  *
  * @author Java Universe
@@ -16,11 +20,13 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 @EnableRedisLibrary(
         hostEntries = {
-            @HostEntry(host = "localhost", port = 6379)
+            @HostEntry(host = "${redis.host}", port = 6379)
         },
+        userName = "${redis.username:}",
+        pwd = "${redis.password:}",
         mode = Mode.STANDALONE,
         ttlEntries = {
-            @TTLEntry(name = "products", ttl = 10)
+            @TTLEntry(name = "${cache.products.name}", ttl = 10)
         }
 )
 /*@EnableRedisLibrary(

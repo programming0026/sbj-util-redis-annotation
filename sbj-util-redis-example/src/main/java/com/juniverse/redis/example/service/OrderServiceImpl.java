@@ -176,7 +176,7 @@ public class OrderServiceImpl implements OrderService {
     }
 
     @CoalesceEvict(
-            pattern = "order:status:*"
+            pattern = "'order:status:*'"
     )
     @Override
     public void clearSearchCache() {

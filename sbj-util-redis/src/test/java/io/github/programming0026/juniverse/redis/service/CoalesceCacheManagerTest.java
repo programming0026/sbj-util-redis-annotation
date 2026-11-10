@@ -610,6 +610,48 @@ class CoalesceCacheManagerTest {
     }
 
     /**
+     * Varias peticiones que esperan la misma clave deben recibir todas el resultado publicado.
+     */
+    @Test
+    @SuppressWarnings("unchecked")
+    void getOrLoad_WithSeveralWaiters_ShouldCompleteAll() throws Exception {
+        setupValueOperations();
+        when(valueOperations.get("coalesce:cache:testKey")).thenReturn(null);
+        when(valueOperations.setIfAbsent(eq("coalesce:lock:testKey"), anyString(), any(Duration.class)))
+                .thenReturn(false);
+
+        int waiters = 4;
+        java.util.concurrent.ExecutorService executor = java.util.concurrent.Executors.newFixedThreadPool(waiters);
+        try {
+            List<java.util.concurrent.Future<Object>> results = new java.util.ArrayList<>();
+            for (int i = 0; i < waiters; i++) {
+                results.add(executor.submit(() -> cacheManager.getOrLoad("testKey", () -> "unused", 20, false)));
+            }
+
+            ConcurrentHashMap<String, CompletableFuture<Object>> pendingRequests = getPendingRequests();
+            long deadline = System.currentTimeMillis() + 5000;
+            while (!pendingRequests.containsKey("testKey") && System.currentTimeMillis() < deadline) {
+                Thread.sleep(10);
+            }
+            // Deja que todos los hilos lleguen a esperar el future compartido.
+            Thread.sleep(200);
+
+            Message message = mock(Message.class);
+            RedisSerializer<Object> serializer = mock(RedisSerializer.class);
+            doReturn(serializer).when(redisTemplate).getValueSerializer();
+            doReturn(new CoalescedResponseDto("id", "testKey", "shared", null, LocalDateTime.now()))
+                    .when(serializer).deserialize(any());
+            invokeHandleCoalesceEvent(message, null);
+
+            for (java.util.concurrent.Future<Object> result : results) {
+                assertEquals("shared", result.get(5, TimeUnit.SECONDS));
+            }
+        } finally {
+            executor.shutdownNow();
+        }
+    }
+
+    /**
      * GetOrLoad con TTL cero debe usar el tiempo de espera predeterminado.
      */
     @Test
