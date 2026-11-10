@@ -3,7 +3,12 @@ package io.github.programming0026.juniverse.redis.aspect;
 import io.github.programming0026.juniverse.redis.annotation.CoalescePut;
 import io.github.programming0026.juniverse.redis.annotation.CoalescePuts;
 import io.github.programming0026.juniverse.redis.service.CoalesceCacheManager;
+import io.github.programming0026.juniverse.redis.util.AnnotationPlaceholderResolver;
 import java.util.Arrays;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.UnaryOperator;
+import org.springframework.core.env.Environment;
 import lombok.extern.slf4j.Slf4j;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
@@ -13,13 +18,11 @@ import org.springframework.core.annotation.Order;
 import org.springframework.expression.Expression;
 import org.springframework.expression.spel.standard.SpelExpressionParser;
 import org.springframework.expression.spel.support.StandardEvaluationContext;
-import org.springframework.stereotype.Component;
 
 /**
  * @author Java Universe
  */
 @Aspect
-@Component
 @Slf4j
 @Order(2)
 public class CoalescePutAspect {
@@ -30,9 +33,48 @@ public class CoalescePutAspect {
     /** Analizador de expresiones. */
     private final SpelExpressionParser parser;
 
+    /** Función que resuelve los placeholders; {@code null} si no hay entorno. */
+    private final UnaryOperator<String> placeholderResolver;
+
+    /** Anotaciones ya resueltas, indexadas por la anotación original. */
+    private final Map<CoalescePut, CoalescePut> resolvedAnnotations = new ConcurrentHashMap<>();
+
+    /**
+     * Crea el aspecto sin resolución de placeholders.
+     *
+     * @param cacheManager administrador de caché
+     */
     public CoalescePutAspect(CoalesceCacheManager cacheManager) {
+        this(cacheManager, null);
+    }
+
+    /**
+     * Crea el aspecto con resolución de placeholders {@code ${...}}.
+     *
+     * @param cacheManager administrador de caché
+     * @param environment entorno con el que se resuelven los placeholders; si es {@code null},
+     *                    los valores se usan tal cual
+     */
+    public CoalescePutAspect(CoalesceCacheManager cacheManager, Environment environment) {
         this.cacheManager = cacheManager;
         this.parser = new SpelExpressionParser();
+        this.placeholderResolver = environment == null
+                ? null
+                : environment::resolveRequiredPlaceholders;
+    }
+
+    /**
+     * Devuelve la anotación con los placeholders resueltos.
+     *
+     * @param put anotación original
+     * @return anotación resuelta
+     */
+    private CoalescePut resolvePlaceholders(CoalescePut put) {
+        if (placeholderResolver == null) {
+            return put;
+        }
+        return resolvedAnnotations.computeIfAbsent(put,
+                p -> AnnotationPlaceholderResolver.resolve(p, placeholderResolver));
     }
 
     /**
@@ -81,7 +123,8 @@ public class CoalescePutAspect {
 
         Object result = joinPoint.proceed();
 
-        for (CoalescePut put : puts) {
+        for (CoalescePut original : puts) {
+            CoalescePut put = resolvePlaceholders(original);
 
             if (shouldCacheResult(joinPoint, put, result)) {
                 String cacheKey = generateCacheKey(joinPoint, put);
@@ -103,7 +146,9 @@ public class CoalescePutAspect {
             return false;
         }
 
-        boolean unlessPassed = evaluateCondition(joinPoint, put.unless(), result);
+        // Un «unless» vacío significa que no hay motivo para descartar el resultado.
+        boolean unlessPassed = !put.unless().isEmpty()
+                && evaluateCondition(joinPoint, put.unless(), result);
         return !unlessPassed;
     }
 

@@ -215,6 +215,73 @@ class CoalesceCachingAspectTest {
     }
 
     /**
+     * Procesar con guardado sin «unless» debe guardar en caché.
+     */
+    @Test
+    void handleCaching_WithPutAndEmptyUnless_ShouldCache() throws Throwable {
+        CoalescePut put = createMockPut("cache", "#id", 300, "", "");
+        CoalesceCaching caching = createMockCaching(
+                new CoalesceCacheable[]{},
+                new CoalesceEvict[]{},
+                new CoalescePut[]{put}
+        );
+        setupJoinPoint();
+        when(joinPoint.proceed()).thenReturn("result");
+
+        aspect.handleCaching(joinPoint, caching);
+
+        verify(cacheManager).put("cache:123", "result", 300L);
+    }
+
+    /**
+     * Procesar con guardado y «unless» falso debe guardar en caché.
+     */
+    @Test
+    void handleCaching_WithPutAndUnlessFalse_ShouldCache() throws Throwable {
+        CoalescePut put = createMockPut("cache", "#id", 300, "", "#result == null");
+        CoalesceCaching caching = createMockCaching(
+                new CoalesceCacheable[]{},
+                new CoalesceEvict[]{},
+                new CoalescePut[]{put}
+        );
+        setupJoinPoint();
+        when(joinPoint.proceed()).thenReturn("result");
+
+        aspect.handleCaching(joinPoint, caching);
+
+        verify(cacheManager).put("cache:123", "result", 300L);
+    }
+
+    /**
+     * Procesar con guardado y condición falsa no debe guardar en caché.
+     */
+    @Test
+    void handleCaching_WithPutAndConditionFalse_ShouldNotCache() throws Throwable {
+        CoalescePut put = createMockPut("cache", "#id", 300, "#id == '999'", "");
+        CoalesceCaching caching = createMockCaching(
+                new CoalesceCacheable[]{},
+                new CoalesceEvict[]{},
+                new CoalescePut[]{put}
+        );
+        setupJoinPoint();
+        when(joinPoint.proceed()).thenReturn("result");
+
+        aspect.handleCaching(joinPoint, caching);
+
+        verify(cacheManager, never()).put(anyString(), any(), anyLong());
+    }
+
+    /**
+     * Prepara el punto de unión con un argumento {@code id = "123"}.
+     */
+    private void setupJoinPoint() {
+        when(joinPoint.getSignature()).thenReturn(methodSignature);
+        when(joinPoint.getArgs()).thenReturn(new Object[]{"123"});
+        when(methodSignature.getParameterNames()).thenReturn(new String[]{"id"});
+        when(methodSignature.getMethod()).thenReturn(getTestMethod());
+    }
+
+    /**
      * Procesar con clave vacía debe usar el hash de los argumentos.
      */
     @Test

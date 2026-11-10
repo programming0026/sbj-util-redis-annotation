@@ -2,6 +2,7 @@ package io.github.programming0026.juniverse.redis.config;
 
 import io.github.programming0026.juniverse.redis.annotation.EnableRedisLibrary;
 import io.github.programming0026.juniverse.redis.service.CacheOperationBuilder;
+import io.github.programming0026.juniverse.redis.service.CoalesceCacheManager;
 import io.github.programming0026.juniverse.redis.service.RedisCacheService;
 import io.github.programming0026.juniverse.redis.service.RedisHealthChecker;
 import io.github.programming0026.juniverse.redis.util.Mode;
@@ -14,7 +15,9 @@ import org.springframework.cache.CacheManager;
 import org.springframework.core.annotation.AnnotationAttributes;
 import org.springframework.core.type.AnnotationMetadata;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
+import org.springframework.data.redis.connection.lettuce.LettuceConnectionFactory;
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.mock.env.MockEnvironment;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -75,6 +78,17 @@ class CacheConfigTest {
     }
 
     /**
+     * Los aspectos de guardado e invalidación deben registrarse como beans.
+     */
+    @Test
+    void putAndEvictAspects_ShouldCreateInstances() {
+        CoalesceCacheManager mockCacheManager = mock(CoalesceCacheManager.class);
+
+        assertNotNull(cacheConfig.coalescePutAspect(mockCacheManager));
+        assertNotNull(cacheConfig.coalesceEvictAspect(mockCacheManager));
+    }
+
+    /**
      * La fábrica del constructor de operaciones debe crear su instancia.
      */
     @Test
@@ -119,6 +133,46 @@ class CacheConfigTest {
     }
 
     
+
+    /**
+     * Los placeholders de la anotación deben resolverse con el entorno.
+     */
+    @Test
+    void setImportMetadata_WithEnvironment_ShouldResolvePlaceholders() {
+        Map<String, Object> attributesMap = createBasicAttributesMap();
+        AnnotationAttributes hostEntry = new AnnotationAttributes();
+        hostEntry.put("host", "${redis.host}");
+        hostEntry.put("port", 6379);
+        attributesMap.put("hostEntries", new AnnotationAttributes[]{hostEntry});
+        attributesMap.put("pwd", "${redis.pwd}");
+        when(annotationMetadata.getAnnotationAttributes(EnableRedisLibrary.class.getName()))
+                .thenReturn(attributesMap);
+
+        cacheConfig.setEnvironment(new MockEnvironment()
+                .withProperty("redis.host", "redis.internal")
+                .withProperty("redis.pwd", "secret"));
+        cacheConfig.setImportMetadata(annotationMetadata);
+
+        LettuceConnectionFactory factory = (LettuceConnectionFactory) cacheConfig.createRedisConnectionFactory();
+        assertEquals("redis.internal", factory.getStandaloneConfiguration().getHostName());
+        assertArrayEquals("secret".toCharArray(), factory.getStandaloneConfiguration().getPassword().get());
+    }
+
+    /**
+     * Un placeholder sin propiedad en la anotación debe lanzar una excepción.
+     */
+    @Test
+    void setImportMetadata_WithMissingProperty_ShouldThrowException() {
+        Map<String, Object> attributesMap = createBasicAttributesMap();
+        attributesMap.put("pwd", "${redis.missing}");
+        when(annotationMetadata.getAnnotationAttributes(EnableRedisLibrary.class.getName()))
+                .thenReturn(attributesMap);
+
+        cacheConfig.setEnvironment(new MockEnvironment());
+        cacheConfig.setImportMetadata(annotationMetadata);
+
+        assertThrows(IllegalArgumentException.class, () -> cacheConfig.createRedisConnectionFactory());
+    }
 
     /**
      * Crear la fábrica con modo standalone debe crear una fábrica standalone.

@@ -2,13 +2,18 @@ package io.github.programming0026.juniverse.redis.config;
 
 import io.github.programming0026.juniverse.redis.annotation.EnableRedisLibrary;
 import io.github.programming0026.juniverse.redis.aspect.CoalesceCachingAspect;
+import io.github.programming0026.juniverse.redis.aspect.CoalesceEvictAspect;
+import io.github.programming0026.juniverse.redis.aspect.CoalescePutAspect;
 import io.github.programming0026.juniverse.redis.dto.HostsDto;
 import io.github.programming0026.juniverse.redis.service.CacheOperationBuilder;
 import io.github.programming0026.juniverse.redis.service.CoalesceCacheManager;
 import io.github.programming0026.juniverse.redis.service.RedisCacheService;
 import io.github.programming0026.juniverse.redis.service.RedisHealthChecker;
+import io.github.programming0026.juniverse.redis.util.AnnotationPlaceholderResolver;
 import io.github.programming0026.juniverse.redis.util.Mode;
 import io.github.programming0026.juniverse.redis.util.Validator;
+import org.springframework.context.EnvironmentAware;
+import org.springframework.core.env.Environment;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.cache.CacheManager;
@@ -38,7 +43,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import org.springframework.context.annotation.ComponentScan;
 import org.springframework.data.redis.listener.RedisMessageListenerContainer;
 
 
@@ -49,8 +53,7 @@ import org.springframework.data.redis.listener.RedisMessageListenerContainer;
 @EnableCaching
 @EnableAspectJAutoProxy
 @Slf4j
-@ComponentScan(basePackages = {"com.juniverse.redis.config"})
-public class CacheConfig implements ImportAware {
+public class CacheConfig implements ImportAware, EnvironmentAware {
 
     /**
      * Atributo del nombre de usuario.
@@ -58,9 +61,45 @@ public class CacheConfig implements ImportAware {
     private static final String ATTRIBUTE_USER_NAME = "userName";
 
     /**
-     * Atributos.
+     * Atributos tal como vienen en la anotación, sin resolver.
      */
     private AnnotationAttributes attributes;
+
+    /**
+     * Atributos con los placeholders resueltos. Se calculan la primera vez que se usan.
+     */
+    private AnnotationAttributes resolvedAttributes;
+
+    /**
+     * Entorno con el que se resuelven los placeholders {@code ${...}}.
+     */
+    private Environment environment;
+
+    /**
+     * Devuelve los atributos de {@link EnableRedisLibrary} con los placeholders resueltos.
+     * Si no hay entorno (por ejemplo, en pruebas unitarias), los valores se usan tal cual.
+     *
+     * @return atributos resueltos
+     */
+    private AnnotationAttributes attributes() {
+        if (resolvedAttributes == null) {
+            resolvedAttributes = environment == null
+                    ? attributes
+                    : AnnotationPlaceholderResolver.resolve(attributes, environment::resolveRequiredPlaceholders);
+        }
+        return resolvedAttributes;
+    }
+
+    /**
+     * Recibe el entorno de Spring.
+     *
+     * @param environment entorno de la aplicación
+     */
+    @Override
+    public void setEnvironment(Environment environment) {
+        this.environment = environment;
+        this.resolvedAttributes = null;
+    }
 
     /**
      * Administrador de caché con coalescencia.
@@ -83,7 +122,29 @@ public class CacheConfig implements ImportAware {
      */
     @Bean
     CoalesceCachingAspect coalesceCachingAspect(CoalesceCacheManager cacheManager) {
-        return new CoalesceCachingAspect(cacheManager);
+        return new CoalesceCachingAspect(cacheManager, environment);
+    }
+
+    /**
+     * Aspecto de guardado en caché.
+     *
+     * @param cacheManager administrador de caché
+     * @return aspecto CoalescePutAspect
+     */
+    @Bean
+    CoalescePutAspect coalescePutAspect(CoalesceCacheManager cacheManager) {
+        return new CoalescePutAspect(cacheManager, environment);
+    }
+
+    /**
+     * Aspecto de invalidación de caché.
+     *
+     * @param cacheManager administrador de caché
+     * @return aspecto CoalesceEvictAspect
+     */
+    @Bean
+    CoalesceEvictAspect coalesceEvictAspect(CoalesceCacheManager cacheManager) {
+        return new CoalesceEvictAspect(cacheManager, environment);
     }
 
     /**
@@ -136,7 +197,7 @@ public class CacheConfig implements ImportAware {
 
     private List<HostsDto> getHostEntries() {
         List<HostsDto> list = new ArrayList<>();
-        AnnotationAttributes[] hostArray = attributes.getAnnotationArray("hostEntries");
+        AnnotationAttributes[] hostArray = attributes().getAnnotationArray("hostEntries");
         for (AnnotationAttributes entry : hostArray) {
             if (entry != null) {
                 String hostName = entry.getString("host");
@@ -160,9 +221,9 @@ public class CacheConfig implements ImportAware {
         RedisStandaloneConfiguration config = new RedisStandaloneConfiguration();
         config.setHostName(Objects.requireNonNull(host.getHostName(), "host is required"));
         config.setPort(host.getPort());
-        String userName = attributes.getString(ATTRIBUTE_USER_NAME);
-        String pwd = attributes.getString("pwd");
-        config.setDatabase(attributes.getNumber("database"));
+        String userName = attributes().getString(ATTRIBUTE_USER_NAME);
+        String pwd = attributes().getString("pwd");
+        config.setDatabase(attributes().getNumber("database"));
         if (StringUtils.hasText(userName)) {
             config.setUsername(userName);
         }
@@ -186,8 +247,8 @@ public class CacheConfig implements ImportAware {
                 .toList();
 
         RedisClusterConfiguration config = new RedisClusterConfiguration(nodes);
-        String userName = attributes.getString(ATTRIBUTE_USER_NAME);
-        String pwd = attributes.getString("pwd");
+        String userName = attributes().getString(ATTRIBUTE_USER_NAME);
+        String pwd = attributes().getString("pwd");
         if (StringUtils.hasText(userName)) {
             config.setUsername(userName);
         }
@@ -205,7 +266,7 @@ public class CacheConfig implements ImportAware {
 
     private RedisSentinelConfiguration createSentinelConfig() {
 
-        String sentinelMaster = attributes.getString("sentinelMaster");
+        String sentinelMaster = attributes().getString("sentinelMaster");
         List<HostsDto> hosts = getHostEntries();
         Validator.validateSentinelHosts(hosts, sentinelMaster);
 
@@ -216,9 +277,9 @@ public class CacheConfig implements ImportAware {
         for (HostsDto host : hosts) {
             sentinelConfig.sentinel(host.getHostName(), host.getPort());
         }
-        String userName = attributes.getString(ATTRIBUTE_USER_NAME);
-        String pwd = attributes.getString("pwd");
-        sentinelConfig.setDatabase(attributes.getNumber("database"));
+        String userName = attributes().getString(ATTRIBUTE_USER_NAME);
+        String pwd = attributes().getString("pwd");
+        sentinelConfig.setDatabase(attributes().getNumber("database"));
         if (StringUtils.hasText(userName)) {
             sentinelConfig.setSentinelUsername(userName);
         }
@@ -237,9 +298,9 @@ public class CacheConfig implements ImportAware {
     @ConditionalOnMissingBean
     RedisConnectionFactory createRedisConnectionFactory() {
         LettuceClientConfiguration clientConfiguration;
-        boolean useSsl = attributes.getBoolean("useSsl");
-        Long connectionTimeout = attributes.getNumber("connectionTimeout");
-        Long readTimeout = attributes.getNumber("readTimeout");
+        boolean useSsl = attributes().getBoolean("useSsl");
+        Long connectionTimeout = attributes().getNumber("connectionTimeout");
+        Long readTimeout = attributes().getNumber("readTimeout");
 
         Validator.validateTimeout(connectionTimeout, readTimeout);
 
@@ -252,7 +313,7 @@ public class CacheConfig implements ImportAware {
                 ? clientConfigurationBuilder.useSsl().and().build()
                 : clientConfigurationBuilder.build();
 
-        Mode mode = attributes.getEnum("mode");
+        Mode mode = attributes().getEnum("mode");
         return switch (mode) {
             case Mode.CLUSTER ->
                     new LettuceConnectionFactory(Objects.requireNonNull(createClusterConfig()), clientConfiguration);
@@ -300,7 +361,7 @@ public class CacheConfig implements ImportAware {
      * @return configuración de conversor de objeto
      */
     private ObjectMapperConfig getObjectMapperConfig() {
-        var configClass = attributes.getClass("mapperConfig");
+        var configClass = attributes().getClass("mapperConfig");
         if (configClass == DefaultObjectMapperConfig.class) {
             log.debug("Using default ObjectMapperConfig");
             return new DefaultObjectMapperConfig();
@@ -343,7 +404,7 @@ public class CacheConfig implements ImportAware {
                         .fromSerializer(new CustomJacksonJsonRedisSerializer<>(mapperConfig.configure(),
                                 Object.class)));
 
-        AnnotationAttributes[] ttlArray = attributes.getAnnotationArray("ttlEntries");
+        AnnotationAttributes[] ttlArray = attributes().getAnnotationArray("ttlEntries");
 
         Map<String, Long> ttlsMap = new HashMap<>();
         for (AnnotationAttributes entry : ttlArray) {
@@ -374,6 +435,7 @@ public class CacheConfig implements ImportAware {
     public void setImportMetadata(AnnotationMetadata importMetadata) {
         this.attributes = AnnotationAttributes.fromMap(
                 importMetadata.getAnnotationAttributes(EnableRedisLibrary.class.getName()));
+        this.resolvedAttributes = null;
         if (this.attributes == null) {
             throw new IllegalStateException(
                     """

@@ -9,6 +9,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.mock.env.MockEnvironment;
 
 import java.lang.reflect.Method;
 
@@ -58,6 +59,49 @@ class CoalescePutAspectTest {
      */
     public String testMethod(String id) {
         return "result";
+    }
+
+    /**
+     * Método anotado con un placeholder en el prefijo.
+     *
+     * @param id identificador
+     * @return cadena
+     */
+    @CoalescePut(value = "${cache.prefix}", key = "#id", ttl = 120, unless = "#result == null")
+    public String placeholderMethod(String id) {
+        return "result";
+    }
+
+    /**
+     * Con entorno, el prefijo con placeholder debe resolverse.
+     */
+    @Test
+    void handleSinglePut_WithEnvironment_ShouldResolvePlaceholders() throws Throwable {
+        CoalescePutAspect resolvingAspect = new CoalescePutAspect(cacheManager,
+                new MockEnvironment().withProperty("cache.prefix", "users-v2"));
+        CoalescePut put = getClass().getMethod("placeholderMethod", String.class)
+                .getAnnotation(CoalescePut.class);
+        setupJoinPoint();
+        when(joinPoint.proceed()).thenReturn("result");
+
+        resolvingAspect.handleSinglePut(joinPoint, put);
+        resolvingAspect.handleSinglePut(joinPoint, put);
+
+        verify(cacheManager, times(2)).put("users-v2:123", "result", 120);
+    }
+
+    /**
+     * Un guardado sin «unless» debe guardar en caché.
+     */
+    @Test
+    void handleSinglePut_WithEmptyUnless_ShouldCache() throws Throwable {
+        CoalescePut put = createMockPut("cache", "#id", 300, "", "");
+        setupJoinPoint();
+        when(joinPoint.proceed()).thenReturn("result");
+
+        aspect.handleSinglePut(joinPoint, put);
+
+        verify(cacheManager).put("cache:123", "result", 300);
     }
 
     /**

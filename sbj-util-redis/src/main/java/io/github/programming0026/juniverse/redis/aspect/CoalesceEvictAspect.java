@@ -3,7 +3,12 @@ package io.github.programming0026.juniverse.redis.aspect;
 import io.github.programming0026.juniverse.redis.annotation.CoalesceEvict;
 import io.github.programming0026.juniverse.redis.annotation.CoalesceEvicts;
 import io.github.programming0026.juniverse.redis.service.CoalesceCacheManager;
+import io.github.programming0026.juniverse.redis.util.AnnotationPlaceholderResolver;
 import java.util.ArrayList;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.UnaryOperator;
+import org.springframework.core.env.Environment;
 import java.util.Arrays;
 import java.util.List;
 import lombok.extern.slf4j.Slf4j;
@@ -15,13 +20,11 @@ import org.springframework.core.annotation.Order;
 import org.springframework.expression.Expression;
 import org.springframework.expression.spel.standard.SpelExpressionParser;
 import org.springframework.expression.spel.support.StandardEvaluationContext;
-import org.springframework.stereotype.Component;
 
 /**
  * @author Java Universe
  */
 @Aspect
-@Component
 @Slf4j
 @Order(3)
 public class CoalesceEvictAspect {
@@ -32,9 +35,48 @@ public class CoalesceEvictAspect {
     /** Analizador de expresiones. */
     private final SpelExpressionParser parser;
 
+    /** Función que resuelve los placeholders; {@code null} si no hay entorno. */
+    private final UnaryOperator<String> placeholderResolver;
+
+    /** Anotaciones ya resueltas, indexadas por la anotación original. */
+    private final Map<CoalesceEvict, CoalesceEvict> resolvedAnnotations = new ConcurrentHashMap<>();
+
+    /**
+     * Crea el aspecto sin resolución de placeholders.
+     *
+     * @param cacheManager administrador de caché
+     */
     public CoalesceEvictAspect(CoalesceCacheManager cacheManager) {
+        this(cacheManager, null);
+    }
+
+    /**
+     * Crea el aspecto con resolución de placeholders {@code ${...}}.
+     *
+     * @param cacheManager administrador de caché
+     * @param environment entorno con el que se resuelven los placeholders; si es {@code null},
+     *                    los valores se usan tal cual
+     */
+    public CoalesceEvictAspect(CoalesceCacheManager cacheManager, Environment environment) {
         this.cacheManager = cacheManager;
         this.parser = new SpelExpressionParser();
+        this.placeholderResolver = environment == null
+                ? null
+                : environment::resolveRequiredPlaceholders;
+    }
+
+    /**
+     * Devuelve la anotación con los placeholders resueltos.
+     *
+     * @param evict anotación original
+     * @return anotación resuelta
+     */
+    private CoalesceEvict resolvePlaceholders(CoalesceEvict evict) {
+        if (placeholderResolver == null) {
+            return evict;
+        }
+        return resolvedAnnotations.computeIfAbsent(evict,
+                e -> AnnotationPlaceholderResolver.resolve(e, placeholderResolver));
     }
 
     /**
@@ -84,7 +126,8 @@ public class CoalesceEvictAspect {
         List<CoalesceEvict> beforeEvictions = new ArrayList<>();
         List<CoalesceEvict> afterEvictions = new ArrayList<>();
 
-        for (CoalesceEvict evict : evicts) {
+        for (CoalesceEvict original : evicts) {
+            CoalesceEvict evict = resolvePlaceholders(original);
             if (evaluateCondition(joinPoint, evict.condition())) {
                 if (evict.beforeInvocation()) {
                     beforeEvictions.add(evict);

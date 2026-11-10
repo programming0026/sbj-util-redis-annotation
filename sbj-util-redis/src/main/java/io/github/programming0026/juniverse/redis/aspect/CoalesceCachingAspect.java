@@ -6,10 +6,15 @@ import io.github.programming0026.juniverse.redis.annotation.CoalesceEvict;
 import io.github.programming0026.juniverse.redis.annotation.CoalescePut;
 import io.github.programming0026.juniverse.redis.exception.CoalesceException;
 import io.github.programming0026.juniverse.redis.service.CoalesceCacheManager;
+import io.github.programming0026.juniverse.redis.util.AnnotationPlaceholderResolver;
+import java.lang.annotation.Annotation;
 import java.util.Arrays;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.UnaryOperator;
+import org.springframework.core.env.Environment;
 import org.springframework.expression.Expression;
 
-import java.util.Objects;
 import java.util.Optional;
 import lombok.extern.slf4j.Slf4j;
 import org.aspectj.lang.ProceedingJoinPoint;
@@ -34,26 +39,70 @@ public class CoalesceCachingAspect {
     /** Analizador de expresiones. */
     private final SpelExpressionParser parser;
 
+    /** Función que resuelve los placeholders; {@code null} si no hay entorno. */
+    private final UnaryOperator<String> placeholderResolver;
+
+    /** Anotaciones ya resueltas, indexadas por la anotación original. */
+    private final Map<Annotation, Annotation> resolvedAnnotations = new ConcurrentHashMap<>();
+
+    /**
+     * Crea el aspecto sin resolución de placeholders.
+     *
+     * @param cacheManager administrador de caché
+     */
     public CoalesceCachingAspect(
             CoalesceCacheManager cacheManager) {
+        this(cacheManager, null);
+    }
+
+    /**
+     * Crea el aspecto con resolución de placeholders {@code ${...}}.
+     *
+     * @param cacheManager administrador de caché
+     * @param environment entorno con el que se resuelven los placeholders; si es {@code null},
+     *                    los valores se usan tal cual
+     */
+    public CoalesceCachingAspect(
+            CoalesceCacheManager cacheManager,
+            Environment environment) {
         this.cacheManager = cacheManager;
         this.parser = new SpelExpressionParser();
+        this.placeholderResolver = environment == null
+                ? null
+                : environment::resolveRequiredPlaceholders;
         log.debug("CoalesceCachingAspect");
+    }
+
+    /**
+     * Devuelve la anotación con los placeholders resueltos.
+     *
+     * @param <A> tipo de la anotación
+     * @param annotation anotación original
+     * @return anotación resuelta
+     */
+    @SuppressWarnings("unchecked")
+    private <A extends Annotation> A resolvePlaceholders(A annotation) {
+        if (placeholderResolver == null) {
+            return annotation;
+        }
+        return (A) resolvedAnnotations.computeIfAbsent(annotation,
+                a -> AnnotationPlaceholderResolver.resolve(a, placeholderResolver));
     }
 
     /**
      * Procesa una anotación de caché.
      *
      * @param joinPoint punto de unión del aspecto
-     * @param cacheable anotación de caché
+     * @param original anotación de caché, antes de resolver placeholders
      * @return objeto
      * @throws Throwable si falla el método interceptado
      */
     @Around("@annotation(cacheable)")
     public Object handleCacheable(
             ProceedingJoinPoint joinPoint,
-            CoalesceCacheable cacheable) throws Throwable {
+            CoalesceCacheable original) throws Throwable {
 
+        CoalesceCacheable cacheable = resolvePlaceholders(original);
 
         if (!evaluateCondition(joinPoint, cacheable.condition())) {
             log.debug("Condition not met for @CoalesceCacheable, skipping cache");
@@ -97,14 +146,16 @@ public class CoalesceCachingAspect {
      * Procesa varias anotaciones de caché.
      *
      * @param joinPoint punto de unión del aspecto
-     * @param caching anotación que agrupa varias operaciones
+     * @param original anotación que agrupa varias operaciones, antes de resolver placeholders
      * @return objeto
      * @throws Throwable si falla el método interceptado
      */
     @Around("@annotation(caching)")
     public Object handleCaching(
             ProceedingJoinPoint joinPoint,
-            CoalesceCaching caching) throws Throwable {
+            CoalesceCaching original) throws Throwable {
+
+        CoalesceCaching caching = resolvePlaceholders(original);
 
         CoalesceCacheable[] cacheables = caching.cacheable();
 
@@ -134,7 +185,7 @@ public class CoalesceCachingAspect {
         CoalescePut[] puts = caching.put();
         for (CoalescePut put : puts) {
             if (evaluateCondition(joinPoint, put.condition(), result)
-                    && !evaluateCondition(joinPoint, put.unless(), result)) {
+                    && (put.unless().isEmpty() || !evaluateCondition(joinPoint, put.unless(), result))) {
 
                 String cacheKey = generateCacheKey(joinPoint, put);
                 cacheManager.put(cacheKey, result, put.ttl());
@@ -271,7 +322,7 @@ public class CoalesceCachingAspect {
             return true;
         }
 
-        return Objects.nonNull(evaluateExpression(joinPoint, condition, result, Boolean.class));
+        return Boolean.TRUE.equals(evaluateExpression(joinPoint, condition, result, Boolean.class));
     }
 
     /**
