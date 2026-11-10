@@ -5,26 +5,26 @@
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
-        <version>4.0.1</version>
+        <version>4.1.2</version>
         <relativePath/> <!-- lookup parent from repository -->
     </parent>
     <groupId>com.juniverse.redis.example</groupId>
     <artifactId>sbj-util-redis-example</artifactId>
     <version>1.0.1</version>
     <name>sbj-util-redis-example</name>
-    <description>Demo project for Spring Boot</description>
+    <description>An example using Spring Boot that demonstrates four caching patterns with Redis, utilizing the sbj-util-redis library</description>
     <url/>
     <licenses>
         <license>
-            <name>Licencia de uso personal de Java Universe 1.1 (LicenseRef-JavaUniverse-Personal-1.1)</name>
-            <distribution>manual</distribution>
-            <comments>No es una licencia de código abierto. Ver el archivo LICENSE en la raíz del repositorio.</comments>
+            <name>MIT License</name>
+            <url>https://opensource.org/license/mit</url>
+            <distribution>repo</distribution>
         </license>
     </licenses>
     <developers>
         <developer>
             <id>programming0026</id>
-            <name>Java Universe</name>
+            <name>programming0026</name>
             <url>https://github.com/programming0026</url>
         </developer>
     </developers>
@@ -46,8 +46,8 @@
             <artifactId>spring-boot-starter-webmvc</artifactId>
         </dependency>
         <dependency>
-            <groupId>com.juniverse.redis</groupId>
-            <artifactId>sbj-util-redis</artifactId>
+            <groupId>io.github.programming0026</groupId>
+            <artifactId>sbj-util-redis-annotation</artifactId>
             <version>2.0.1</version>
         </dependency>
         <dependency>
@@ -74,7 +74,6 @@
                 <artifactId>maven-surefire-plugin</artifactId>
                 <configuration>
                     <systemPropertyVariables>
-                        <!-- sin la espera de 3 s que simula un servicio lento -->
                         <example.slow-service-millis>0</example.slow-service-millis>
                     </systemPropertyVariables>
                 </configuration>

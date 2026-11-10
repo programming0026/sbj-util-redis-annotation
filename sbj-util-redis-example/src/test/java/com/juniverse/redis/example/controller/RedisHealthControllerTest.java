@@ -6,8 +6,8 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import com.juniverse.redis.dto.RedisStatusDto;
-import com.juniverse.redis.service.RedisHealthChecker;
+import io.github.programming0026.juniverse.redis.dto.RedisStatusDto;
+import io.github.programming0026.juniverse.redis.service.RedisHealthChecker;
 import org.junit.jupiter.api.Test;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;

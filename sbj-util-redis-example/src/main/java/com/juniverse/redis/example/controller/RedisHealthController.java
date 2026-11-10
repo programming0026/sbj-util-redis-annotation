@@ -1,7 +1,7 @@
 package com.juniverse.redis.example.controller;
 
-import com.juniverse.redis.dto.RedisStatusDto;
-import com.juniverse.redis.service.RedisHealthChecker;
+import io.github.programming0026.juniverse.redis.dto.RedisStatusDto;
+import io.github.programming0026.juniverse.redis.service.RedisHealthChecker;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;

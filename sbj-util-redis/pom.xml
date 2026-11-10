@@ -5,27 +5,27 @@
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
-        <version>4.0.1</version>
+        <version>4.1.2</version>
         <relativePath/> <!-- lookup parent from repository -->
     </parent>
-    <groupId>com.juniverse.redis</groupId>
-    <artifactId>sbj-util-redis</artifactId>
+    <groupId>io.github.programming0026</groupId>
+    <artifactId>sbj-util-redis-annotation</artifactId>
     <version>2.0.1</version>
     <name>sbj-util-redis</name>
     <description>Utility library for using Redis</description>
     <packaging>jar</packaging>
-    <url/>
+    <url>https://github.com/programming0026/sbj-util-redis-annotation</url>
     <licenses>
         <license>
-            <name>Licencia de uso personal de Java Universe 1.1 (LicenseRef-JavaUniverse-Personal-1.1)</name>
-            <distribution>manual</distribution>
-            <comments>No es una licencia de código abierto. Ver el archivo LICENSE en la raíz del repositorio.</comments>
+            <name>MIT License</name>
+            <url>https://opensource.org/license/mit</url>
+            <distribution>repo</distribution>
         </license>
     </licenses>
     <developers>
         <developer>
             <id>programming0026</id>
-            <name>Java Universe</name>
+            <name>programming0026</name>
             <url>https://github.com/programming0026</url>
         </developer>
     </developers>
@@ -36,6 +36,7 @@
     </scm>
     <properties>
         <java.version>21</java.version>
+        <central.autoPublish>false</central.autoPublish>
         <sonar.java.coveragePlugin>jacoco</sonar.java.coveragePlugin>
         <sonar.dynamicAnalysis>reuseReports</sonar.dynamicAnalysis>
         <sonar.language>java</sonar.language>
@@ -43,7 +44,7 @@
         <sonar.sources>src/main</sonar.sources>
         <sonar.tests>src/test</sonar.tests>
         <sonar.exclusions>
-            src/main/java/com/juniverse/redis/dto/**
+            src/main/java/io/github/programming0026/juniverse/redis/dto/**
         </sonar.exclusions>
     </properties>
     <dependencies>
@@ -76,18 +77,56 @@
             <scope>test</scope>
         </dependency>
     </dependencies>
-
     <build>
         <plugins>
             <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-source-plugin</artifactId>
-                <version>3.3.1</version>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-maven-plugin</artifactId>
+                <configuration>
+                    <skip>true</skip>
+                </configuration>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>build-info</goal>
+                        </goals>
+                    </execution>
+                </executions>
             </plugin>
             <plugin>
                 <groupId>org.sonarsource.scanner.maven</groupId>
                 <artifactId>sonar-maven-plugin</artifactId>
                 <version>5.5.0.6356</version>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-source-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>attach-sources</id>
+                        <goals>
+                            <goal>jar-no-fork</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-javadoc-plugin</artifactId>
+                <configuration>
+                    <doclint>all,-missing</doclint>
+                    <failOnWarnings>false</failOnWarnings>
+                    <failOnError>true</failOnError>
+                    <show>protected</show>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>attach-javadocs</id>
+                        <goals>
+                            <goal>jar</goal>
+                        </goals>
+                    </execution>
+                </executions>
             </plugin>
             <plugin>
                 <groupId>org.jacoco</groupId>
@@ -108,8 +147,8 @@
                         </goals>
                         <configuration>
                             <excludes>
-                                <exclude>com/juniverse/redis/dto/**</exclude>
-                                <exclude>com/juniverse/redis/exception/**</exclude>
+                                <exclude>io/github/programming0026/juniverse/redis/dto/**</exclude>
+                                <exclude>io/github/programming0026/juniverse/redis/exception/**</exclude>
                             </excludes>
                             <outputDirectory>target/jacoco-report</outputDirectory>
                             <rules>
@@ -152,7 +191,7 @@
                     <violationSeverity>warning</violationSeverity>
                     <failOnViolation>true</failOnViolation>
                     <failsOnError>true</failsOnError>
-                    <configLocation>src/main/resources/checkstyle.xml</configLocation>
+                    <configLocation>config/checkstyle.xml</configLocation>
                 </configuration>
             </plugin>
             <plugin>
@@ -167,8 +206,45 @@
                     </annotationProcessorPaths>
                 </configuration>
             </plugin>
-           
         </plugins>
     </build>
-
+    <profiles>
+        <profile>
+            <id>release</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-gpg-plugin</artifactId>
+                        <version>3.2.8</version>
+                        <executions>
+                            <execution>
+                                <id>sign-artifacts</id>
+                                <phase>verify</phase>
+                                <goals>
+                                    <goal>sign</goal>
+                                </goals>
+                                <configuration>
+                                    <gpgArguments>
+                                        <arg>--pinentry-mode</arg>
+                                        <arg>loopback</arg>
+                                    </gpgArguments>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                    <plugin>
+                        <groupId>org.sonatype.central</groupId>
+                        <artifactId>central-publishing-maven-plugin</artifactId>
+                        <version>0.12.0</version>
+                        <extensions>true</extensions>
+                        <configuration>
+                            <publishingServerId>central</publishingServerId>
+                            <autoPublish>${central.autoPublish}</autoPublish>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
 </project>

@@ -3,7 +3,7 @@ package com.juniverse.redis.example.service;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
-import com.juniverse.redis.annotation.CoalesceCacheable;
+import io.github.programming0026.juniverse.redis.annotation.CoalesceCacheable;
 import com.juniverse.redis.example.dto.OrderDTO;
 import java.lang.reflect.Method;
 import java.util.List;

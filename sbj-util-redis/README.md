@@ -72,48 +72,48 @@ Después agregue la dependencia a su `pom.xml`:
 Agregue la anotación `@EnableRedisLibrary` a su aplicación Spring Boot:
 
 ```java
-import com.juniverse.redis.annotation.EnableRedisLibrary;
-import com.juniverse.redis.util.Mode;
+import annotation.io.github.programming0026.juniverse.redis.EnableRedisLibrary;
+import util.io.github.programming0026.juniverse.redis.Mode;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 @SpringBootApplication
 @EnableRedisLibrary(
-    hostEntries = {
-        @HostEntry(host = "localhost", port = 6379)
-    },
-    mode = Mode.STANDALONE,
-    connectionTimeout = 5000,
-    readTimeout = 3000
+		hostEntries = {
+				@HostEntry(host = "localhost", port = 6379)
+		},
+		mode = Mode.STANDALONE,
+		connectionTimeout = 5000,
+		readTimeout = 3000
 )
 public class Application {
-    public static void main(String[] args) {
-        SpringApplication.run(Application.class, args);
-    }
+	public static void main(String[] args) {
+		SpringApplication.run(Application.class, args);
+	}
 }
 ```
 
 ### 2. Inyectar y usar
 
 ```java
-import com.juniverse.redis.service.RedisCacheService;
+import service.io.github.programming0026.juniverse.redis.RedisCacheService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 @Service
 public class UserService {
-    
-    @Autowired
-    private RedisCacheService cacheService;
-    
-    public User getUser(String userId) {
-        return cacheService.cacheable(
-            "users",
-            userId,
-            () -> fetchUserFromDatabase(userId),
-            Duration.ofMinutes(30)
-        );
-    }
+
+	@Autowired
+	private RedisCacheService cacheService;
+
+	public User getUser(String userId) {
+		return cacheService.cacheable(
+				"users",
+				userId,
+				() -> fetchUserFromDatabase(userId),
+				Duration.ofMinutes(30)
+		);
+	}
 }
 ```
 
@@ -236,22 +236,22 @@ La anotación `@EnableRedisLibrary` admite los siguientes parámetros:
 Cree una clase de configuración propia:
 
 ```java
-import com.juniverse.redis.config.ObjectMapperConfig;
+import config.io.github.programming0026.juniverse.redis.ObjectMapperConfig;
 import tools.jackson.databind.ObjectMapper;
 import tools.jackson.databind.json.JsonMapper;
 import tools.jackson.databind.cfg.DateTimeFeature;
 
 public class CustomObjectMapperConfig implements ObjectMapperConfig {
 
-    @Override
-    public ObjectMapper configure() {
-        // Los mappers de Jackson 3 son inmutables: todo se configura en el constructor.
-        // java.time y Optional se admiten de fábrica (no hay módulos que registrar).
-        return JsonMapper.builder()
-                .disable(DateTimeFeature.WRITE_DATES_AS_TIMESTAMPS)
-                // Agregue su configuración personalizada
-                .build();
-    }
+	@Override
+	public ObjectMapper configure() {
+		// Los mappers de Jackson 3 son inmutables: todo se configura en el constructor.
+		// java.time y Optional se admiten de fábrica (no hay módulos que registrar).
+		return JsonMapper.builder()
+				.disable(DateTimeFeature.WRITE_DATES_AS_TIMESTAMPS)
+				// Agregue su configuración personalizada
+				.build();
+	}
 }
 ```
 

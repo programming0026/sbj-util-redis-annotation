@@ -1,6 +1,6 @@
 package com.juniverse.redis.example.service;
 
-import com.juniverse.redis.service.CacheOperationBuilder;
+import io.github.programming0026.juniverse.redis.service.CacheOperationBuilder;
 import com.juniverse.redis.example.dto.AccountDTO;
 import java.math.BigDecimal;
 import java.time.Duration;

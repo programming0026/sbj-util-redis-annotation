@@ -1,9 +1,9 @@
 package com.juniverse.redis.example.config;
 
-import com.juniverse.redis.annotation.EnableRedisLibrary;
-import com.juniverse.redis.annotation.HostEntry;
-import com.juniverse.redis.annotation.TTLEntry;
-import com.juniverse.redis.util.Mode;
+import io.github.programming0026.juniverse.redis.annotation.EnableRedisLibrary;
+import io.github.programming0026.juniverse.redis.annotation.HostEntry;
+import io.github.programming0026.juniverse.redis.annotation.TTLEntry;
+import io.github.programming0026.juniverse.redis.util.Mode;
 import org.springframework.context.annotation.Configuration;
 
 /**

@@ -1,9 +1,9 @@
 package com.juniverse.redis.example.service;
 
-import com.juniverse.redis.annotation.CoalesceCacheable;
-import com.juniverse.redis.annotation.CoalesceCaching;
-import com.juniverse.redis.annotation.CoalesceEvict;
-import com.juniverse.redis.annotation.CoalescePut;
+import io.github.programming0026.juniverse.redis.annotation.CoalesceCacheable;
+import io.github.programming0026.juniverse.redis.annotation.CoalesceCaching;
+import io.github.programming0026.juniverse.redis.annotation.CoalesceEvict;
+import io.github.programming0026.juniverse.redis.annotation.CoalescePut;
 import com.juniverse.redis.example.dto.OrderDTO;
 import com.juniverse.redis.example.dto.OrderItemDTO;
 import com.juniverse.redis.example.util.Utility;

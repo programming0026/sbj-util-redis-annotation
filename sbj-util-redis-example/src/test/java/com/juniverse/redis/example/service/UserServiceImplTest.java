@@ -12,7 +12,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.juniverse.redis.example.dto.UserDTO;
-import com.juniverse.redis.service.RedisCacheService;
+import io.github.programming0026.juniverse.redis.service.RedisCacheService;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.List;

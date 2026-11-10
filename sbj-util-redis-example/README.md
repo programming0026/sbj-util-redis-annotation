@@ -62,7 +62,7 @@ El ejemplo se ejecuta en modo STANDALONE (configuración por defecto), así que 
 docker run -d --name redis -p 6379:6379 redis:7-alpine
 ```
 
-Para cambiar a SENTINEL o CLUSTER, edite `src/main/java/com/juniverse/redis/example/config/AppConfig.java`: comente el bloque `@EnableRedisLibrary` activo y descomente el que necesite.
+Para cambiar a SENTINEL o CLUSTER, edite `src/main/java/io/github/programming0026/juniverse/redis`: comente el bloque `@EnableRedisLibrary` activo y descomente el que necesite.
 
 ### 3. Instalar la librería
 

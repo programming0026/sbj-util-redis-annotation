@@ -1,6 +1,6 @@
 package com.juniverse.redis.example.service;
 
-import com.juniverse.redis.service.RedisCacheService;
+import io.github.programming0026.juniverse.redis.service.RedisCacheService;
 import com.juniverse.redis.example.dto.UserDTO;
 import java.time.Duration;
 import java.time.LocalDateTime;

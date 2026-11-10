@@ -12,8 +12,8 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.juniverse.redis.example.dto.AccountDTO;
-import com.juniverse.redis.service.CacheOperationBuilder;
-import com.juniverse.redis.service.RedisCacheService;
+import io.github.programming0026.juniverse.redis.service.CacheOperationBuilder;
+import io.github.programming0026.juniverse.redis.service.RedisCacheService;
 import java.math.BigDecimal;
 import java.time.Duration;
 import java.util.List;
@@ -40,7 +40,7 @@ class AccountServiceImplTest {
         redisCacheService = mock(RedisCacheService.class);
         service = new AccountServiceImpl(cacheManager, new CacheOperationBuilder.Factory(redisCacheService));
         when(redisCacheService.cacheableWithResult(any(), any(), any(Supplier.class), any(Duration.class)))
-                .thenAnswer(invocation -> new com.juniverse.redis.dto.CacheResult<>(
+                .thenAnswer(invocation -> new io.github.programming0026.juniverse.redis.dto.CacheResult<>(
                         ((Supplier<?>) invocation.getArgument(2)).get(), false));
     }
 
