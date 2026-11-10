@@ -482,7 +482,7 @@ Los endpoints también se pueden probar a mano con:
 
 ## Licencia
 
-Este proyecto es **libre y gratuito**, y se publica bajo la [Licencia de uso personal de Java Universe](../LICENSE), que **no es de código abierto**. Puedes estudiarlo, modificarlo y usarlo en tus propios proyectos, incluidos los comerciales y los que desarrolles para un cliente, pero **no puedes compartir, publicar ni revender el código fuente**. Las condiciones completas están en [LICENSE](../LICENSE).
+Este proyecto es **código abierto** y se publica bajo la [Licencia MIT](../LICENSE). Puedes usarlo, copiarlo, modificarlo, fusionarlo, publicarlo, distribuirlo, sublicenciarlo e incluso venderlo, siempre que conserves el aviso de copyright y el texto de la licencia. Las condiciones completas están en [LICENSE](../LICENSE).
 
 ## Autor
 

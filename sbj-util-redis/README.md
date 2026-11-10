@@ -72,7 +72,7 @@ Después agregue la dependencia a su `pom.xml`:
 Agregue la anotación `@EnableRedisLibrary` a su aplicación Spring Boot:
 
 ```java
-import annotation.io.github.programming0026.juniverse.redis.EnableRedisLibrary;
+import io.github.programming0026.juniverse.redis.EnableRedisLibrary;
 import util.io.github.programming0026.juniverse.redis.Mode;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -96,7 +96,7 @@ public class Application {
 ### 2. Inyectar y usar
 
 ```java
-import service.io.github.programming0026.juniverse.redis.RedisCacheService;
+import io.github.programming0026.juniverse.redis.RedisCacheService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -1309,7 +1309,7 @@ Revise los logs en busca de errores de conexión
 
 ## Licencia
 
-Este proyecto es **libre y gratuito**, y se publica bajo la [Licencia de uso personal de Java Universe](../LICENSE), que **no es de código abierto**. Puedes estudiarlo, modificarlo y usarlo en tus propios proyectos, incluidos los comerciales y los que desarrolles para un cliente, pero **no puedes compartir, publicar ni revender el código fuente**. Las condiciones completas están en [LICENSE](../LICENSE).
+Este proyecto es **código abierto** y se publica bajo la [Licencia MIT](../LICENSE). Puedes usarlo, copiarlo, modificarlo, fusionarlo, publicarlo, distribuirlo, sublicenciarlo e incluso venderlo, siempre que conserves el aviso de copyright y el texto de la licencia. Las condiciones completas están en [LICENSE](../LICENSE).
 
 ## Autor
 
@@ -1328,7 +1328,7 @@ Este proyecto es **libre y gratuito**, y se publica bajo la [Licencia de uso per
 - **Seguridad en hilos**: verificada por completo
 - **Modos admitidos**: Standalone, Cluster, Sentinel
 - **Versión de Java**: 21
-- **Spring Boot**: 4.0.1
+- **Spring Boot**: 4.1.2
 
 ---
 
