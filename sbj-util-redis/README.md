@@ -59,8 +59,8 @@ Después agregue la dependencia a su `pom.xml`:
 
 ```xml
 <dependency>
-    <groupId>com.juniverse.redis</groupId>
-    <artifactId>sbj-util-redis</artifactId>
+    <groupId>io.github.programming0026</groupId>
+    <artifactId>sbj-util-redis-annotation</artifactId>
     <version>2.0.1</version>
 </dependency>
 ```
