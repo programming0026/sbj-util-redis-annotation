@@ -43,12 +43,12 @@ Librería de utilidades para Spring Boot, potente y flexible, que simplifica la 
 ## Requisitos
 
 - Java 21 o superior
-- Spring Boot 4.0.1 o superior
+- Spring Boot 4.1.2 o superior
 - Servidor Redis (Standalone, Sentinel o Cluster)
 
 ## Instalación
 
-Esta copia de la librería usa el grupo `com.juniverse.redis`, que no está publicado en Maven Central, así que primero instálela en su repositorio local de Maven:
+Esta copia de la librería se publica con las coordenadas `io.github.programming0026:sbj-util-redis-annotation`. Para usar la versión de este repositorio, instálela primero en su repositorio local de Maven:
 
 ```bash
 cd sbj-util-redis
@@ -72,8 +72,8 @@ Después agregue la dependencia a su `pom.xml`:
 Agregue la anotación `@EnableRedisLibrary` a su aplicación Spring Boot:
 
 ```java
-import io.github.programming0026.juniverse.redis.EnableRedisLibrary;
-import util.io.github.programming0026.juniverse.redis.Mode;
+import io.github.programming0026.juniverse.redis.annotation.EnableRedisLibrary;
+import io.github.programming0026.juniverse.redis.util.Mode;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
@@ -96,7 +96,7 @@ public class Application {
 ### 2. Inyectar y usar
 
 ```java
-import io.github.programming0026.juniverse.redis.RedisCacheService;
+import io.github.programming0026.juniverse.redis.service.RedisCacheService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -236,7 +236,7 @@ La anotación `@EnableRedisLibrary` admite los siguientes parámetros:
 Cree una clase de configuración propia:
 
 ```java
-import config.io.github.programming0026.juniverse.redis.ObjectMapperConfig;
+import io.github.programming0026.juniverse.redis.config.ObjectMapperConfig;
 import tools.jackson.databind.ObjectMapper;
 import tools.jackson.databind.json.JsonMapper;
 import tools.jackson.databind.cfg.DateTimeFeature;
@@ -858,7 +858,7 @@ Los diagramas están escritos en [Mermaid](https://mermaid.js.org/), que GitHub 
 flowchart LR
     APP["Su aplicación Spring Boot<br/>@EnableRedisLibrary"]
 
-    subgraph LIB["com.juniverse.redis"]
+    subgraph LIB["io.github.programming0026.juniverse.redis"]
         direction TB
         ANN["annotation<br/>EnableRedisLibrary, HostEntry, TTLEntry,<br/>CoalesceCacheable, CoalescePut, CoalesceEvict, CoalesceCaching"]
         ASP["aspect<br/>CoalesceCachingAspect, CoalescePutAspect, CoalesceEvictAspect"]
@@ -1284,7 +1284,7 @@ La versión 2.0.0 pasa la librería de Jackson 2 a **Jackson 3**, el valor por d
 
 El JSON guardado en Redis conserva la misma forma (`@class` más los campos). Los valores en caché son temporales por naturaleza, así que, si tiene dudas al actualizar, vacíe una vez las cachés de la librería.
 
-**2.0.1.** Sin cambios en el código ni en la API: la librería deja de ser contenido premium, se publica gratis en GitHub y pasa a la Licencia de uso personal de Java Universe 1.1.
+**2.0.1.** Sin cambios en el código ni en la API: la librería deja de ser contenido premium, se publica gratis en GitHub como código abierto bajo la [Licencia MIT](../LICENSE).
 
 ## Solución de problemas
 
@@ -1323,7 +1323,7 @@ Este proyecto es **código abierto** y se publica bajo la [Licencia MIT](../LICE
 ## Estadísticas del proyecto
 
 - **Cobertura de pruebas**: más del 85 %
-- **Total de pruebas**: más de 260 pruebas unitarias
+- **Total de pruebas**: 297 pruebas unitarias
 - **Estado de la compilación**: todas las pruebas pasan
 - **Seguridad en hilos**: verificada por completo
 - **Modos admitidos**: Standalone, Cluster, Sentinel

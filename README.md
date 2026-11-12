@@ -4,7 +4,7 @@ Una **librería** para Spring Boot 4 que simplifica el uso de Redis (caché con 
 
 | Módulo | Qué es | Paquete |
 |--------|--------|---------|
-| [`sbj-util-redis`](sbj-util-redis/README.md) | La librería (`com.juniverse.redis:sbj-util-redis:2.0.1`, sobre Jackson 3), con 278 pruebas y diagramas UML | `com.juniverse.redis` |
+| [`sbj-util-redis`](sbj-util-redis/README.md) | La librería (`io.github.programming0026:sbj-util-redis-annotation:2.0.1`, sobre Jackson 3), con 297 pruebas y diagramas UML | `io.github.programming0026.juniverse.redis` |
 | [`sbj-util-redis-example`](sbj-util-redis-example/README.md) | API REST de ejemplo (modo Standalone) que usa la librería: productos, usuarios, cuentas y pedidos, con 59 pruebas | `com.juniverse.redis.example` |
 
 ## Cómo se usa

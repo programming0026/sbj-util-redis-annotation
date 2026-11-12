@@ -29,11 +29,11 @@ La aplicación administra cuatro entidades de dominio (productos, usuarios, cuen
 ## Tecnologías
 
 - **Java 21**
-- **Spring Boot 4.0.1**
+- **Spring Boot 4.1.2**
 - **Spring Data Redis**
 - **Maven**
 - **Lombok**
-- **sbj-util-redis 2.0.1**
+- **sbj-util-redis-annotation 2.0.1 (`io.github.programming0026`)**
 - **Jackson 3** (serialización JSON; el soporte de java.time viene integrado)
 
 ## Requisitos previos
@@ -62,11 +62,11 @@ El ejemplo se ejecuta en modo STANDALONE (configuración por defecto), así que 
 docker run -d --name redis -p 6379:6379 redis:7-alpine
 ```
 
-Para cambiar a SENTINEL o CLUSTER, edite `src/main/java/io/github/programming0026/juniverse/redis`: comente el bloque `@EnableRedisLibrary` activo y descomente el que necesite.
+Para cambiar a SENTINEL o CLUSTER, edite `src/main/java/com/juniverse/redis/example/config/AppConfig.java`: comente el bloque `@EnableRedisLibrary` activo y descomente el que necesite.
 
 ### 3. Instalar la librería
 
-El ejemplo depende de `com.juniverse.redis:sbj-util-redis`, que es el módulo `sbj-util-redis` de este repositorio (no está publicado en Maven Central). Instálela una vez en su repositorio local de Maven:
+El ejemplo depende de `io.github.programming0026:sbj-util-redis-annotation:2.0.1`, que es el módulo `sbj-util-redis` de este repositorio. Instálela una vez en su repositorio local de Maven:
 
 ```bash
 cd ../sbj-util-redis
