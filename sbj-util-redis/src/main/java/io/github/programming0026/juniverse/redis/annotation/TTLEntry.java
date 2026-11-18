@@ -3,6 +3,7 @@ package io.github.programming0026.juniverse.redis.annotation;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
+import java.util.concurrent.TimeUnit;
 
 /**
  * @author Java Universe
@@ -12,16 +13,24 @@ import java.lang.annotation.Target;
 public @interface TTLEntry {
 
     /**
-     * Nombre.
+     * Nombre de la caché: el {@code value} de las anotaciones {@code @Coalesce*} y {@code @Cacheable},
+     * o el {@code cacheName} de {@code RedisCacheService}.
      *
-     * @return cadena
+     * @return nombre de la caché
      */
     String name();
 
     /**
-     * Tiempo de vida (TTL).
+     * Tiempo de vida de las entradas de esa caché, en la unidad de {@link #unit()}.
      *
-     * @return valor entero largo
+     * @return tiempo de vida; debe ser mayor que cero
      */
     long ttl();
+
+    /**
+     * Unidad de {@link #ttl()}.
+     *
+     * @return unidad de tiempo; minutos por defecto
+     */
+    TimeUnit unit() default TimeUnit.MINUTES;
 }

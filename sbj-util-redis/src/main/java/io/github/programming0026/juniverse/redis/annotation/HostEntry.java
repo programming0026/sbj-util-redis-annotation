@@ -12,16 +12,19 @@ import java.lang.annotation.Target;
 public @interface HostEntry {
 
     /**
-     * Servidor.
+     * Servidor. Admite placeholders, y puede llevar también el puerto con la forma
+     * {@code servidor:puerto} (o {@code [ipv6]:puerto}); en ese caso manda sobre {@link #port()}.
+     * Así el puerto puede venir de una propiedad:
+     * {@code host = "${redis.host}:${redis.port}"}.
      *
-     * @return cadena
+     * @return nombre o dirección del servidor, con o sin puerto
      */
     String host();
 
     /**
-     * Puerto.
+     * Puerto. Es una constante; para tomarlo de una propiedad, indíquelo dentro de {@link #host()}.
      *
-     * @return entero
+     * @return puerto, entre 1 y 65535
      */
     int port() default 6379;
 }

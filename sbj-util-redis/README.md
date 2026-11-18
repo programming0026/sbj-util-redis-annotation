@@ -16,12 +16,15 @@ Librería de utilidades para Spring Boot, potente y flexible, que simplifica la 
   - [Coalescencia de peticiones](#coalescencia-de-peticiones-caché-con-alta-concurrencia)
 - [Comparación de enfoques de caché](#comparación-de-enfoques-de-caché)
 - [Seguridad](#seguridad)
+- [Observabilidad](#observabilidad)
 - [Seguridad en hilos](#seguridad-en-hilos)
 - [Referencia de la API](#referencia-de-la-api)
 - [Ejemplos](#ejemplos)
 - [Diagramas UML](#diagramas-uml)
 - [Migración de 1.x a 2.0 (Jackson 3)](#migración-de-1x-a-20-jackson-3)
+- [Migración de 2.x a 3.0](#migración-de-2x-a-30)
 - [Solución de problemas](#solución-de-problemas)
+- [Pruebas](#pruebas)
 - [Licencia](#licencia)
 
 ## Características
@@ -44,6 +47,7 @@ Librería de utilidades para Spring Boot, potente y flexible, que simplifica la 
 
 - Java 21 o superior
 - Spring Boot 4.1.2 o superior
+- Redis 4 o superior (los borrados usan `UNLINK`)
 - Servidor Redis (Standalone, Sentinel o Cluster)
 
 ## Instalación
@@ -61,7 +65,7 @@ Después agregue la dependencia a su `pom.xml`:
 <dependency>
     <groupId>io.github.programming0026</groupId>
     <artifactId>sbj-util-redis-annotation</artifactId>
-    <version>2.0.1</version>
+    <version>3.0.0</version>
 </dependency>
 ```
 
@@ -84,7 +88,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 		},
 		mode = Mode.STANDALONE,
 		connectionTimeout = 5000,
-		readTimeout = 3000
+		readTimeout = 1000
 )
 public class Application {
 	public static void main(String[] args) {
@@ -125,16 +129,25 @@ La anotación `@EnableRedisLibrary` admite los siguientes parámetros:
 
 | Parámetro | Tipo | Valor por defecto | Descripción |
 |-----------|------|---------|-------------|
-| `hostEntries` | HostEntry[] | `{}` | Configuración de los servidores Redis con `@HostEntry(host, port)` |
-| `userName` | String | `""` | Usuario de Redis (opcional) |
-| `pwd` | String | `""` | Contraseña de Redis (opcional) |
+| `hostEntries` | HostEntry[] | `{}` | Servidores Redis con `@HostEntry(host, port)`. `host` admite placeholders y también el puerto: `@HostEntry(host = "${redis.host}:${redis.port}")` |
+| `userName` | String | `""` | Usuario de los nodos de datos (opcional). En modo `SENTINEL` es el del maestro y las réplicas |
+| `pwd` | String | `""` | Contraseña de los nodos de datos (opcional). En modo `SENTINEL` es la del maestro y las réplicas |
+| `sentinelUserName` | String | `""` | Usuario de los sentinels (opcional, solo modo `SENTINEL`) |
+| `sentinelPwd` | String | `""` | Contraseña de los sentinels (opcional, solo modo `SENTINEL`) |
 | `mode` | Mode | `STANDALONE` | Modo de conexión: `STANDALONE`, `CLUSTER` o `SENTINEL` |
 | `sentinelMaster` | String | `""` | Nombre del maestro de Sentinel (obligatorio con el modo `SENTINEL`) |
 | `useSsl` | boolean | `false` | Habilita SSL/TLS para conexiones seguras |
-| `connectionTimeout` | long | `5000` | Tiempo de espera de conexión en milisegundos (debe ser > 0) |
-| `readTimeout` | long | `3000` | Tiempo de espera de lectura en milisegundos (debe ser > 0) |
-| `errorHandler` | Class | `DefaultObjectMapperConfig.class` | Configuración personalizada del ObjectMapper |
-| `ttlEntries` | TTLEntry[] | `{}` | Configuración del TTL por caché |
+| `failOpen` | boolean | `true` | Si Redis falla, las tres formas de caché (`@Coalesce*`, `RedisCacheService` y `@Cacheable`) ejecutan el método como si no hubiera caché, y la aplicación arranca aunque Redis no esté disponible. Con `false`, el fallo se propaga |
+| `failurePause` | long | `5000` | Milisegundos que se deja de usar Redis tras un fallo de conexión. Al acabar, una sola petición vuelve a probarlo. `0` lo desactiva |
+| `coalesceLockTimeout` | long | `30000` | Duración del bloqueo de una carga con coalescencia. Quien carga lo renueva mientras trabaja; es lo que se tarda en detectar que la instancia que cargaba murió |
+| `coalesceWaitTimeout` | long | `30000` | Milisegundos que una petición espera como máximo el resultado que carga otra antes de fallar con `CoalesceException`. Debe superar la duración máxima de los métodos `@CoalesceCacheable` |
+| `connectionTimeout` | long | `5000` | Tiempo máximo para establecer la conexión, en milisegundos (debe ser > 0) |
+| `readTimeout` | long | `1000` | Tiempo máximo de espera de la respuesta de cada orden, en milisegundos (debe ser > 0). Es lo que tarda en detectarse que Redis no contesta (ver «Qué pasa si Redis falla») |
+| `mapperConfig` | Class | `DefaultObjectMapperConfig.class` | Clase que construye el `ObjectMapper`. Debe tener constructor público sin argumentos; si no se puede instanciar, la aplicación no arranca |
+| `ttlEntries` | TTLEntry[] | `{}` | TTL por nombre de caché, con `@TTLEntry(name, ttl, unit)`; la unidad por defecto son minutos |
+| `keyPrefix` | String | `""` | Prefijo de todas las claves, bloqueos y canales de la aplicación. Vacío: se usa `spring.application.name`; si tampoco está, no hay prefijo |
+| `readFrom` | String | `""` | De qué nodos se lee cuando hay réplicas (`replicaPreferred`, `replica`, `any`, `nearest`...). Vacío: siempre del maestro |
+| `trustedPackages` | String[] | `{}` | Paquetes adicionales cuyas clases se pueden reconstruir a partir del nombre de clase guardado en Redis (ver «Serialización») |
 
 ### Ejemplo de configuración Standalone
 
@@ -189,8 +202,9 @@ La anotación `@EnableRedisLibrary` admite los siguientes parámetros:
     },
     mode = Mode.SENTINEL,
     sentinelMaster = "mymaster",  // Obligatorio: nombre de la instancia maestra
-    userName = "myuser",
-    pwd = "mypassword"
+    userName = "myuser",           // Credenciales del maestro y las réplicas
+    pwd = "${redis.password}",
+    sentinelPwd = "${redis.sentinel.password:}"  // Solo si los sentinels piden contraseña
 )
 ```
 
@@ -198,6 +212,8 @@ La anotación `@EnableRedisLibrary` admite los siguientes parámetros:
 - Redis Sentinel ofrece alta disponibilidad mediante la conmutación automática por fallo
 - Los nodos Sentinel vigilan las instancias maestra y réplica
 - El parámetro `sentinelMaster` es **obligatorio** con el modo SENTINEL
+- `userName` y `pwd` autentican contra el maestro y las réplicas; `sentinelUserName` y `sentinelPwd`, contra los sentinels. Hasta la versión 2.0.1 `userName` y `pwd` se enviaban solo a los sentinels: si los suyos piden contraseña, pásela ahora en `sentinelPwd`
+- En los modos `SENTINEL` y `CLUSTER` basta un `hostEntry` (por ejemplo, el punto de entrada único de un servicio gestionado); con varios, la conexión inicial tiene alternativas si uno no responde
 - Nombres comunes del maestro: «mymaster», «redis-master» (se configuran en sentinel.conf)
 
 ### Cómo elegir el modo
@@ -229,7 +245,72 @@ La anotación `@EnableRedisLibrary` admite los siguientes parámetros:
 )
 ```
 
-**Nota:** las configuraciones de `@TTLEntry` solo se aplican a la **anotación `@Cacheable` de Spring**. En las operaciones programáticas con `RedisCacheService` (como `cacheable()`, `cachePut()`, etc.) debe indicar el TTL de forma explícita como parámetro de la llamada.
+Un `@TTLEntry` es el TTL por defecto de esa caché en las tres formas de usarla:
+
+| Forma de uso | Cuándo se aplica el `@TTLEntry` | Si la caché no tiene `@TTLEntry` |
+|---|---|---|
+| `@Cacheable` de Spring | Siempre | Sin caducidad |
+| `@CoalesceCacheable`, `@CoalescePut` | Cuando la anotación no indica `ttl` | 300 segundos |
+| `RedisCacheService`, `CacheOperationBuilder` | Cuando la llamada no indica TTL | 10 minutos |
+
+La unidad se indica con `unit`; sin ella son minutos: `@TTLEntry(name = "tokens", ttl = 90, unit = TimeUnit.SECONDS)`. El atributo `ttl` de las anotaciones `@Coalesce*` va siempre en segundos.
+
+### Comportamiento del cliente de Redis
+
+La librería configura Lettuce así, sin atributos que ajustar:
+
+- **Keep-alive de TCP** con sondeos tras 30 s de inactividad, cada 10 s, 3 intentos: una conexión que un cortafuegos o un balanceador cortó en silencio se detecta en algo más de un minuto y Lettuce reconecta. Donde el sistema no admite estos tiempos se usa el keep-alive básico.
+- **Modo CLUSTER**: refresco de la topología cada 60 segundos y ante errores de redirección, para seguir a los nodos tras una conmutación por fallo o un movimiento de slots.
+- **Con `failOpen = true`**: mientras no hay conexión, las órdenes fallan enseguida en lugar de esperar `readTimeout`.
+
+**Qué pasa si Redis falla (`failOpen = true`, valor por defecto)**
+
+| Situación | Comportamiento |
+|---|---|
+| Redis caído o rechaza la conexión | Las peticiones se sirven sin caché, sin esperar |
+| Redis no contesta (corte de red, cortafuegos que descarta paquetes) | Las peticiones que llegan durante el primer `readTimeout` esperan ese tiempo, porque la avería todavía no se ha detectado. La primera que vence abre una pausa de `failurePause`. Durante la pausa, ninguna operación de ninguna de las tres formas de caché espera a Redis. Al acabar, una sola petición vuelve a probar: si contesta, la caché se reanuda para todas |
+| Redis no está disponible al arrancar | La aplicación arranca igualmente; la suscripción a los avisos se reintenta cada 5 s |
+| Redis vuelve | El cliente se reconecta solo y la caché se reanuda, sin reiniciar la aplicación |
+| Sentinel promueve otra réplica, o cae un maestro del clúster | Las peticiones siguen respondiendo durante la conmutación y la caché se reanuda contra el nuevo maestro |
+
+Mientras Redis no está disponible, las invalidaciones no se aplican: al recuperarse puede haber datos antiguos hasta que caduquen. Use siempre un TTL.
+
+Leer de réplicas (`readFrom`) reparte la carga, pero una réplica puede ir unos milisegundos por detrás: una lectura justo después de guardar o invalidar puede ver el estado anterior.
+
+### Sustituir los beans de la librería
+
+Todos los beans de la librería se retiran si la aplicación define el suyo:
+
+| Bean de la librería | Se retira si la aplicación define |
+|---|---|
+| `redisConnectionFactory` | Cualquier `RedisConnectionFactory` |
+| `redisTemplate` | Un bean llamado `redisTemplate` |
+| `cacheManager` | Cualquier `CacheManager` |
+| `redisMessageListenerContainer` | Cualquier `RedisMessageListenerContainer` |
+| `CoalesceCacheManager`, `RedisCacheService`, `RedisHealthChecker`, los tres aspectos, `CacheOperationBuilder.Factory` | Un bean del mismo tipo |
+
+Si define su propia `RedisConnectionFactory`, los atributos de conexión de `@EnableRedisLibrary` (`hostEntries`, `mode`, tiempos, SSL) no se usan. Es la forma de configurar lo que la anotación no permite, por ejemplo un almacén de confianza TLS propio:
+
+```java
+@Bean
+RedisConnectionFactory redisConnectionFactory(@Value("${redis.host}") String host) {
+    LettuceClientConfiguration client = LettuceClientConfiguration.builder()
+            .useSsl().and()
+            .clientOptions(ClientOptions.builder()
+                    .sslOptions(SslOptions.builder().truststore(new File("/etc/redis/truststore.p12"), "clave").build())
+                    .build())
+            .build();
+    return new LettuceConnectionFactory(new RedisStandaloneConfiguration(host, 6380), client);
+}
+```
+
+Para tomar el puerto de una propiedad no hace falta: basta con `@HostEntry(host = "${redis.host}:${redis.port}")`.
+
+La plantilla y la fábrica de conexiones usan los nombres de Spring Boot (`redisTemplate`, `redisConnectionFactory`), así que su autoconfiguración de Redis no crea otras. Hasta la versión 2.0.1 se llamaban `createRedisTemplate` y `createRedisConnectionFactory`.
+
+La anotación puede estar en la clase de configuración, en una superclase suya o dentro de una anotación propia de la aplicación.
+
+El administrador de caché de la librería escribe en Redis de forma inmediata. Spring Data Redis 4 lo hace de forma asíncrona por defecto, y entonces una lectura justo después de un `@Cacheable` o un `@CacheEvict` puede no ver el cambio.
 
 ### Configuración personalizada del ObjectMapper
 
@@ -255,7 +336,7 @@ public class CustomObjectMapperConfig implements ObjectMapperConfig {
 }
 ```
 
-> El mapper debe escribir y leer la información de tipo (`@class`) que la librería necesita para reconstruir sus objetos; parta de `DefaultObjectMapperConfig` si tiene dudas.
+> El mapper debe escribir y leer la información de tipo (`@class`) que `RedisTemplate`, `RedisCacheService` y `@Cacheable` necesitan para reconstruir sus objetos; parta de `DefaultObjectMapperConfig` si tiene dudas. Las anotaciones `@Coalesce*` usan una copia de ese mismo mapper sin información de tipo, porque ya conocen el tipo de retorno del método. Con un `mapperConfig` propio, `trustedPackages` no se aplica: la validación de clases es la de su mapper.
 
 Después, haga referencia a ella en la anotación:
 
@@ -420,7 +501,7 @@ El verificador de salud ofrece métricas completas:
 - **responseTime**: tiempo de respuesta en milisegundos
 - **errorMessage**: mensaje de estado o de error
 - **usedMemory**: uso actual de memoria en bytes
-- **maxMemory**: límite máximo de memoria en bytes
+- **maxMemory**: límite de memoria configurado en Redis (`maxmemory`), en bytes; 0 si no hay límite
 - **connectedClients**: cantidad de clientes conectados
 - **redisVersion**: versión del servidor Redis
 
@@ -468,9 +549,12 @@ public void deleteUser(String userId) {
 // Invalidar todas las entradas de la caché
 @CoalesceEvict(value = "users", allEntries = true)
 public void clearAllUsers() {
-    // Esto invalidará todas las entradas con el prefijo "users"
+    // Esto invalidará todas las entradas de la caché "users" (claves "users:...").
+    // Otras cachés cuyo nombre empieza igual, como "usersByEmail", no se tocan.
 }
 ```
+
+Si usa `:` dentro de los nombres de caché (`order`, `order:status`, `order:customer`), `allEntries` sobre `order` borra también las otras dos, porque sus claves empiezan por `order:`. Para poder vaciarlas por separado, use nombres sin `:`.
 
 #### @CoalesceCaching (varias operaciones)
 
@@ -486,9 +570,20 @@ public User refreshUser(String userId) {
 
 **Características principales:**
 - **Coalescencia de peticiones**: varias peticiones concurrentes por la misma clave se unifican y el método subyacente se ejecuta una sola vez
-- **Soporte de SpEL**: generación dinámica de claves con Spring Expression Language
-- **Invalidación distribuida**: los eventos de invalidación se publican por pub/sub de Redis para avisar a todas las instancias de la aplicación
+- **Soporte de SpEL**: generación dinámica de claves con Spring Expression Language. Los argumentos están disponibles por nombre (`#id`) y por posición (`#a0`, `#p0`); el nombre requiere compilar con `-parameters`, la posición funciona siempre. También `#target`, `#method` y, tras ejecutar el método, `#result`
+- **Varias cachés en una invalidación**: `@CoalesceEvict(value = {"users", "usersByEmail"}, key = "#id")` borra la clave en todas
+- **Invalidación distribuida**: los valores viven solo en Redis, así que una invalidación vale para todas las instancias
 - **Espacio de nombres propio**: usa el prefijo `coalesce:cache:` para evitar conflictos con la caché estándar
+- **Tipos exactos**: el valor se reconstruye con el tipo de retorno del método, incluidos records, `Long`, fechas, enums y listas inmutables
+- **Nulos en caché**: con `cacheNull = true` un resultado nulo queda guardado y no vuelve a ejecutar el método
+
+**Claves cuando la anotación no las indica:**
+
+- Sin `value`, el nombre de la caché es la clase, el método y los tipos de sus parámetros: `com.acme.UserService.find(Long)`. Dos sobrecargas no comparten entradas.
+- Sin `key`, la clave se forma con el contenido de los argumentos, no con su `hashCode()`. Un solo argumento numérico, booleano, enum o UUID da su texto (`users:42`); en los demás casos es la lista de argumentos en JSON (`users:["ana",2]`), o su SHA-256 si pasa de 200 caracteres.
+- Si un argumento no se puede convertir a JSON, la llamada falla con un mensaje que pide indicar `key`.
+
+Un `@CoalescePut` cuyo método devuelve `null` borra la entrada en lugar de guardar un nulo.
 
 **Cuándo usar las anotaciones de coalescencia:**
 - Métodos con operaciones costosas (consultas a la base de datos, llamadas a APIs externas)
@@ -513,10 +608,12 @@ La librería ofrece **tres enfoques de caché distintos**; elija según su caso 
 - **¿Invalidación distribuida entre instancias?** Use `@CoalesceEvict` (publica en pub/sub de Redis)
 - **¿Caché condicional dinámica en tiempo de ejecución?** Use `CacheOperationBuilder.condition()` o `@CoalesceCacheable(condition=...)`
 
-**Espacios de nombres de las claves:**
-- `RedisCacheService`: `{cacheName}:{key}`
-- Spring `@Cacheable`: se configura con `RedisCacheManager` (por defecto: `{cacheName}::{key}`)
-- `@CoalesceCacheable`: `coalesce:cache:{value}:{key}`
+**Espacios de nombres de las claves** (`{prefijo}` es `keyPrefix` o `spring.application.name`; sin ninguno de los dos, no hay prefijo ni su `:`):
+- `RedisCacheService`: `{prefijo}:{cacheName}:{key}`
+- Spring `@Cacheable`: `{prefijo}:{cacheName}::{key}`
+- `@CoalesceCacheable`: `{prefijo}:coalesce:cache:{value}:{key}`
+
+Las tres formas usan espacios de claves distintos a propósito: guardan los valores en formatos distintos y no deben leerse entre sí. Dos aplicaciones que comparten Redis deben tener prefijos distintos; todas las instancias de una misma aplicación, el mismo. `cacheEvictByPattern` y los borrados por patrón actúan solo dentro del prefijo propio.
 
 ## Seguridad
 
@@ -541,6 +638,11 @@ Habilite conexiones seguras con Redis mediante SSL/TLS:
 - Nunca escriba contraseñas directamente en el código fuente
 - Use credenciales de autenticación robustas
 - Configure tiempos de espera adecuados para evitar bloqueos
+- Dé a cada aplicación su propio usuario de Redis (ACL) y su propio `keyPrefix`
+
+**Qué valida `useSsl`.** El certificado del servidor se comprueba contra el almacén de confianza de la JVM (`javax.net.ssl.trustStore`). Para usar otro almacén, un certificado de cliente o desactivar la comprobación del nombre de host, defina su propia `RedisConnectionFactory` (ver «Sustituir los beans de la librería»).
+
+**Qué puede instanciar lo que hay en Redis.** Quien pueda escribir en su Redis no debe poder elegir qué clases construye su aplicación. Las anotaciones `@Coalesce*` no guardan nombres de clase; el resto solo admite los paquetes de confianza (ver «Serialización»).
 
 ### Validación de parámetros
 
@@ -580,10 +682,43 @@ cacheService.cacheable("cache", "key", loader, Duration.ofMinutes(10));
 
 La librería maneja los errores con elegancia:
 
-- **Respaldo de la caché**: ante errores de Redis, `cacheable()` devuelve el resultado del cargador
-- **Errores que no bloquean**: las operaciones de invalidación no lanzan excepciones si fallan
+- **Respaldo de la caché**: ante errores de Redis, `cacheable()` y los métodos `@Coalesce*` devuelven el resultado del método de negocio (`failOpen = true`)
+- **El método de negocio se ejecuta una sola vez**: si lanza una excepción, llega tal cual a quien llama
+- **Errores que no bloquean**: las operaciones de invalidación no lanzan excepciones si fallan. La entrada sigue en Redis hasta que caduque, así que use siempre un TTL
+- **`@Cacheable`, `@CachePut` y `@CacheEvict` de Spring** tienen el mismo respaldo: un fallo de Redis se trata como caché vacía. Con `failOpen = false` se propaga
 - **Registro detallado**: todos los errores se registran con información de contexto
 - **Verificaciones de salud**: use `RedisHealthChecker` para monitorear la conectividad
+
+## Observabilidad
+
+### Métricas
+
+Si la aplicación tiene un `MeterRegistry` de Micrometer (por ejemplo, con Spring Boot Actuator), la librería publica estos contadores de las anotaciones `@Coalesce*`, sin configuración:
+
+| Métrica | Etiqueta | Qué cuenta |
+|---|---|---|
+| `sbj.redis.cache.requests` | `result`: `hit`, `miss`, `coalesced` | Peticiones servidas de la caché, que no encontraron valor, o que recibieron el valor que cargó otra petición |
+| `sbj.redis.cache.loads` | | Ejecuciones del método de negocio |
+| `sbj.redis.cache.wait.timeouts` | | Peticiones que agotaron `coalesceWaitTimeout` |
+| `sbj.redis.cache.errors` | `operation`: `read`, `write`, `lock`... | Operaciones contra Redis que fallaron |
+
+Cómo leerlas:
+
+- **Tasa de aciertos**: `hit / (hit + miss)`.
+- **Ahorro de la coalescencia**: `coalesced` son llamadas al método de negocio que no se hicieron.
+- **`errors` creciendo** con `failOpen = true` significa que la aplicación sigue respondiendo, pero sin caché: es la señal para alertar.
+
+Micrometer es una dependencia opcional. Para enviar los contadores a otro sistema, defina un bean de tipo `CacheMetrics`. `RedisCacheService` y el `@Cacheable` de Spring no publican estas métricas.
+
+### Logs
+
+| Nivel | Qué se registra |
+|---|---|
+| `WARN` | Fallos de Redis en las anotaciones (como mucho uno cada 10 segundos; el resto va a `DEBUG`), entradas ilegibles que se descartan, modo CLUSTER o SENTINEL con un solo host |
+| `ERROR` | Fallos de Redis en `RedisCacheService` y en el verificador de salud |
+| `DEBUG` | Cada acierto, fallo, guardado e invalidación, con su clave |
+
+Las claves pueden contener datos de quien llama (identificadores, correos). Téngalo en cuenta antes de activar `DEBUG` en producción.
 
 ## Seguridad en hilos
 
@@ -693,7 +828,7 @@ public class UserService {
 | `responseTime` | long | Tiempo de respuesta en milisegundos |
 | `errorMessage` | String | Mensaje de estado o de error |
 | `usedMemory` | long | Uso actual de memoria en bytes |
-| `maxMemory` | long | Límite máximo de memoria en bytes |
+| `maxMemory` | long | Límite de memoria configurado en Redis (`maxmemory`), en bytes; 0 si no hay límite |
 | `connectedClients` | int | Cantidad de clientes conectados |
 | `redisVersion` | String | Versión del servidor Redis |
 
@@ -842,9 +977,32 @@ La librería usa **Jackson 3** (`tools.jackson`, la versión que trae Spring Boo
 - Soporte de fecha y hora de Java 8 y de `Optional` (integrado en Jackson 3, sin módulos que registrar)
 - Fechas escritas como texto ISO-8601, no como marcas de tiempo
 - Visibilidad basada en campos
-- Información de tipo polimórfico (`@class`) para reconstruir los objetos con su clase original
 - Ignora las propiedades desconocidas
 - Maneja con elegancia los beans vacíos
+
+**Dos formatos según quién guarda el valor:**
+
+| | Anotaciones `@Coalesce*` | `RedisTemplate`, `RedisCacheService`, `@Cacheable` |
+|---|---|---|
+| Cómo se sabe el tipo al leer | Por el tipo de retorno del método | Por el nombre de clase guardado junto a cada valor en el JSON |
+| Records, `Long`, `BigDecimal`, fechas y enums | Se conservan | Se conservan |
+| `List.of(...)`, `stream.toList()`, `Map.of(...)` | Se conservan | Se leen con el mismo contenido, como `ArrayList` / mapa modificable |
+| Campos de tipo `Object`, interfaz o clase abstracta | Necesitan `@JsonTypeInfo` en el tipo | Funcionan |
+| Qué clases puede instanciar lo que haya en Redis | Solo las del tipo de retorno | Las de los paquetes de confianza |
+| Tamaño | Más compacto | Algo mayor, por los nombres de clase |
+
+Con las anotaciones, un método que devuelve `Object` o un genérico sin resolver usa el segundo formato. En el segundo formato, un `Optional` como valor raíz se guarda como su contenido; el `@Cacheable` de Spring ya lo desenvuelve por su cuenta.
+
+**Paquetes de confianza.** En el formato con `@class`, solo se instancian clases de los paquetes base de la aplicación (los de `@SpringBootApplication`; si no los hay, el de la clase que lleva `@EnableRedisLibrary`), los añadidos en `trustedPackages` y los tipos básicos de `java.lang`, `java.util`, `java.time` y `java.math`. Una entrada con una clase de otro paquete no se puede leer: se registra el error y se ejecuta el cargador. Si sus DTO vienen de una librería compartida, añada su paquete:
+
+```java
+@EnableRedisLibrary(
+    hostEntries = @HostEntry(host = "${redis.host}"),
+    trustedPackages = {"com.acme.shared.dto"}
+)
+```
+
+**Compatibilidad de los valores guardados.** Una entrada que no corresponde al tipo actual del método (por ejemplo, tras cambiar el DTO de forma incompatible) se borra y se vuelve a cargar, sin error para quien llama.
 
 Las anotaciones de Jackson (`@JsonFormat`, `@JsonIgnore`, ...) siguen siendo las de `com.fasterxml.jackson.annotation`: Jackson 3 sigue usando el paquete de anotaciones de la versión 2.x.
 
@@ -864,7 +1022,7 @@ flowchart LR
         ASP["aspect<br/>CoalesceCachingAspect, CoalescePutAspect, CoalesceEvictAspect"]
         CFG["config<br/>CacheConfig, ObjectMapperConfig,<br/>DefaultObjectMapperConfig, CustomJacksonJsonRedisSerializer"]
         SVC["service<br/>RedisCacheService, CacheOperationBuilder,<br/>CoalesceCacheManager, RedisHealthChecker"]
-        DTO["dto<br/>CacheResult, CoalescedResponseDto, EvictionEventDto,<br/>HostsDto, RedisStatusDto"]
+        DTO["dto<br/>CacheResult, CoalescedResponseDto,<br/>HostsDto, RedisStatusDto"]
         UTL["util + exception<br/>Mode, Validator, CoalesceException"]
     end
 
@@ -1029,9 +1187,8 @@ classDiagram
     }
     class CoalescedResponseDto {
         <<Serializable>>
-    }
-    class EvictionEventDto {
-        <<Serializable>>
+        +String coalescingKey
+        +boolean cached
     }
     class RedisStatusDto {
         +boolean connected
@@ -1198,7 +1355,22 @@ sequenceDiagram
 
 ### 7. Secuencia: coalescencia de peticiones (`@CoalesceCacheable`)
 
-Diez peticiones concurrentes por la misma clave producen **una sola** llamada a la base de datos: la primera petición toma un bloqueo y las demás esperan su resultado mediante pub/sub de Redis.
+Diez peticiones concurrentes por la misma clave producen **una sola** llamada a la base de datos.
+
+- **Dentro de una instancia**, la primera petición de una clave se encarga de ella y las demás esperan su resultado en memoria. Si el método lanza una excepción, todas reciben esa misma excepción.
+- **Entre instancias**, la petición encargada de cada instancia compite por un bloqueo en Redis. La que lo consigue carga el valor, lo guarda y avisa por pub/sub; las demás esperan el aviso y, por si se pierde, vuelven a mirar la caché y el bloqueo cada 100 ms.
+
+Casos que conviene conocer:
+
+| Situación | Qué ocurre |
+|---|---|
+| El método lanza una excepción | Quien lo llamó recibe esa excepción, sin envoltorios. Las instancias que esperaban ejecutan su propia llamada |
+| El método devuelve `null` | No hay valor que repartir: cada instancia que esperaba ejecuta su propia llamada |
+| El método tarda más que `coalesceLockTimeout` | Quien carga renueva el bloqueo cada tercio de su duración, así que el método no se ejecuta a la vez en otra instancia. Si esa instancia muere, el bloqueo caduca y otra petición carga el valor |
+| El bloqueo ajeno sigue vigente al agotarse `coalesceWaitTimeout` | La petición falla con `CoalesceException` |
+| Redis no responde (`failOpen = true`) | El método se ejecuta sin caché y el fallo se registra. Tras un fallo de conexión la librería deja de usar Redis durante `failurePause` (5 s), para que las peticiones no paguen el tiempo de espera una por una |
+
+Mientras Redis no responde, las invalidaciones (`@CoalesceEvict`) no se aplican. Al recuperarse puede haber datos antiguos hasta que caduquen, así que conviene usar siempre un TTL.
 
 ```mermaid
 sequenceDiagram
@@ -1221,18 +1393,23 @@ sequenceDiagram
         Mgr->>Db: loader.get() (método original)
         Db-->>Mgr: resultado
         Mgr->>Red: SET coalesce:cache:key resultado EX ttl
-        Mgr->>Red: PUBLISH coalesce:ready (CoalescedResponseDto)
-        Mgr->>Red: DEL coalesce:lock:key
+        Mgr->>Red: borra coalesce:lock:key solo si sigue siendo suyo
+        Mgr->>Red: PUBLISH coalesce:signal (clave, guardado sí/no)
         Mgr-->>A: resultado
-    else B..N no obtienen el bloqueo
+    else B..N están en otra instancia y no obtienen el bloqueo
         Red-->>Mgr: el bloqueo ya está tomado
-        Mgr->>Mgr: waitForResult(key, timeout)
-        Red-->>Mgr: mensaje en coalesce:ready
+        Red-->>Mgr: mensaje en coalesce:signal (o pasan 100 ms)
+        Mgr->>Red: GET coalesce:cache:key
+        Red-->>Mgr: resultado
         Mgr-->>B: el mismo resultado (sin llamar a la base de datos)
     end
 ```
 
+En el diagrama, B..N son peticiones de otra instancia. Las que llegan a la misma instancia que A ni siquiera consultan Redis: esperan en memoria el resultado de A.
+
 ### 8. Secuencia: invalidación entre instancias
+
+Los valores viven solo en Redis, no en la memoria de cada instancia. Por eso basta con borrar la clave: la siguiente lectura de cualquier instancia ya no la encuentra.
 
 ```mermaid
 sequenceDiagram
@@ -1244,10 +1421,8 @@ sequenceDiagram
 
     S1->>Mgr1: evict(key) (@CoalesceEvict)
     Mgr1->>Red: DEL coalesce:cache:key
-    Mgr1->>Red: PUBLISH coalesce:evict (EvictionEventDto)
-    Red-->>Mgr2: mensaje en coalesce:evict
-    Mgr2->>Mgr2: handleEvictionEvent()
-    Note over Mgr2: la otra instancia se entera de que la entrada ya no existe
+    Mgr2->>Red: GET coalesce:cache:key (siguiente lectura)
+    Red-->>Mgr2: null (fallo de caché)
 ```
 
 ### 9. Elección del modo de conexión
@@ -1286,6 +1461,53 @@ El JSON guardado en Redis conserva la misma forma (`@class` más los campos). Lo
 
 **2.0.1.** Sin cambios en el código ni en la API: la librería deja de ser contenido premium, se publica gratis en GitHub como código abierto bajo la [Licencia MIT](../LICENSE).
 
+## Migración de 2.x a 3.0
+
+La 3.0 corrige fallos que afectaban a datos y disponibilidad, y para ello cambia el formato de lo que se guarda en Redis y varios comportamientos. Revise esta lista antes de actualizar.
+
+**Antes de desplegar**
+
+1. **La caché arranca vacía.** Las claves cambian (nuevo formato por defecto y prefijo de aplicación), así que la primera petición de cada clave ejecuta el método. Prevea esa carga inicial.
+2. **Borre las entradas antiguas sin caducidad.** Las que tenían TTL caducan solas. Las guardadas con `ttl = 0` quedan huérfanas: `coalesce:cache:*`, `coalesce:lock:*` y las claves `{cacheName}:*` de `RedisCacheService`.
+3. **No mantenga mezcladas instancias 2.x y 3.0** más tiempo del necesario: no comparten entradas ni avisos de coalescencia.
+
+**Configuración que puede necesitar cambios**
+
+| Si su aplicación... | Haga esto |
+|---|---|
+| Usa Sentinel con contraseña en los sentinels | Pásela en `sentinelPwd`; `pwd` es ahora la del maestro y las réplicas |
+| Guarda con `RedisCacheService`, `RedisTemplate` o `@Cacheable` clases de un paquete que no es el de la aplicación | Añada ese paquete a `trustedPackages` |
+| Tiene campos de tipo `Object`, interfaz o clase abstracta en lo que devuelven los métodos `@Coalesce*` | Anote el tipo con `@JsonTypeInfo`, o devuelva tipos concretos |
+| Inyecta por nombre `createRedisTemplate` o `createRedisConnectionFactory` | Use `redisTemplate` y `redisConnectionFactory` |
+| Captura `CoalesceException` para detectar fallos del método en caché | Capture la excepción original del método; `CoalesceException` queda para la espera agotada o interrumpida |
+| Dependía de que `allEntries` con `value = "user"` borrase también `users:...` | Declare las dos cachés |
+| Dependía de que la librería trajese Spring MVC | Declare `spring-boot-starter-webmvc` en su aplicación |
+| Prefiere que un fallo de Redis haga fallar la petición | Ponga `failOpen = false` |
+| No quiere prefijo en las claves | No defina `keyPrefix` ni `spring.application.name` |
+
+**Comportamientos que cambian sin tocar nada**
+
+- **Redis caído**: las tres formas de caché sirven las peticiones sin caché en lugar de fallar, y la aplicación arranca aunque Redis no esté disponible. Las invalidaciones que ocurran mientras tanto no se aplican.
+- **Formato con nombres de clase** (`RedisTemplate`, `RedisCacheService`, `@Cacheable`): ahora conserva `Long`, records, fechas y enums. Las entradas escritas por la 2.x se siguen leyendo, con las limitaciones de entonces, hasta que caducan.
+- **`@Cacheable`**: el administrador de caché es un `FailOpenCacheManager` que envuelve al `RedisCacheManager`. Si necesita la API de este último, use `getDelegate()`.
+- **Tiempos de espera**: `readTimeout` (1 s por defecto; antes 3 s) limita cada orden y `connectionTimeout` (5 s) la conexión; antes estaban cruzados. Sin conexión, las órdenes fallan enseguida.
+- **Excepciones**: con coalescencia, quien llama recibe la excepción de su método, sin envoltorio.
+- **`cacheNull = true`** funciona: el nulo queda guardado.
+- **`@CoalescePut` con resultado nulo** borra la entrada.
+- **`@CoalesceEvict` con varios `value`** borra la clave en todos.
+- **`@TTLEntry`** es también el TTL por defecto de `@Coalesce*` (si la anotación no indica `ttl`) y de `RedisCacheService` (si la llamada no lo indica).
+- **`cacheable` / `cachePut` de `RedisCacheService`**: una excepción del cargador ya no lo ejecuta dos veces.
+- **`mapperConfig` que no se puede instanciar**: la aplicación no arranca.
+- **`maxMemory` del verificador de salud** es el `maxmemory` de Redis (0 si no hay límite), no la memoria del sistema.
+- **`@Cacheable` de Spring** escribe en Redis de forma inmediata.
+- **Logs**: los mensajes por operación pasan a `debug`.
+
+**API**
+
+- `CoalesceCacheManager` cambia de constructor y gana `lookup`, `put` y `getOrLoad` con tipo. Si solo lo inyecta, no le afecta.
+- `CoalescedResponseDto` cambia de campos y `EvictionEventDto` desaparece (eran mensajes internos).
+- Atributos nuevos de `@EnableRedisLibrary`: `failOpen`, `failurePause`, `coalesceLockTimeout`, `coalesceWaitTimeout`, `keyPrefix`, `trustedPackages`, `readFrom`, `sentinelUserName`, `sentinelPwd`. `@TTLEntry` gana `unit`.
+
 ## Solución de problemas
 
 ### Problemas comunes
@@ -1306,6 +1528,22 @@ Verifique que Redis esté en ejecución y accesible
 Revise el endpoint de salud: /api/health/redis
 Revise los logs en busca de errores de conexión
 ```
+
+## Pruebas
+
+`mvn verify` ejecuta las pruebas unitarias y, si hay Docker disponible, las de integración contra Redis real (sin Docker se omiten). Las de integración cubren:
+
+| Escenario | Prueba |
+|---|---|
+| Ida y vuelta de tipos en las tres formas de caché | `SerializationRoundTripIT`, `UntypedRoundTripIT` |
+| Coalescencia con 20 hilos y 2 instancias, cargas más largas que el bloqueo, instancia muerta | `CoalesceConcurrencyIT` (standalone y clúster) |
+| Redis que no contesta, que se cae y vuelve, que no está al arrancar; pausa con peticiones simultáneas | `NetworkFailureIT` |
+| Sentinel con contraseñas distintas en datos y sentinels; caída del maestro | `SentinelFailoverIT` |
+| Clúster de 3 maestros y 3 réplicas desde un solo nodo semilla; borrado en todos los nodos; caída de un maestro | `ClusterFailoverIT` |
+| TLS con certificado de confianza y con certificado rechazado | `TlsIT` |
+| Contexto de Spring real: beans, sustitución, métricas | `SpringContextIT` |
+
+Las pruebas de Sentinel y de clúster publican los puertos de Redis en la propia máquina, así que necesitan un Docker local. Los certificados de `src/test/resources/tls` son solo de prueba.
 
 ## Licencia
 

@@ -1,5 +1,6 @@
 package io.github.programming0026.juniverse.redis.annotation;
 
+import io.github.programming0026.juniverse.redis.util.CacheDefaults;
 import java.lang.annotation.Documented;
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Repeatable;
@@ -31,11 +32,15 @@ public @interface CoalescePut {
     String key() default "";
 
     /**
-     * Tiempo de expiración en segundos.
+     * Tiempo de vida en segundos. Cero o un valor negativo significan que la entrada no caduca.
      *
-     * @return valor entero largo
+     * <p>Si no se indica, se usa el TTL configurado para esta caché en
+     * {@code @EnableRedisLibrary(ttlEntries = ...)}; si la caché no tiene uno,
+     * {@value io.github.programming0026.juniverse.redis.util.CacheDefaults#FALLBACK_TTL_SECONDS} segundos.</p>
+     *
+     * @return segundos
      */
-    long ttl() default 300;
+    long ttl() default CacheDefaults.CONFIGURED_TTL;
 
     /**
      * Condición SpEL para ejecutar el cacheo.

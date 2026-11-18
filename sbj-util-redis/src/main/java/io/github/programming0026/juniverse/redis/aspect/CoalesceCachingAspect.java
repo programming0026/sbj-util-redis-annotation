@@ -1,31 +1,29 @@
 package io.github.programming0026.juniverse.redis.aspect;
 
 import io.github.programming0026.juniverse.redis.annotation.CoalesceCacheable;
+import io.github.programming0026.juniverse.redis.annotation.CoalesceCacheables;
 import io.github.programming0026.juniverse.redis.annotation.CoalesceCaching;
 import io.github.programming0026.juniverse.redis.annotation.CoalesceEvict;
 import io.github.programming0026.juniverse.redis.annotation.CoalescePut;
-import io.github.programming0026.juniverse.redis.exception.CoalesceException;
+import io.github.programming0026.juniverse.redis.dto.CacheResult;
 import io.github.programming0026.juniverse.redis.service.CoalesceCacheManager;
-import io.github.programming0026.juniverse.redis.util.AnnotationPlaceholderResolver;
-import java.lang.annotation.Annotation;
-import java.util.Arrays;
+import io.github.programming0026.juniverse.redis.util.CacheKeyGenerator;
+import java.io.Serial;
+import java.lang.reflect.Type;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.function.UnaryOperator;
-import org.springframework.core.env.Environment;
-import org.springframework.expression.Expression;
 
-import java.util.Optional;
 import lombok.extern.slf4j.Slf4j;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
-import org.aspectj.lang.reflect.MethodSignature;
 import org.springframework.core.annotation.Order;
-import org.springframework.expression.spel.standard.SpelExpressionParser;
-import org.springframework.expression.spel.support.StandardEvaluationContext;
+import org.springframework.core.env.Environment;
 
 /**
+ * Aspecto de {@code @CoalesceCacheable} (una o varias) y de {@code @CoalesceCaching}.
+ *
  * @author Java Universe
  */
 @Aspect
@@ -33,17 +31,11 @@ import org.springframework.expression.spel.support.StandardEvaluationContext;
 @Order(1)
 public class CoalesceCachingAspect {
 
+    /** Lógica común de los aspectos de caché. */
+    private final CacheAspectSupport support;
+
     /** Administrador de caché. */
     private final CoalesceCacheManager cacheManager;
-    
-    /** Analizador de expresiones. */
-    private final SpelExpressionParser parser;
-
-    /** Función que resuelve los placeholders; {@code null} si no hay entorno. */
-    private final UnaryOperator<String> placeholderResolver;
-
-    /** Anotaciones ya resueltas, indexadas por la anotación original. */
-    private final Map<Annotation, Annotation> resolvedAnnotations = new ConcurrentHashMap<>();
 
     /**
      * Crea el aspecto sin resolución de placeholders.
@@ -65,28 +57,24 @@ public class CoalesceCachingAspect {
     public CoalesceCachingAspect(
             CoalesceCacheManager cacheManager,
             Environment environment) {
-        this.cacheManager = cacheManager;
-        this.parser = new SpelExpressionParser();
-        this.placeholderResolver = environment == null
-                ? null
-                : environment::resolveRequiredPlaceholders;
-        log.debug("CoalesceCachingAspect");
+        this(cacheManager, environment, Map.of());
     }
 
     /**
-     * Devuelve la anotación con los placeholders resueltos.
+     * Crea el aspecto con resolución de placeholders y los TTL configurados por caché.
      *
-     * @param <A> tipo de la anotación
-     * @param annotation anotación original
-     * @return anotación resuelta
+     * @param cacheManager administrador de caché
+     * @param environment entorno con el que se resuelven los placeholders; si es {@code null},
+     *                    los valores se usan tal cual
+     * @param configuredTtlSeconds TTL en segundos por nombre de caché, para las anotaciones
+     *                             que no indican {@code ttl}
      */
-    @SuppressWarnings("unchecked")
-    private <A extends Annotation> A resolvePlaceholders(A annotation) {
-        if (placeholderResolver == null) {
-            return annotation;
-        }
-        return (A) resolvedAnnotations.computeIfAbsent(annotation,
-                a -> AnnotationPlaceholderResolver.resolve(a, placeholderResolver));
+    public CoalesceCachingAspect(
+            CoalesceCacheManager cacheManager,
+            Environment environment,
+            Map<String, Long> configuredTtlSeconds) {
+        this.cacheManager = cacheManager;
+        this.support = new CacheAspectSupport(cacheManager, environment, configuredTtlSeconds);
     }
 
     /**
@@ -103,48 +91,88 @@ public class CoalesceCachingAspect {
             CoalesceCacheable cacheable) throws Throwable {
 
         // El nombre del parámetro debe coincidir con el del pointcut @annotation(cacheable).
-        cacheable = resolvePlaceholders(cacheable);
+        cacheable = support.resolve(joinPoint, cacheable);
 
-        if (!evaluateCondition(joinPoint, cacheable.condition())) {
+        if (!support.condition(joinPoint, cacheable.condition(), null)) {
             log.debug("Condition not met for @CoalesceCacheable, skipping cache");
             return joinPoint.proceed();
         }
 
-        String cacheKey = generateCacheKey(joinPoint, cacheable);
+        Type returnType = CacheKeyGenerator.returnTypeOf(joinPoint);
+        String cacheKey = support.cacheKey(joinPoint, cacheable.value(), cacheable.key());
 
+        if (cacheable.coalesce()) {
+            // getOrLoad ya consulta la caché: no hace falta leerla antes.
+            return loadCoalesced(joinPoint, cacheable, cacheKey, returnType);
+        }
 
-        Optional<Object> cached = cacheManager.get(cacheKey);
-        if (cached.isPresent()) {
+        CacheResult<Object> cached = cacheManager.lookup(cacheKey, returnType);
+        if (cached.isCacheHit()) {
             log.debug("Returning cached value for key: {}", cacheKey);
-            return cached.get();
+            return cached.getValue();
         }
-
-
-        if (!cacheable.coalesce()) {
-            Object result = joinPoint.proceed();
-            if (result != null || cacheable.cacheNull()) {
-                cacheManager.put(cacheKey, result, cacheable.ttl());
-            }
-            return result;
-        }
-
-
-        return cacheManager.getOrLoad(
-                cacheKey,
-                () -> {
-                    try {
-                        return joinPoint.proceed();
-                    } catch (Throwable t) {
-                        throw new CoalesceException(t);
-                    }
-                },
-                cacheable.ttl(),
-                cacheable.cacheNull()
-        );
+        return loadAndStore(joinPoint, cacheable, cacheKey, returnType);
     }
 
     /**
-     * Procesa varias anotaciones de caché.
+     * Procesa un método con varias anotaciones {@code @CoalesceCacheable}.
+     * Java agrupa las anotaciones repetidas en {@link CoalesceCacheables}, así que
+     * necesitan su propio punto de corte.
+     *
+     * <p>Se consultan en orden las claves de las anotaciones cuya condición se cumple y
+     * se devuelve el primer valor encontrado. Si no hay ninguno, el método se ejecuta una vez
+     * (con coalescencia según la primera anotación) y el resultado se guarda en todas.</p>
+     *
+     * @param joinPoint punto de unión del aspecto
+     * @param cacheables anotación que agrupa las repetidas
+     * @return objeto
+     * @throws Throwable si falla el método interceptado
+     */
+    @Around("@annotation(cacheables)")
+    public Object handleCacheables(
+            ProceedingJoinPoint joinPoint,
+            CoalesceCacheables cacheables) throws Throwable {
+
+        // El nombre del parámetro debe coincidir con el del pointcut @annotation(cacheables).
+        cacheables = support.resolve(joinPoint, cacheables);
+
+        List<CoalesceCacheable> applicable = new ArrayList<>();
+        List<String> cacheKeys = new ArrayList<>();
+        for (CoalesceCacheable cacheable : cacheables.value()) {
+            if (support.condition(joinPoint, cacheable.condition(), null)) {
+                applicable.add(cacheable);
+                cacheKeys.add(support.cacheKey(joinPoint, cacheable.value(), cacheable.key()));
+            }
+        }
+
+        if (applicable.isEmpty()) {
+            log.debug("No condition met for @CoalesceCacheable annotations, skipping cache");
+            return joinPoint.proceed();
+        }
+
+        Type returnType = CacheKeyGenerator.returnTypeOf(joinPoint);
+        for (String cacheKey : cacheKeys) {
+            CacheResult<Object> cached = cacheManager.lookup(cacheKey, returnType);
+            if (cached.isCacheHit()) {
+                log.debug("Returning cached value for key: {}", cacheKey);
+                return cached.getValue();
+            }
+        }
+
+        CoalesceCacheable first = applicable.getFirst();
+        Object result = first.coalesce()
+                ? loadCoalesced(joinPoint, first, cacheKeys.getFirst(), returnType)
+                : loadAndStore(joinPoint, first, cacheKeys.getFirst(), returnType);
+
+        for (int i = 1; i < applicable.size(); i++) {
+            store(applicable.get(i), cacheKeys.get(i), result, returnType);
+        }
+
+        return result;
+    }
+
+    /**
+     * Procesa varias operaciones de caché agrupadas en {@code @CoalesceCaching}.
      *
      * @param joinPoint punto de unión del aspecto
      * @param caching anotación que agrupa varias operaciones
@@ -157,210 +185,138 @@ public class CoalesceCachingAspect {
             CoalesceCaching caching) throws Throwable {
 
         // El nombre del parámetro debe coincidir con el del pointcut @annotation(caching).
-        caching = resolvePlaceholders(caching);
+        caching = support.resolve(joinPoint, caching);
+        Type returnType = CacheKeyGenerator.returnTypeOf(joinPoint);
 
-        CoalesceCacheable[] cacheables = caching.cacheable();
+        List<CoalesceCacheable> cacheables = new ArrayList<>();
+        List<String> cacheKeys = new ArrayList<>();
+        for (CoalesceCacheable cacheable : caching.cacheable()) {
+            if (support.condition(joinPoint, cacheable.condition(), null)) {
+                cacheables.add(cacheable);
+                cacheKeys.add(support.cacheKey(joinPoint, cacheable.value(), cacheable.key()));
+            }
+        }
 
-        if (cacheables.length > 0) {
-            for (CoalesceCacheable cacheable : cacheables) {
-                if (!evaluateCondition(joinPoint, cacheable.condition())) {
-                    continue;
-                }
-                String cacheKey = generateCacheKey(joinPoint, cacheable);
-                Optional<Object> cached = cacheManager.get(cacheKey);
-                if (cached.isPresent()) {
-                    log.debug("Returning cached value from @CoalesceCaching for key: {}", cacheKey);
-                    return cached.get();
-                }
+        for (String cacheKey : cacheKeys) {
+            CacheResult<Object> cached = cacheManager.lookup(cacheKey, returnType);
+            if (cached.isCacheHit()) {
+                log.debug("Returning cached value from @CoalesceCaching for key: {}", cacheKey);
+                return cached.getValue();
             }
         }
 
         CoalesceEvict[] evicts = caching.evict();
         for (CoalesceEvict evict : evicts) {
-            if (evict.beforeInvocation() && evaluateCondition(joinPoint, evict.condition())) {
-                performEviction(joinPoint, evict);
+            if (evict.beforeInvocation() && support.condition(joinPoint, evict.condition(), null)) {
+                support.evict(joinPoint, evict);
             }
         }
 
         Object result = joinPoint.proceed();
 
-        CoalescePut[] puts = caching.put();
-        for (CoalescePut put : puts) {
-            if (evaluateCondition(joinPoint, put.condition(), result)
-                    && (put.unless().isEmpty() || !evaluateCondition(joinPoint, put.unless(), result))) {
-
-                String cacheKey = generateCacheKey(joinPoint, put);
-                cacheManager.put(cacheKey, result, put.ttl());
-                log.debug("Cached result from @CoalesceCaching for key: {}", cacheKey);
+        for (CoalescePut put : caching.put()) {
+            if (support.shouldPut(joinPoint, put, result)) {
+                support.put(joinPoint, put, result, returnType);
             }
         }
 
         for (CoalesceEvict evict : evicts) {
-            if (!evict.beforeInvocation() && evaluateCondition(joinPoint, evict.condition())) {
-                performEviction(joinPoint, evict);
+            if (!evict.beforeInvocation() && support.condition(joinPoint, evict.condition(), null)) {
+                support.evict(joinPoint, evict);
             }
         }
 
-        for (CoalesceCacheable cacheable : cacheables) {
-            if (!evaluateCondition(joinPoint, cacheable.condition())) {
-                continue;
-            }
-            String cacheKey = generateCacheKey(joinPoint, cacheable);
-            if (result != null || cacheable.cacheNull()) {
-                cacheManager.put(cacheKey, result, cacheable.ttl());
-            }
+        for (int i = 0; i < cacheables.size(); i++) {
+            store(cacheables.get(i), cacheKeys.get(i), result, returnType);
         }
 
         return result;
     }
 
     /**
-     * Genera clave de caché.
+     * Guarda el resultado si no es nulo o si la anotación admite nulos.
+     *
+     * @param cacheable anotación de caché
+     * @param cacheKey clave ya calculada
+     * @param result resultado del método
+     * @param returnType tipo de retorno del método
+     */
+    private void store(CoalesceCacheable cacheable, String cacheKey, Object result, Type returnType) {
+        if (result != null || cacheable.cacheNull()) {
+            cacheManager.put(cacheKey, result, support.ttl(cacheable.ttl(), cacheable.value()), returnType);
+        }
+    }
+
+    /**
+     * Ejecuta el método sin coalescencia y guarda el resultado.
      *
      * @param joinPoint punto de unión del aspecto
      * @param cacheable anotación de caché
-     * @return cadena
+     * @param cacheKey clave ya calculada
+     * @param returnType tipo de retorno del método
+     * @return resultado del método
+     * @throws Throwable si falla el método interceptado
      */
-    private String generateCacheKey(ProceedingJoinPoint joinPoint, CoalesceCacheable cacheable) {
-        String baseKey = cacheable.value().isEmpty()
-                ? joinPoint.getSignature().toShortString()
-                : cacheable.value();
-
-        if (!cacheable.key().isEmpty()) {
-            String dynamicKey = evaluateExpression(joinPoint, cacheable.key(), null, String.class);
-            return baseKey + ":" + dynamicKey;
-        }
-
-        return baseKey + ":" + Arrays.hashCode(joinPoint.getArgs());
-    }
-
-    /**
-     * Genera clave de caché.
-     *
-     * @param joinPoint punto de unión del aspecto
-     * @param put anotación de guardado
-     * @return cadena
-     */
-    private String generateCacheKey(ProceedingJoinPoint joinPoint, CoalescePut put) {
-        String baseKey = put.value().isEmpty()
-                ? joinPoint.getSignature().toShortString()
-                : put.value();
-
-        if (!put.key().isEmpty()) {
-            String dynamicKey = evaluateExpression(joinPoint, put.key(), null, String.class);
-            return baseKey + ":" + dynamicKey;
-        }
-
-        return baseKey + ":" + Arrays.hashCode(joinPoint.getArgs());
-    }
-
-    /**
-     * Realiza la invalidación.
-     *
-     * @param joinPoint punto de unión del aspecto
-     * @param evict anotación de invalidación
-     */
-    private void performEviction(ProceedingJoinPoint joinPoint, CoalesceEvict evict) {
-        if (evict.allEntries()) {
-            for (String prefix : evict.value()) {
-                cacheManager.evictAll(prefix);
-                log.info("Evicted all entries for prefix: {}", prefix);
-            }
-        } else if (!evict.pattern().isEmpty()) {
-            String pattern = evaluateExpression(joinPoint, evict.pattern(), null, String.class);
-            cacheManager.evictPattern(pattern);
-            log.info("Evicted entries matching pattern: {}", pattern);
-        } else {
-            String cacheKey = generateCacheKeyForEvict(joinPoint, evict);
-            cacheManager.evict(cacheKey);
-            log.info("Evicted cache key: {}", cacheKey);
-        }
-    }
-
-    /**
-     * Genera la clave de caché para invalidar.
-     *
-     * @param joinPoint punto de unión del aspecto
-     * @param evict anotación de invalidación
-     * @return cadena
-     */
-    private String generateCacheKeyForEvict(ProceedingJoinPoint joinPoint, CoalesceEvict evict) {
-        String baseKey = evict.value().length > 0
-                ? evict.value()[0]
-                : joinPoint.getSignature().toShortString();
-
-        if (!evict.key().isEmpty()) {
-            String dynamicKey = evaluateExpression(joinPoint, evict.key(), null, String.class);
-            return baseKey + ":" + dynamicKey;
-        }
-
-        return baseKey + ":" + Arrays.hashCode(joinPoint.getArgs());
-    }
-
-    /**
-     * Evalúa la condición.
-     *
-     * @param joinPoint punto de unión del aspecto
-     * @param condition expresión de la condición
-     * @return {@code true} si la operación tuvo éxito
-     */
-    private boolean evaluateCondition(ProceedingJoinPoint joinPoint, String condition) {
-        return evaluateCondition(joinPoint, condition, null);
-    }
-
-    /**
-     * Evalúa la condición.
-     *
-     * @param joinPoint punto de unión del aspecto
-     * @param condition expresión de la condición
-     * @param result resultado
-     * @return {@code true} si la operación tuvo éxito
-     */
-    private boolean evaluateCondition(
+    private Object loadAndStore(
             ProceedingJoinPoint joinPoint,
-            String condition,
-            Object result) {
-        if (condition.isEmpty()) {
-            return true;
-        }
+            CoalesceCacheable cacheable,
+            String cacheKey,
+            Type returnType) throws Throwable {
 
-        return Boolean.TRUE.equals(evaluateExpression(joinPoint, condition, result, Boolean.class));
+        Object result = joinPoint.proceed();
+        store(cacheable, cacheKey, result, returnType);
+        return result;
     }
 
     /**
-     * Evalúa la expresión.
+     * Obtiene el valor de la caché o ejecuta el método con coalescencia de peticiones.
      *
-     * @param <T> tipo genérico
      * @param joinPoint punto de unión del aspecto
-     * @param expression expresión que se evalúa
-     * @param result resultado
-     * @param resultType tipo de resultado
-     * @return resultado de la evaluación
+     * @param cacheable anotación de caché
+     * @param cacheKey clave ya calculada
+     * @param returnType tipo de retorno del método
+     * @return valor de la caché o resultado del método
+     * @throws Throwable si falla el método interceptado
      */
-    private <T> T evaluateExpression(
+    private Object loadCoalesced(
             ProceedingJoinPoint joinPoint,
-            String expression,
-            Object result,
-            Class<T> resultType) {
+            CoalesceCacheable cacheable,
+            String cacheKey,
+            Type returnType) throws Throwable {
 
-        StandardEvaluationContext context = new StandardEvaluationContext();
-
-        MethodSignature signature = (MethodSignature) joinPoint.getSignature();
-        String[] paramNames = signature.getParameterNames();
-        Object[] args = joinPoint.getArgs();
-
-        for (int i = 0; i < paramNames.length; i++) {
-            context.setVariable(paramNames[i], args[i]);
+        try {
+            return cacheManager.getOrLoad(
+                    cacheKey,
+                    () -> {
+                        try {
+                            return joinPoint.proceed();
+                        } catch (RuntimeException | Error e) {
+                            throw e;
+                        } catch (Throwable t) {
+                            throw new CheckedFailure(t);
+                        }
+                    },
+                    support.ttl(cacheable.ttl(), cacheable.value()),
+                    cacheable.cacheNull(),
+                    returnType
+            );
+        } catch (CheckedFailure e) {
+            // El llamador recibe la excepción comprobada que lanzó su método, no el envoltorio.
+            throw e.getCause();
         }
+    }
 
-        if (result != null) {
-            context.setVariable("result", result);
+    /**
+     * Lleva una excepción comprobada del método interceptado a través del cargador,
+     * que solo puede lanzar excepciones no comprobadas. Nunca sale del aspecto.
+     */
+    private static final class CheckedFailure extends RuntimeException {
+
+        @Serial
+        private static final long serialVersionUID = 1L;
+
+        CheckedFailure(Throwable cause) {
+            super(null, cause, false, false);
         }
-
-        context.setVariable("target", joinPoint.getTarget());
-        context.setVariable("method", signature.getMethod());
-
-        Expression exp = parser.parseExpression(expression);
-        return exp.getValue(context, resultType);
     }
 }

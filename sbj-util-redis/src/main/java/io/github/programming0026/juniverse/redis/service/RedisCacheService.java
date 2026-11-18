@@ -1,40 +1,110 @@
 package io.github.programming0026.juniverse.redis.service;
 
 import java.time.Duration;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Supplier;
 
 import io.github.programming0026.juniverse.redis.dto.CacheResult;
+import io.github.programming0026.juniverse.redis.util.CacheDefaults;
+import io.github.programming0026.juniverse.redis.util.RedisKeyScanner;
 import io.github.programming0026.juniverse.redis.util.Validator;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.redis.core.Cursor;
-import org.springframework.data.redis.core.RedisCallback;
 import org.springframework.data.redis.core.RedisTemplate;
-import org.springframework.data.redis.core.ScanOptions;
+import org.springframework.data.redis.serializer.SerializationException;
 
 /**
+ * Caché programática sobre Redis: equivalentes de {@code @Cacheable}, {@code @CachePut} y
+ * {@code @CacheEvict} con el TTL indicado en cada llamada.
+ *
+ * <p>Los fallos de Redis no interrumpen la operación: se registran y la caché se comporta como si
+ * estuviera vacía. Tras un fallo de conexión, durante la pausa de {@link RedisCircuitBreaker} las
+ * operaciones ni siquiera intentan llegar a Redis, para no esperar su tiempo de respuesta.</p>
+ *
  * @author Java Universe
  */
 @Slf4j
 public class RedisCacheService {
+
+    /** TTL de las cachés que no tienen uno configurado. */
+    private static final Duration DEFAULT_TTL = Duration.ofMinutes(10);
 
     /**
      * Plantilla de Redis.
      */
     private final RedisTemplate<String, Object> redisTemplate;
 
+    /** Deja de usar Redis un tiempo tras un fallo de conexión; compartido con las demás formas de caché. */
+    private final RedisCircuitBreaker breaker;
+
+    /** Prefijo de la aplicación, ya con su separador; vacío si no se usa. */
+    private final String namespace;
+
+    /** TTL configurado por nombre de caché, para las operaciones que no indican uno. */
+    private final Map<String, Duration> configuredTtls;
+
+    /**
+     * Crea el servicio sin prefijo de aplicación y con el TTL predeterminado de 10 minutos.
+     *
+     * @param redisTemplate plantilla de Redis
+     */
     public RedisCacheService(RedisTemplate<String, Object> redisTemplate) {
+        this(redisTemplate, "", Map.of());
+    }
+
+    /**
+     * Crea el servicio.
+     *
+     * @param redisTemplate plantilla de Redis
+     * @param keyPrefix prefijo de la aplicación para todas las claves; vacío si no se usa
+     * @param configuredTtls TTL por nombre de caché, para las operaciones que no indican uno
+     */
+    public RedisCacheService(
+            RedisTemplate<String, Object> redisTemplate,
+            String keyPrefix,
+            Map<String, Duration> configuredTtls) {
+        this(redisTemplate, keyPrefix, configuredTtls, new RedisCircuitBreaker(Duration.ZERO));
+    }
+
+    /**
+     * Crea el servicio con un cortacircuitos, normalmente compartido con las demás formas de caché.
+     *
+     * @param redisTemplate plantilla de Redis
+     * @param keyPrefix prefijo de la aplicación para todas las claves; vacío si no se usa
+     * @param configuredTtls TTL por nombre de caché, para las operaciones que no indican uno
+     * @param breaker cortacircuitos que evita esperar a Redis mientras está caído
+     */
+    public RedisCacheService(
+            RedisTemplate<String, Object> redisTemplate,
+            String keyPrefix,
+            Map<String, Duration> configuredTtls,
+            RedisCircuitBreaker breaker) {
         this.redisTemplate = redisTemplate;
+        this.breaker = breaker;
+        this.namespace = CacheDefaults.namespace(keyPrefix);
+        this.configuredTtls = Map.copyOf(configuredTtls);
+    }
+
+    /**
+     * TTL de las operaciones que no indican uno: el configurado para la caché o 10 minutos.
+     *
+     * @param cacheName nombre de caché
+     * @return tiempo de vida
+     */
+    private Duration defaultTtl(String cacheName) {
+        Duration configured = cacheName == null ? null : configuredTtls.get(cacheName);
+        return configured != null ? configured : DEFAULT_TTL;
     }
 
     /**
      * Equivale a @Cacheable: busca en la caché y, si no existe,
      * ejecuta el cargador y guarda el resultado.
+     *
+     * <p>El cargador se ejecuta como mucho una vez. Si lanza una excepción, esta se propaga
+     * sin cambios. Los fallos de Redis se registran y no interrumpen la operación.</p>
      *
      * @param <T> tipo genérico
      * @param cacheName nombre de caché
@@ -50,7 +120,7 @@ public class RedisCacheService {
 
     
     /**
-     * Sobrecarga con el TTL predeterminado de 10 minutos.
+     * Sobrecarga con el TTL configurado para la caché o, si no lo hay, 10 minutos.
      *
      * @param <T> tipo genérico
      * @param cacheName nombre de caché
@@ -59,7 +129,7 @@ public class RedisCacheService {
      * @return objeto
      */
     public <T> T cacheable(String cacheName, String key, Supplier<T> loader) {
-        return cacheable(cacheName, key, loader, Duration.ofMinutes(10));
+        return cacheable(cacheName, key, loader, defaultTtl(cacheName));
     }
 
     /**
@@ -81,33 +151,45 @@ public class RedisCacheService {
         Validator.validateCacheable(cacheName, key, loader, ttl);
 
         String fullKey = buildKey(cacheName, key);
-        T result = null;
-        boolean wasLoaded = false;
+
+        // Un fallo de Redis al leer se trata como fallo de caché.
+        if (paused("Read", fullKey)) {
+            return CacheResult.miss(loader.get());
+        }
         try {
             Object cached = redisTemplate.opsForValue().get(fullKey);
+            breaker.recordSuccess();
 
             if (cached != null) {
                 log.debug("Cache HIT - Key: {}", fullKey);
                 return CacheResult.hit((T) cached);
             }
-
-            result = loader.get();
-            wasLoaded = true;
-
-            if (result != null) {
-                redisTemplate.opsForValue().set(fullKey, result, ttl);
-                log.debug("Cached data - Key: {}", fullKey);
-            }
-
-            return CacheResult.miss(result);
-
+        } catch (SerializationException e) {
+            // Una entrada que no se puede leer (otro formato, una clase que ya no existe o que no
+            // es de confianza) no se podrá leer nunca: se borra para no repetir el error.
+            log.warn("Discarding unreadable cache entry {}: {}", fullKey, e.toString());
+            discard(fullKey);
         } catch (Exception e) {
-            log.error("Error in cacheable operation for key {}: {}", fullKey, e.getMessage());
-            if (!wasLoaded) {
-                result = loader.get();
-            }
-            return CacheResult.miss(result);
+            breaker.recordFailure(e);
+            log.error("Error reading cache key {}: {}", fullKey, e.toString());
         }
+
+        // El cargador queda fuera de cualquier catch: se ejecuta una sola vez
+        // y sus excepciones llegan intactas a quien llama.
+        T result = loader.get();
+
+        if (result != null && !paused("Write", fullKey)) {
+            try {
+                redisTemplate.opsForValue().set(fullKey, result, ttl);
+                breaker.recordSuccess();
+                log.debug("Cached data - Key: {}", fullKey);
+            } catch (Exception e) {
+                breaker.recordFailure(e);
+                log.error("Error writing cache key {}: {}", fullKey, e.toString());
+            }
+        }
+
+        return CacheResult.miss(result);
     }
 
     /**
@@ -120,11 +202,15 @@ public class RedisCacheService {
      * @return CacheResult con el valor y la información de acierto o fallo
      */
     public <T> CacheResult<T> cacheableWithResult(String cacheName, String key, Supplier<T> loader) {
-        return cacheableWithResult(cacheName, key, loader, Duration.ofMinutes(10));
+        return cacheableWithResult(cacheName, key, loader, defaultTtl(cacheName));
     }
 
     /**
      * Equivale a @CachePut.
+     *
+     * <p>El cargador se ejecuta exactamente una vez. Si lanza una excepción, esta se propaga
+     * sin cambios y la caché no se toca. Los fallos de Redis se registran y no interrumpen
+     * la operación.</p>
      *
      * @param <T> tipo genérico
      * @param cacheName nombre de caché
@@ -137,12 +223,15 @@ public class RedisCacheService {
         Validator.validateCacheable(cacheName, key, loader, ttl);
 
         String fullKey = buildKey(cacheName, key);
-        boolean wasLoaded = false;
-        T result = null;
-        try {
-            result = loader.get();
-            wasLoaded = true;
 
+        // El cargador queda fuera de cualquier catch: se ejecuta una sola vez
+        // y sus excepciones llegan intactas a quien llama.
+        T result = loader.get();
+        if (paused("Update", fullKey)) {
+            return result;
+        }
+
+        try {
             if (result != null) {
                 redisTemplate.opsForValue().set(fullKey, result, ttl);
                 log.debug("Cache UPDATED - Key: {}", fullKey);
@@ -150,16 +239,13 @@ public class RedisCacheService {
                 redisTemplate.delete(fullKey);
                 log.debug("Cache EVICTED (null result) - Key: {}", fullKey);
             }
-
-            return result;
-
+            breaker.recordSuccess();
         } catch (Exception e) {
-            log.error("Error in cachePut operation for key {}: {}", fullKey, e.getMessage());
-            if (!wasLoaded) {
-                result = loader.get();
-            }
-            return result;
+            breaker.recordFailure(e);
+            log.error("Error updating cache key {}: {}", fullKey, e.toString());
         }
+
+        return result;
     }
 
     /**
@@ -172,7 +258,7 @@ public class RedisCacheService {
      * @return objeto
      */
     public <T> T cachePut(String cacheName, String key, Supplier<T> loader) {
-        return cachePut(cacheName, key, loader, Duration.ofMinutes(10));
+        return cachePut(cacheName, key, loader, defaultTtl(cacheName));
     }
 
     /**
@@ -185,67 +271,46 @@ public class RedisCacheService {
         Validator.validateCacheEvict(cacheName, key);
 
         String fullKey = buildKey(cacheName, key);
+        if (paused("Evict", fullKey)) {
+            return;
+        }
 
         try {
             Boolean deleted = redisTemplate.delete(fullKey);
+            breaker.recordSuccess();
             if (Boolean.TRUE.equals(deleted)) {
                 log.debug("Cache EVICTED - Key: {}", fullKey);
             } else {
                 log.debug("Cache key not found - Key: {}", fullKey);
             }
         } catch (Exception e) {
-            log.error("Error evicting cache key {}: {}", fullKey, e.getMessage());
+            breaker.recordFailure(e);
+            log.error("Error evicting cache key {}: {}", fullKey, e.toString());
         }
     }
 
     /**
      * Equivale a @CacheEvict(allEntries = true).
      *
-     * <p>Este método usa SCAN para recorrer las claves y las elimina por lotes
-     * durante el recorrido, para no cargarlas todas en memoria de una vez.</p>
+     * <p>Recorre las claves con SCAN y las elimina por lotes con UNLINK, sin bloquear Redis
+     * ni cargarlas todas en memoria.</p>
      *
      * @param cacheName nombre de caché
      */
     public void cacheEvictAll(String cacheName) {
         Validator.validateCacheEvict(cacheName);
 
-        String pattern = cacheName + ":*";
+        String pattern = namespace + cacheName + ":*";
+        if (paused("Evict", pattern)) {
+            return;
+        }
         try {
-            AtomicLong deletedCount = new AtomicLong(0);
-
-            redisTemplate.execute((RedisCallback<Void>) connection -> {
-                ScanOptions options = ScanOptions.scanOptions()
-                        .match(pattern)
-                        .count(100)
-                        .build();
-
-                List<byte[]> batch = new ArrayList<>();
-                try(Cursor<byte[]> cursor = connection.keyCommands().scan(options)) {
-                    while (cursor.hasNext()) {
-                        batch.add(cursor.next());
-
-                        if (batch.size() >= 100) {
-                            Long deleted = connection.keyCommands().del(
-                                batch.toArray(new byte[0][])
-                            );
-                            deletedCount.addAndGet(deleted != null ? deleted : 0);
-                            batch.clear();
-                        }
-                    }
-
-                    if (!batch.isEmpty()) {
-                        Long deleted = connection.keyCommands().del(
-                            batch.toArray(new byte[0][])
-                        );
-                        deletedCount.addAndGet(deleted != null ? deleted : 0);
-                    }
-                }
-                return null;
-            });
-
-            log.debug("Cache EVICTED ALL - Pattern: {}, Count: {}", pattern, deletedCount.get());
+            long deleted = RedisKeyScanner.deleteMatching(redisTemplate, pattern);
+            breaker.recordSuccess();
+            log.debug("Cache EVICTED ALL - Pattern: {}, Count: {}", pattern, deleted);
         } catch (Exception e) {
-            log.error("Error evicting all entries for cache {}: {}", cacheName, e.getMessage());
+            breaker.recordFailure(e);
+            log.error("Error evicting all entries for cache {}: {}", cacheName, e.toString());
         }
     }
 
@@ -270,62 +335,43 @@ public class RedisCacheService {
         List<String> fullKeys = Arrays.stream(keys)
                 .map(key -> buildKey(cacheName, key))
                 .toList();
+        if (paused("Evict", fullKeys.size() + " keys")) {
+            return;
+        }
 
         try {
             Long deleted = redisTemplate.delete(fullKeys);
+            breaker.recordSuccess();
             log.debug("Cache EVICTED MULTIPLE - Count: {}", deleted);
         } catch (Exception e) {
-            log.error("Error evicting multiple keys: {}", e.getMessage());
+            breaker.recordFailure(e);
+            log.error("Error evicting multiple keys: {}", e.toString());
         }
     }
 
     /**
-     * Invalida por un patrón propio.
+     * Invalida por un patrón propio. El patrón se aplica dentro del prefijo de la aplicación,
+     * así que no alcanza a las claves de otras aplicaciones que compartan Redis.
      *
-     * <p>Este método usa SCAN para recorrer las claves y las elimina por lotes
-     * durante el recorrido, para no cargarlas todas en memoria de una vez.</p>
+     * <p>Recorre las claves con SCAN y las elimina por lotes con UNLINK, sin bloquear Redis
+     * ni cargarlas todas en memoria.</p>
      *
-     * @param pattern patrón de claves
+     * @param userPattern patrón de claves, sin el prefijo de la aplicación
      */
-    public void cacheEvictByPattern(String pattern) {
-        Validator.validatePattern(pattern);
+    public void cacheEvictByPattern(String userPattern) {
+        Validator.validatePattern(userPattern);
 
+        String pattern = namespace + userPattern;
+        if (paused("Evict", pattern)) {
+            return;
+        }
         try {
-            AtomicLong deletedCount = new AtomicLong(0);
-
-            redisTemplate.execute((RedisCallback<Void>) connection -> {
-                ScanOptions options = ScanOptions.scanOptions()
-                        .match(pattern)
-                        .count(100)
-                        .build();
-
-                List<byte[]> batch = new ArrayList<>();
-                try(Cursor<byte[]> cursor = connection.keyCommands().scan(options)) {
-                    while (cursor.hasNext()) {
-                        batch.add(cursor.next());
-
-                        if (batch.size() >= 100) {
-                            Long deleted = connection.keyCommands().del(
-                                batch.toArray(new byte[0][])
-                            );
-                            deletedCount.addAndGet(deleted != null ? deleted : 0);
-                            batch.clear();
-                        }
-                    }
-
-                    if (!batch.isEmpty()) {
-                        Long deleted = connection.keyCommands().del(
-                            batch.toArray(new byte[0][])
-                        );
-                        deletedCount.addAndGet(deleted != null ? deleted : 0);
-                    }
-                }
-                return null;
-            });
-
-            log.debug("Cache EVICTED BY PATTERN - Pattern: {}, Count: {}", pattern, deletedCount.get());
+            long deleted = RedisKeyScanner.deleteMatching(redisTemplate, pattern);
+            breaker.recordSuccess();
+            log.debug("Cache EVICTED BY PATTERN - Pattern: {}, Count: {}", pattern, deleted);
         } catch (Exception e) {
-            log.error("Error evicting by pattern {}: {}", pattern, e.getMessage());
+            breaker.recordFailure(e);
+            log.error("Error evicting by pattern {}: {}", pattern, e.toString());
         }
     }
 
@@ -340,11 +386,17 @@ public class RedisCacheService {
         Validator.validateCacheEvict(cacheName, key);
 
         String fullKey = buildKey(cacheName, key);
+        if (paused("Exists", fullKey)) {
+            return false;
+        }
 
         try {
-            return Boolean.TRUE.equals(redisTemplate.hasKey(fullKey));
+            boolean exists = Boolean.TRUE.equals(redisTemplate.hasKey(fullKey));
+            breaker.recordSuccess();
+            return exists;
         } catch (Exception e) {
-            log.error("Error checking key existence {}: {}", fullKey, e.getMessage());
+            breaker.recordFailure(e);
+            log.error("Error checking key existence {}: {}", fullKey, e.toString());
             return false;
         }
     }
@@ -360,12 +412,42 @@ public class RedisCacheService {
         Validator.validateCacheEvict(cacheName, key);
 
         String fullKey = buildKey(cacheName, key);
+        if (paused("TTL", fullKey)) {
+            return null;
+        }
 
         try {
-            return redisTemplate.getExpire(fullKey, TimeUnit.SECONDS);
+            Long ttl = redisTemplate.getExpire(fullKey, TimeUnit.SECONDS);
+            breaker.recordSuccess();
+            return ttl;
         } catch (Exception e) {
-            log.error("Error getting TTL for key {}: {}", fullKey, e.getMessage());
+            breaker.recordFailure(e);
+            log.error("Error getting TTL for key {}: {}", fullKey, e.toString());
             return null;
+        }
+    }
+
+    /**
+     * Indica si hay que saltarse Redis porque hubo un fallo de conexión hace poco.
+     *
+     * @param operation operación que se salta, para el log
+     * @param target clave o patrón afectado, para el log
+     * @return {@code true} si la operación no debe llegar a Redis
+     */
+    private boolean paused(String operation, String target) {
+        if (breaker.isOpen()) {
+            log.debug("{} paused after a Redis connection failure, skipping cache for {}", operation, target);
+            return true;
+        }
+        return false;
+    }
+
+    private void discard(String fullKey) {
+        try {
+            redisTemplate.delete(fullKey);
+        } catch (Exception e) {
+            breaker.recordFailure(e);
+            log.error("Error discarding cache key {}: {}", fullKey, e.toString());
         }
     }
 
@@ -377,6 +459,6 @@ public class RedisCacheService {
      * @return cadena
      */
     private String buildKey(String cacheName, String key) {
-        return cacheName + ":" + key;
+        return namespace + cacheName + ":" + key;
     }
 }

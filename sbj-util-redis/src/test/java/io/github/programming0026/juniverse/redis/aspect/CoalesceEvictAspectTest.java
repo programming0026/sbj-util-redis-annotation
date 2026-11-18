@@ -102,13 +102,13 @@ class CoalesceEvictAspectTest {
     }
 
     /**
-     * Una invalidación con clave vacía debe usar el hash de los argumentos.
+     * Una invalidación con clave vacía debe usar el contenido de los argumentos.
      */
     @Test
-    void handleSingleEvict_WithEmptyKey_ShouldUseArgsHashcode() throws Throwable {
+    void handleSingleEvict_WithEmptyKey_ShouldUseArgumentsContent() throws Throwable {
         CoalesceEvict evict = createMockEvict(new String[] { "cache" }, "", "", true, false, "");
         Object[] args = new Object[] { "123" };
-        String expectedKey = "cache:" + java.util.Arrays.hashCode(args);
+        String expectedKey = "cache:[\"123\"]";
 
         when(joinPoint.getSignature()).thenReturn(methodSignature);
         when(joinPoint.getArgs()).thenReturn(args);

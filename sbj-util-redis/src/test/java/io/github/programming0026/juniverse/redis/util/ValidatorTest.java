@@ -216,18 +216,15 @@ class ValidatorTest {
     }
 
     /**
-     * Validar el modo clúster con un solo servidor debe lanzar una excepción.
+     * Validar el modo clúster con un solo servidor es válido: basta un nodo para descubrir el resto.
      */
     @Test
-    void validateClusterHosts_WithSingleHost_ShouldThrowException() {
+    void validateClusterHosts_WithSingleHost_ShouldNotThrowException() {
         List<HostsDto> hosts = Arrays.asList(
                 HostsDto.builder().hostName("localhost").port(6379).build()
         );
 
-        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class,
-                () -> Validator.validateClusterHosts(hosts));
-        assertEquals("Cluster mode requires host entries for proper redundancy",
-                exception.getMessage());
+        assertDoesNotThrow(() -> Validator.validateClusterHosts(hosts));
     }
 
     /**
@@ -276,18 +273,15 @@ class ValidatorTest {
     }
 
     /**
-     * Validar sentinel con un solo servidor debe lanzar una excepción.
+     * Validar sentinel con un solo servidor es válido.
      */
     @Test
-    void validateSentinelHosts_WithSingleHost_ShouldThrowException() {
+    void validateSentinelHosts_WithSingleHost_ShouldNotThrowException() {
         List<HostsDto> hosts = Arrays.asList(
                 HostsDto.builder().hostName("localhost").port(26379).build()
         );
 
-        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class,
-                () -> Validator.validateSentinelHosts(hosts, "mymaster"));
-        assertEquals("Sentinel mode requires host entries for proper redundancy",
-                exception.getMessage());
+        assertDoesNotThrow(() -> Validator.validateSentinelHosts(hosts, "mymaster"));
     }
 
     /**
@@ -684,5 +678,55 @@ class ValidatorTest {
     @Test
     void validatePattern_WithValidPattern_ShouldNotThrowException() {
         assertDoesNotThrow(() -> Validator.validatePattern("cache:*"));
+    }
+
+    /**
+     * Los tiempos de coalescencia válidos no deben lanzar excepción.
+     */
+    @Test
+    void validateCoalesceTimeouts_WithValidValues_ShouldNotThrowException() {
+        assertDoesNotThrow(() -> Validator.validateCoalesceTimeouts(30000L, 1L));
+    }
+
+    /**
+     * Los tiempos de coalescencia nulos deben rechazarse.
+     */
+    @Test
+    void validateCoalesceTimeouts_WithNullValues_ShouldThrowException() {
+        assertEquals("Coalesce lock timeout cannot be null",
+                assertThrows(NullPointerException.class,
+                        () -> Validator.validateCoalesceTimeouts(null, 30000L)).getMessage());
+        assertEquals("Coalesce wait timeout cannot be null",
+                assertThrows(NullPointerException.class,
+                        () -> Validator.validateCoalesceTimeouts(30000L, null)).getMessage());
+    }
+
+    /**
+     * Los tiempos de coalescencia que no son positivos deben rechazarse.
+     */
+    @Test
+    void validateCoalesceTimeouts_WithNonPositiveValues_ShouldThrowException() {
+        assertEquals("Invalid coalesceLockTimeout 0.",
+                assertThrows(IllegalArgumentException.class,
+                        () -> Validator.validateCoalesceTimeouts(0L, 30000L)).getMessage());
+        assertEquals("Invalid coalesceWaitTimeout -5.",
+                assertThrows(IllegalArgumentException.class,
+                        () -> Validator.validateCoalesceTimeouts(30000L, -5L)).getMessage());
+    }
+
+    /**
+     * El prefijo de la aplicación admite texto corriente y rechaza espacios y caracteres de patrón.
+     */
+    @Test
+    void validateKeyPrefix_ShouldRejectWhitespaceAndGlobCharacters() {
+        assertDoesNotThrow(() -> Validator.validateKeyPrefix(null));
+        assertDoesNotThrow(() -> Validator.validateKeyPrefix(""));
+        assertDoesNotThrow(() -> Validator.validateKeyPrefix("tienda-pedidos:v2"));
+
+        for (String invalid : List.of("mi tienda", "tienda*", "tienda?", "tienda[1]", "tienda\\x")) {
+            IllegalArgumentException exception = assertThrows(IllegalArgumentException.class,
+                    () -> Validator.validateKeyPrefix(invalid));
+            assertTrue(exception.getMessage().contains("keyPrefix"));
+        }
     }
 }

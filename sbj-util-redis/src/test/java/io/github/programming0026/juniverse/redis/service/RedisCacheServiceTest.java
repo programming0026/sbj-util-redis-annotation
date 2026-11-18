@@ -1,9 +1,9 @@
 package io.github.programming0026.juniverse.redis.service;
 
 import io.github.programming0026.juniverse.redis.dto.CacheResult;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.redis.core.RedisCallback;
@@ -12,7 +12,10 @@ import org.springframework.data.redis.core.ValueOperations;
 
 import java.time.Duration;
 import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Supplier;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -36,8 +39,15 @@ class RedisCacheServiceTest {
     private ValueOperations<String, Object> valueOperations;
 
     /** Servicio de caché. */
-    @InjectMocks
     private RedisCacheService cacheService;
+
+    /**
+     * Crea el servicio sin prefijo de aplicación ni TTL configurados.
+     */
+    @BeforeEach
+    void createService() {
+        cacheService = new RedisCacheService(redisTemplate);
+    }
 
    
     /**
@@ -963,5 +973,149 @@ class RedisCacheServiceTest {
         IllegalStateException exception = assertThrows(IllegalStateException.class,
                 () -> cacheService.getTTL("cache", null));
         assertEquals("key is required", exception.getMessage());
+    }
+
+    /**
+     * Si el cargador falla, se ejecuta una sola vez y su excepción llega intacta.
+     */
+    @Test
+    void cacheable_WhenLoaderThrows_ShouldRunLoaderOnceAndPropagate() {
+        AtomicInteger calls = new AtomicInteger();
+        Supplier<String> loader = () -> {
+            calls.incrementAndGet();
+            throw new IllegalArgumentException("fallo de negocio");
+        };
+        when(redisTemplate.opsForValue()).thenReturn(valueOperations);
+        when(valueOperations.get("users:user1")).thenReturn(null);
+
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class,
+                () -> cacheService.cacheable("users", "user1", loader, Duration.ofMinutes(10)));
+
+        assertEquals("fallo de negocio", exception.getMessage());
+        assertEquals(1, calls.get());
+    }
+
+    /**
+     * Si Redis falla al leer y al escribir, el cargador se ejecuta una sola vez y su resultado se devuelve.
+     */
+    @Test
+    void cacheable_WhenRedisFailsOnReadAndWrite_ShouldRunLoaderOnce() {
+        AtomicInteger calls = new AtomicInteger();
+        when(redisTemplate.opsForValue()).thenReturn(valueOperations);
+        when(valueOperations.get("users:user1")).thenThrow(new RuntimeException("Redis error"));
+        doThrow(new RuntimeException("Redis error"))
+                .when(valueOperations).set(anyString(), any(), any(Duration.class));
+
+        String result = cacheService.cacheable("users", "user1",
+                () -> "valor-" + calls.incrementAndGet(), Duration.ofMinutes(10));
+
+        assertEquals("valor-1", result);
+        assertEquals(1, calls.get());
+    }
+
+    /**
+     * Si el cargador de cachePut falla, se ejecuta una sola vez, su excepción llega intacta
+     * y la caché no se toca.
+     */
+    @Test
+    void cachePut_WhenLoaderThrows_ShouldRunLoaderOnceAndPropagate() {
+        AtomicInteger calls = new AtomicInteger();
+        Supplier<String> loader = () -> {
+            calls.incrementAndGet();
+            throw new IllegalArgumentException("fallo de negocio");
+        };
+
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class,
+                () -> cacheService.cachePut("users", "user1", loader, Duration.ofMinutes(10)));
+
+        assertEquals("fallo de negocio", exception.getMessage());
+        assertEquals(1, calls.get());
+        verify(redisTemplate, never()).opsForValue();
+        verify(redisTemplate, never()).delete(anyString());
+    }
+
+    /**
+     * Si Redis falla al guardar en cachePut, el cargador se ejecuta una sola vez.
+     */
+    @Test
+    void cachePut_WhenRedisThrowsException_ShouldRunLoaderOnce() {
+        AtomicInteger calls = new AtomicInteger();
+        when(redisTemplate.opsForValue()).thenReturn(valueOperations);
+        doThrow(new RuntimeException("Redis error"))
+                .when(valueOperations).set(anyString(), any(), any(Duration.class));
+
+        String result = cacheService.cachePut("users", "user1",
+                () -> "valor-" + calls.incrementAndGet(), Duration.ofMinutes(10));
+
+        assertEquals("valor-1", result);
+        assertEquals(1, calls.get());
+    }
+
+    /**
+     * Con prefijo de aplicación, todas las claves lo llevan delante.
+     */
+    @Test
+    void keyPrefix_ShouldBeAppliedToEveryKey() {
+        RedisCacheService prefixed = new RedisCacheService(redisTemplate, "tienda", Map.of());
+        when(redisTemplate.opsForValue()).thenReturn(valueOperations);
+        when(valueOperations.get("tienda:users:user1")).thenReturn("Ana");
+
+        assertEquals("Ana", prefixed.cacheable("users", "user1", () -> "no-debe-ejecutarse"));
+        prefixed.cacheEvict("users", "user1");
+        prefixed.exists("users", "user1");
+        prefixed.getTTL("users", "user1");
+        prefixed.cacheEvictMultiple("users", "user1", "user2");
+
+        verify(redisTemplate).delete("tienda:users:user1");
+        verify(redisTemplate).hasKey("tienda:users:user1");
+        verify(redisTemplate).getExpire("tienda:users:user1", TimeUnit.SECONDS);
+        verify(redisTemplate).delete(List.of("tienda:users:user1", "tienda:users:user2"));
+    }
+
+    /**
+     * Sin TTL en la llamada se usa el configurado para esa caché; si no lo hay, 10 minutos.
+     */
+    @Test
+    void defaultTtl_ShouldComeFromTheCacheConfiguration() {
+        RedisCacheService configured = new RedisCacheService(
+                redisTemplate, "", Map.of("users", Duration.ofMinutes(30)));
+        when(redisTemplate.opsForValue()).thenReturn(valueOperations);
+
+        configured.cacheable("users", "user1", () -> "Ana");
+        configured.cachePut("users", "user2", () -> "Luis");
+        configured.cacheableWithResult("orders", "order1", () -> "Pedido");
+
+        verify(valueOperations).set("users:user1", "Ana", Duration.ofMinutes(30));
+        verify(valueOperations).set("users:user2", "Luis", Duration.ofMinutes(30));
+        verify(valueOperations).set("orders:order1", "Pedido", Duration.ofMinutes(10));
+    }
+
+    /**
+     * Una entrada que no se puede deserializar se borra y se carga de nuevo, sin fallar.
+     */
+    @Test
+    void cacheable_WhenEntryIsUnreadable_ShouldDiscardItAndLoad() {
+        when(redisTemplate.opsForValue()).thenReturn(valueOperations);
+        when(valueOperations.get("users:user1"))
+                .thenThrow(new org.springframework.data.redis.serializer.SerializationException("ilegible"));
+
+        String result = cacheService.cacheable("users", "user1", () -> "Ana", Duration.ofMinutes(10));
+
+        assertEquals("Ana", result);
+        verify(redisTemplate).delete("users:user1");
+        verify(valueOperations).set("users:user1", "Ana", Duration.ofMinutes(10));
+    }
+
+    /**
+     * Si tampoco se puede borrar la entrada ilegible, el resultado se devuelve igualmente.
+     */
+    @Test
+    void cacheable_WhenUnreadableEntryCannotBeDiscarded_ShouldStillLoad() {
+        when(redisTemplate.opsForValue()).thenReturn(valueOperations);
+        when(valueOperations.get("users:user1"))
+                .thenThrow(new org.springframework.data.redis.serializer.SerializationException("ilegible"));
+        when(redisTemplate.delete("users:user1")).thenThrow(new RuntimeException("Redis error"));
+
+        assertEquals("Ana", cacheService.cacheable("users", "user1", () -> "Ana", Duration.ofMinutes(10)));
     }
 }

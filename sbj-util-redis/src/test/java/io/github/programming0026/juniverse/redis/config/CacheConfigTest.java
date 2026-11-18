@@ -1,22 +1,46 @@
 package io.github.programming0026.juniverse.redis.config;
 
 import io.github.programming0026.juniverse.redis.annotation.EnableRedisLibrary;
+import io.github.programming0026.juniverse.redis.annotation.HostEntry;
 import io.github.programming0026.juniverse.redis.service.CacheOperationBuilder;
 import io.github.programming0026.juniverse.redis.service.CoalesceCacheManager;
 import io.github.programming0026.juniverse.redis.service.RedisCacheService;
 import io.github.programming0026.juniverse.redis.service.RedisHealthChecker;
 import io.github.programming0026.juniverse.redis.util.Mode;
+import io.github.programming0026.juniverse.redis.service.CacheMetrics;
+import io.lettuce.core.ClientOptions;
+import io.micrometer.core.instrument.MeterRegistry;
+import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
+import org.springframework.beans.factory.ObjectProvider;
+import org.springframework.dao.QueryTimeoutException;
+import io.lettuce.core.ReadFrom;
+import io.lettuce.core.cluster.ClusterClientOptions;
+import io.lettuce.core.cluster.ClusterTopologyRefreshOptions;
+import java.nio.charset.StandardCharsets;
+import java.time.Duration;
+import java.util.List;
+import java.util.concurrent.TimeUnit;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.cache.CacheManager;
+import org.springframework.core.Ordered;
 import org.springframework.core.annotation.AnnotationAttributes;
 import org.springframework.core.type.AnnotationMetadata;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
+import org.springframework.data.redis.connection.RedisPassword;
+import org.springframework.data.redis.connection.RedisSentinelConfiguration;
+import org.springframework.data.redis.connection.lettuce.LettuceClientConfiguration;
 import org.springframework.data.redis.connection.lettuce.LettuceConnectionFactory;
+import org.springframework.data.redis.cache.RedisCacheConfiguration;
+import org.springframework.data.redis.cache.RedisCacheManager;
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.serializer.RedisSerializer;
+import org.springframework.data.redis.serializer.SerializationException;
+import org.springframework.data.redis.listener.ChannelTopic;
+import org.springframework.data.redis.listener.RedisMessageListenerContainer;
 import org.springframework.mock.env.MockEnvironment;
 
 import java.util.HashMap;
@@ -69,6 +93,7 @@ class CacheConfigTest {
     @SuppressWarnings("unchecked")
 	@Test
     void redisCacheService_ShouldCreateInstance() {
+        setAttributes(createBasicAttributesMap());
         RedisTemplate<String, Object> mockRedisTemplate = mock(RedisTemplate.class);
 
         RedisCacheService result = cacheConfig.redisCacheService(mockRedisTemplate);
@@ -82,6 +107,7 @@ class CacheConfigTest {
      */
     @Test
     void putAndEvictAspects_ShouldCreateInstances() {
+        setAttributes(createBasicAttributesMap());
         CoalesceCacheManager mockCacheManager = mock(CoalesceCacheManager.class);
 
         assertNotNull(cacheConfig.coalescePutAspect(mockCacheManager));
@@ -327,15 +353,96 @@ class CacheConfigTest {
     }
 
     /**
-     * Validar el modo clúster con un solo servidor debe lanzar una excepción.
+     * El modo clúster con un solo servidor es válido: basta un nodo para descubrir el resto.
      */
     @Test
-    void validateClusterHosts_WithSingleHost_ShouldThrowException() {
+    void createRedisConnectionFactory_WithSingleHostCluster_ShouldCreateClusterConfiguration() {
         setupConfigurationWithSingleHostCluster();
 
-        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class,
-                () -> cacheConfig.createRedisConnectionFactory());
-        assertTrue(exception.getMessage().contains("Cluster mode requires host entries for proper redundancy"));
+        LettuceConnectionFactory result = (LettuceConnectionFactory) cacheConfig.createRedisConnectionFactory();
+
+        assertNotNull(result.getClusterConfiguration());
+        assertEquals(1, result.getClusterConfiguration().getClusterNodes().size());
+    }
+
+    /**
+     * connectionTimeout debe limitar la conexión y readTimeout la respuesta de cada orden.
+     */
+    @Test
+    void createRedisConnectionFactory_ShouldMapTimeoutsToConnectAndCommand() {
+        Map<String, Object> attributesMap = createBasicAttributesMap();
+        attributesMap.put("connectionTimeout", 1500L);
+        attributesMap.put("readTimeout", 700L);
+        when(annotationMetadata.getAnnotationAttributes(EnableRedisLibrary.class.getName()))
+                .thenReturn(attributesMap);
+        cacheConfig.setImportMetadata(annotationMetadata);
+
+        LettuceConnectionFactory result = (LettuceConnectionFactory) cacheConfig.createRedisConnectionFactory();
+
+        LettuceClientConfiguration client = result.getClientConfiguration();
+        assertEquals(Duration.ofMillis(700), client.getCommandTimeout());
+        assertEquals(Duration.ofMillis(1500),
+                client.getClientOptions().orElseThrow().getSocketOptions().getConnectTimeout());
+    }
+
+    /**
+     * En modo clúster las opciones del cliente deben ser las de clúster, con el mismo tiempo de conexión.
+     */
+    @Test
+    void createRedisConnectionFactory_WithClusterMode_ShouldUseClusterClientOptions() {
+        setupConfigurationWithSingleHostCluster();
+
+        LettuceConnectionFactory result = (LettuceConnectionFactory) cacheConfig.createRedisConnectionFactory();
+
+        ClientOptions options = result.getClientConfiguration().getClientOptions().orElseThrow();
+        assertInstanceOf(ClusterClientOptions.class, options);
+        assertEquals(Duration.ofMillis(5000), options.getSocketOptions().getConnectTimeout());
+    }
+
+    /**
+     * En modo sentinel, userName y pwd son las credenciales de los nodos de datos;
+     * los sentinels quedan sin autenticación si no se indica la suya.
+     */
+    @Test
+    void createRedisConnectionFactory_WithSentinelMode_ShouldApplyCredentialsToDataNodes() {
+        setupSentinelConfigurationWithCredentials();
+
+        LettuceConnectionFactory result = (LettuceConnectionFactory) cacheConfig.createRedisConnectionFactory();
+
+        RedisSentinelConfiguration sentinel = result.getSentinelConfiguration();
+        assertNotNull(sentinel);
+        assertEquals("testuser", sentinel.getUsername());
+        assertEquals(RedisPassword.of("testpassword"), sentinel.getPassword());
+        assertNull(sentinel.getSentinelUsername());
+        assertFalse(sentinel.getSentinelPassword().isPresent());
+    }
+
+    /**
+     * En modo sentinel, sentinelUserName y sentinelPwd son las credenciales de los sentinels.
+     */
+    @Test
+    void createRedisConnectionFactory_WithSentinelCredentials_ShouldApplyThemToSentinels() {
+        Map<String, Object> attributesMap = createBasicAttributesMap();
+        attributesMap.put("mode", Mode.SENTINEL);
+        attributesMap.put("sentinelMaster", "mymaster");
+        attributesMap.put("sentinelUserName", "guardian");
+        attributesMap.put("sentinelPwd", "secreto");
+        AnnotationAttributes hostEntry = new AnnotationAttributes();
+        hostEntry.put("host", "sentinel1");
+        hostEntry.put("port", 26379);
+        attributesMap.put("hostEntries", new AnnotationAttributes[] {hostEntry});
+        when(annotationMetadata.getAnnotationAttributes(EnableRedisLibrary.class.getName()))
+                .thenReturn(attributesMap);
+        cacheConfig.setImportMetadata(annotationMetadata);
+
+        LettuceConnectionFactory result = (LettuceConnectionFactory) cacheConfig.createRedisConnectionFactory();
+
+        RedisSentinelConfiguration sentinel = result.getSentinelConfiguration();
+        assertNotNull(sentinel);
+        assertEquals("guardian", sentinel.getSentinelUsername());
+        assertEquals(RedisPassword.of("secreto"), sentinel.getSentinelPassword());
+        assertNull(sentinel.getUsername());
+        assertFalse(sentinel.getPassword().isPresent());
     }
 
     
@@ -353,6 +460,14 @@ class CacheConfigTest {
         map.put("readTimeout", 3000L);
         map.put("userName", "");
         map.put("pwd", "");
+        map.put("sentinelUserName", "");
+        map.put("sentinelPwd", "");
+        map.put("failOpen", Boolean.TRUE);
+        map.put("keyPrefix", "");
+        map.put("readFrom", "");
+        map.put("trustedPackages", new String[0]);
+        map.put("coalesceLockTimeout", 30000L);
+        map.put("coalesceWaitTimeout", 30000L);
         map.put("database", 0);
         map.put("mapperConfig", DefaultObjectMapperConfig.class);
 
@@ -752,5 +867,453 @@ class CacheConfigTest {
                 .thenReturn(attributesMap);
 
         cacheConfig.setImportMetadata(annotationMetadata);
+    }
+
+    /**
+     * El administrador de caché con coalescencia se crea con los ajustes de la anotación.
+     */
+    @Test
+    void coalesceCacheManager_ShouldBeCreatedFromAnnotationSettings() {
+        setAttributes(createBasicAttributesMap());
+        RedisMessageListenerContainer container = mock(RedisMessageListenerContainer.class);
+
+        CoalesceCacheManager result = cacheConfig.coalesceCacheManager(mock(RedisConnectionFactory.class), container);
+
+        assertNotNull(result);
+        verify(container).addMessageListener(any(), any(ChannelTopic.class));
+    }
+
+    /**
+     * Un tiempo de bloqueo que no es positivo debe rechazarse al arrancar.
+     */
+    @Test
+    void coalesceCacheManager_WithInvalidLockTimeout_ShouldThrowException() {
+        Map<String, Object> attributesMap = createBasicAttributesMap();
+        attributesMap.put("coalesceLockTimeout", 0L);
+        setAttributes(attributesMap);
+
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class,
+                () -> cacheConfig.coalesceCacheManager(mock(RedisConnectionFactory.class),
+                        mock(RedisMessageListenerContainer.class)));
+
+        assertEquals("Invalid coalesceLockTimeout 0.", exception.getMessage());
+    }
+
+    /**
+     * La escucha de mensajes se crea sobre la fábrica de conexiones recibida.
+     */
+    @Test
+    void redisMessageListenerContainer_ShouldUseGivenConnectionFactory() {
+        setAttributes(createBasicAttributesMap());
+        RedisConnectionFactory connectionFactory = mock(RedisConnectionFactory.class);
+
+        RedisMessageListenerContainer result = cacheConfig.redisMessageListenerContainer(connectionFactory);
+
+        assertSame(connectionFactory, result.getConnectionFactory());
+        assertInstanceOf(ResilientRedisMessageListenerContainer.class, result);
+    }
+
+    /**
+     * Sin degradación se usa la escucha de Spring, que falla al arrancar si Redis no responde.
+     */
+    @Test
+    void redisMessageListenerContainer_WithoutFailOpen_ShouldBeThePlainOne() {
+        Map<String, Object> attributesMap = createBasicAttributesMap();
+        attributesMap.put("failOpen", Boolean.FALSE);
+        setAttributes(attributesMap);
+
+        RedisMessageListenerContainer result =
+                cacheConfig.redisMessageListenerContainer(mock(RedisConnectionFactory.class));
+
+        assertEquals(RedisMessageListenerContainer.class, result.getClass());
+    }
+
+    /**
+     * Si Redis no responde al arrancar, la escucha no lanza excepción y lo reintenta sola.
+     *
+     * @throws Exception si la prueba se interrumpe
+     */
+    @Test
+    void resilientListenerContainer_WhenRedisIsDown_ShouldNotFailAndShouldRetry() throws Exception {
+        RedisConnectionFactory connectionFactory = mock(RedisConnectionFactory.class);
+        when(connectionFactory.getConnection())
+                .thenThrow(new org.springframework.data.redis.RedisConnectionFailureException("sin conexión"));
+        ResilientRedisMessageListenerContainer container =
+                new ResilientRedisMessageListenerContainer(Duration.ofMillis(50));
+        container.setConnectionFactory(connectionFactory);
+        container.addMessageListener((message, pattern) -> { }, new ChannelTopic("canal"));
+        container.afterPropertiesSet();
+
+        assertDoesNotThrow(container::start);
+        Thread.sleep(400);
+        container.stop();
+        container.destroy();
+
+        verify(connectionFactory, atLeast(2)).getConnection();
+    }
+
+    private void setAttributes(Map<String, Object> attributesMap) {
+        when(annotationMetadata.getAnnotationAttributes(EnableRedisLibrary.class.getName()))
+                .thenReturn(attributesMap);
+        cacheConfig.setImportMetadata(annotationMetadata);
+    }
+
+    /**
+     * Sin keyPrefix en la anotación se usa spring.application.name; con keyPrefix, manda este.
+     */
+    @Test
+    void keyPrefix_ShouldComeFromAnnotationOrApplicationName() {
+        cacheConfig.setEnvironment(new MockEnvironment().withProperty("spring.application.name", "tienda"));
+        setAttributes(createBasicAttributesMap());
+        RedisMessageListenerContainer fromName = mock(RedisMessageListenerContainer.class);
+        cacheConfig.coalesceCacheManager(mock(RedisConnectionFactory.class), fromName);
+
+        Map<String, Object> explicit = createBasicAttributesMap();
+        explicit.put("keyPrefix", "pedidos");
+        setAttributes(explicit);
+        RedisMessageListenerContainer fromAnnotation = mock(RedisMessageListenerContainer.class);
+        cacheConfig.coalesceCacheManager(mock(RedisConnectionFactory.class), fromAnnotation);
+
+        verify(fromName).addMessageListener(any(), eq(new ChannelTopic("tienda:coalesce:signal")));
+        verify(fromAnnotation).addMessageListener(any(), eq(new ChannelTopic("pedidos:coalesce:signal")));
+    }
+
+    /**
+     * Un prefijo con caracteres de patrón debe rechazarse al arrancar.
+     */
+    @Test
+    void keyPrefix_WithGlobCharacters_ShouldThrowException() {
+        Map<String, Object> attributesMap = createBasicAttributesMap();
+        attributesMap.put("keyPrefix", "tienda*");
+        setAttributes(attributesMap);
+
+        assertThrows(IllegalArgumentException.class,
+                () -> cacheConfig.redisCacheService(mock(RedisTemplate.class)));
+    }
+
+    /**
+     * Las entradas de TTL admiten unidad; sin unidad son minutos. Las tres vías de caché las reciben.
+     */
+    @Test
+    void ttlEntries_ShouldHonourTheirUnit() {
+        Map<String, Object> attributesMap = createBasicAttributesMap();
+        AnnotationAttributes seconds = new AnnotationAttributes();
+        seconds.put("name", "tokens");
+        seconds.put("ttl", 90L);
+        seconds.put("unit", TimeUnit.SECONDS);
+        AnnotationAttributes minutes = new AnnotationAttributes();
+        minutes.put("name", "users");
+        minutes.put("ttl", 30L);
+        attributesMap.put("ttlEntries", new AnnotationAttributes[] {seconds, minutes, null});
+        setAttributes(attributesMap);
+
+        RedisCacheManager manager = redisCacheManagerBehind(
+                cacheConfig.cacheManager(cacheConfig.createRedisConnectionFactory()));
+
+        Map<String, RedisCacheConfiguration> configurations = manager.getCacheConfigurations();
+        assertEquals(Duration.ofSeconds(90), configurations.get("tokens").getTtlFunction().getTimeToLive("k", "v"));
+        assertEquals(Duration.ofMinutes(30), configurations.get("users").getTtlFunction().getTimeToLive("k", "v"));
+        assertNotNull(cacheConfig.coalesceCachingAspect(mock(CoalesceCacheManager.class)));
+        assertNotNull(cacheConfig.redisCacheService(mock(RedisTemplate.class)));
+    }
+
+    /**
+     * Con prefijo de aplicación, el administrador de caché de Spring antepone el prefijo a sus claves.
+     */
+    @Test
+    void cacheManager_WithKeyPrefix_ShouldPrefixCacheNames() {
+        Map<String, Object> attributesMap = createBasicAttributesMap();
+        attributesMap.put("keyPrefix", "tienda");
+        setAttributes(attributesMap);
+
+        RedisCacheManager manager = redisCacheManagerBehind(
+                cacheConfig.cacheManager(cacheConfig.createRedisConnectionFactory()));
+
+        assertEquals("tienda:users::", manager.getCacheConfigurations().getOrDefault("users", ((org.springframework.data.redis.cache.RedisCache) manager.getCache("users")).getCacheConfiguration()).getKeyPrefixFor("users"));
+    }
+
+    /**
+     * Los paquetes de confianza son los de la anotación más el paquete de la clase que la lleva.
+     */
+    @Test
+    void trustedPackages_ShouldIncludeImportingClassPackage() {
+        Map<String, Object> attributesMap = createBasicAttributesMap();
+        attributesMap.put("trustedPackages", new String[] {"com.acme.shared"});
+        when(annotationMetadata.getClassName()).thenReturn("com.acme.app.config.AppConfig");
+        cacheConfig.setBeanFactory(mock(org.springframework.beans.factory.BeanFactory.class));
+        setAttributes(attributesMap);
+
+        RedisTemplate<String, Object> template =
+                cacheConfig.createRedisTemplate(cacheConfig.createRedisConnectionFactory());
+        @SuppressWarnings("unchecked")
+        RedisSerializer<Object> serializer = (RedisSerializer<Object>) template.getValueSerializer();
+
+        assertThrows(SerializationException.class, () -> serializer.deserialize(
+                "{\"@class\":\"com.otra.Clase\"}".getBytes(StandardCharsets.UTF_8)));
+        assertEquals(List.of("a"), serializer.deserialize(
+                "[\"java.util.ArrayList\",[\"a\"]]".getBytes(StandardCharsets.UTF_8)));
+    }
+
+    /**
+     * El cliente mantiene vivas las conexiones y, con la degradación activa, rechaza las órdenes
+     * mientras está desconectado en lugar de encolarlas.
+     */
+    @Test
+    void createRedisConnectionFactory_ShouldEnableKeepAliveAndRejectCommandsWhileDisconnected() {
+        setAttributes(createBasicAttributesMap());
+
+        ClientOptions options = clientOptionsOfNewFactory();
+
+        assertTrue(options.getSocketOptions().isKeepAlive());
+        assertEquals(ClientOptions.DisconnectedBehavior.REJECT_COMMANDS, options.getDisconnectedBehavior());
+    }
+
+    /**
+     * Sin degradación se conserva el comportamiento de Lettuce: las órdenes esperan la reconexión.
+     */
+    @Test
+    void createRedisConnectionFactory_WithoutFailOpen_ShouldKeepDefaultDisconnectedBehavior() {
+        Map<String, Object> attributesMap = createBasicAttributesMap();
+        attributesMap.put("failOpen", Boolean.FALSE);
+        setAttributes(attributesMap);
+
+        assertEquals(ClientOptions.DisconnectedBehavior.DEFAULT,
+                clientOptionsOfNewFactory().getDisconnectedBehavior());
+    }
+
+    /**
+     * En modo clúster el cliente refresca la topología, periódicamente y ante errores de redirección.
+     */
+    @Test
+    void createRedisConnectionFactory_WithClusterMode_ShouldRefreshTopology() {
+        setupConfigurationWithSingleHostCluster();
+
+        ClusterClientOptions options = assertInstanceOf(ClusterClientOptions.class, clientOptionsOfNewFactory());
+
+        ClusterTopologyRefreshOptions refresh = options.getTopologyRefreshOptions();
+        assertTrue(refresh.isPeriodicRefreshEnabled());
+        assertEquals(Duration.ofSeconds(60), refresh.getRefreshPeriod());
+        assertFalse(refresh.getAdaptiveRefreshTriggers().isEmpty());
+        assertTrue(options.getSocketOptions().isKeepAlive());
+    }
+
+    /**
+     * readFrom se pasa al cliente; un nombre que Lettuce no conoce se rechaza al arrancar.
+     */
+    @Test
+    void createRedisConnectionFactory_ShouldApplyReadFrom() {
+        Map<String, Object> attributesMap = createBasicAttributesMap();
+        attributesMap.put("readFrom", " replicaPreferred ");
+        setAttributes(attributesMap);
+        LettuceConnectionFactory withReplicas = (LettuceConnectionFactory) cacheConfig.createRedisConnectionFactory();
+
+        setAttributes(createBasicAttributesMap());
+        LettuceConnectionFactory withoutReplicas =
+                (LettuceConnectionFactory) cacheConfig.createRedisConnectionFactory();
+
+        Map<String, Object> invalid = createBasicAttributesMap();
+        invalid.put("readFrom", "no-existe");
+        setAttributes(invalid);
+
+        assertEquals(ReadFrom.REPLICA_PREFERRED, withReplicas.getClientConfiguration().getReadFrom().orElseThrow());
+        assertTrue(withoutReplicas.getClientConfiguration().getReadFrom().isEmpty());
+        assertThrows(IllegalArgumentException.class, () -> cacheConfig.createRedisConnectionFactory());
+    }
+
+    /**
+     * Un mapperConfig que no se puede instanciar impide arrancar, en lugar de sustituirse
+     * en silencio por el predeterminado.
+     */
+    @Test
+    void createRedisTemplate_WithMapperConfigThatCannotBeInstantiated_ShouldFail() {
+        Map<String, Object> attributesMap = createBasicAttributesMap();
+        attributesMap.put("mapperConfig", ObjectMapperConfig.class);
+        setAttributes(attributesMap);
+        RedisConnectionFactory connectionFactory = mock(RedisConnectionFactory.class);
+
+        IllegalStateException exception = assertThrows(IllegalStateException.class,
+                () -> cacheConfig.createRedisTemplate(connectionFactory));
+
+        assertTrue(exception.getMessage().contains(ObjectMapperConfig.class.getName()));
+    }
+
+    /**
+     * Un mapperConfig propio con constructor sin argumentos se usa tal cual.
+     */
+    @Test
+    void createRedisTemplate_WithCustomMapperConfig_ShouldUseIt() {
+        Map<String, Object> attributesMap = createBasicAttributesMap();
+        attributesMap.put("mapperConfig", PlainMapperConfig.class);
+        setAttributes(attributesMap);
+
+        RedisTemplate<String, Object> template =
+                cacheConfig.createRedisTemplate(mock(RedisConnectionFactory.class));
+        @SuppressWarnings("unchecked")
+        RedisSerializer<Object> serializer = (RedisSerializer<Object>) template.getValueSerializer();
+
+        // Sin tipado por defecto, una lista se escribe sin nombre de clase.
+        assertEquals("[\"a\"]", new String(serializer.serialize(List.of("a")), StandardCharsets.UTF_8));
+    }
+
+    /**
+     * El selector importa la configuración de la librería antes que la autoconfiguración de Spring Boot.
+     */
+    @Test
+    void importSelector_ShouldImportCacheConfigBeforeAutoConfiguration() {
+        RedisLibraryImportSelector selector = new RedisLibraryImportSelector();
+
+        assertArrayEquals(
+                new String[] {CacheMetricsConfiguration.class.getName(), CacheConfig.class.getName()},
+                selector.selectImports(annotationMetadata));
+        assertTrue(selector.getOrder() < Ordered.LOWEST_PRECEDENCE - 1);
+    }
+
+    /** Configuración de conversor propia, sin tipado por defecto. */
+    public static class PlainMapperConfig implements ObjectMapperConfig {
+
+        @Override
+        public tools.jackson.databind.ObjectMapper configure() {
+            return tools.jackson.databind.json.JsonMapper.builder().build();
+        }
+    }
+
+    private ClientOptions clientOptionsOfNewFactory() {
+        LettuceConnectionFactory factory = (LettuceConnectionFactory) cacheConfig.createRedisConnectionFactory();
+        return factory.getClientConfiguration().getClientOptions().orElseThrow();
+    }
+
+    /**
+     * Con un registro de Micrometer se publican los contadores; sin registro, o con varios,
+     * se usa la implementación vacía.
+     */
+    @Test
+    @SuppressWarnings("unchecked")
+    void cacheMetrics_ShouldUseMicrometerOnlyWhenThereIsOneRegistry() {
+        CacheMetricsConfiguration configuration = new CacheMetricsConfiguration();
+        ObjectProvider<MeterRegistry> withRegistry = mock(ObjectProvider.class);
+        when(withRegistry.getIfUnique()).thenReturn(new SimpleMeterRegistry());
+        ObjectProvider<MeterRegistry> withoutRegistry = mock(ObjectProvider.class);
+
+        assertInstanceOf(MicrometerCacheMetrics.class, configuration.cacheMetrics(withRegistry));
+        assertSame(CacheMetrics.NOOP, configuration.cacheMetrics(withoutRegistry));
+    }
+
+    /**
+     * El administrador de caché recibe los contadores registrados en el contexto.
+     */
+    @Test
+    @SuppressWarnings("unchecked")
+    void coalesceCacheManager_ShouldUseMetricsBeanFromContext() {
+        CacheMetrics metrics = mock(CacheMetrics.class);
+        ObjectProvider<CacheMetrics> provider = mock(ObjectProvider.class);
+        when(provider.getIfAvailable(any(java.util.function.Supplier.class))).thenReturn(metrics);
+        org.springframework.beans.factory.BeanFactory beanFactory =
+                mock(org.springframework.beans.factory.BeanFactory.class);
+        when(beanFactory.getBeanProvider(CacheMetrics.class)).thenReturn(provider);
+        cacheConfig.setBeanFactory(beanFactory);
+        setAttributes(createBasicAttributesMap());
+        RedisConnectionFactory connectionFactory = mock(RedisConnectionFactory.class);
+        when(connectionFactory.getConnection()).thenThrow(new QueryTimeoutException("sin respuesta"));
+
+        CoalesceCacheManager manager = cacheConfig.coalesceCacheManager(
+                connectionFactory, mock(RedisMessageListenerContainer.class));
+        manager.get("users:1");
+
+        verify(metrics).redisError("read");
+    }
+
+    private static RedisCacheManager redisCacheManagerBehind(CacheManager cacheManager) {
+        FailOpenCacheManager failOpen = assertInstanceOf(FailOpenCacheManager.class, cacheManager);
+        return assertInstanceOf(RedisCacheManager.class, failOpen.getDelegate());
+    }
+
+    /**
+     * Sin degradación, el administrador de caché de Spring es el de Redis sin envolver.
+     */
+    @Test
+    void cacheManager_WithoutFailOpen_ShouldNotBeWrapped() {
+        Map<String, Object> attributesMap = createBasicAttributesMap();
+        attributesMap.put("failOpen", Boolean.FALSE);
+        setAttributes(attributesMap);
+
+        assertInstanceOf(RedisCacheManager.class,
+                cacheConfig.cacheManager(cacheConfig.createRedisConnectionFactory()));
+    }
+
+    /**
+     * El servidor admite el puerto dentro de host, que entonces manda sobre el atributo port.
+     */
+    @Test
+    void hostEntry_ShouldAcceptPortInsideHost() {
+        assertHostAndPort("redis.interno:6380", 6379, "redis.interno", 6380);
+        assertHostAndPort(" redis.interno : 6381 ", 6379, "redis.interno", 6381);
+        assertHostAndPort("redis.interno", 7000, "redis.interno", 7000);
+        assertHostAndPort("[2001:db8::1]:6382", 6379, "2001:db8::1", 6382);
+        assertHostAndPort("[2001:db8::1]", 6379, "2001:db8::1", 6379);
+        assertHostAndPort("2001:db8::1", 6379, "2001:db8::1", 6379);
+    }
+
+    @Test
+    void hostEntry_WithInvalidPortInsideHost_ShouldThrowException() {
+        setAttributes(attributesWithHost("redis.interno:puerto", 6379));
+
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class,
+                () -> cacheConfig.createRedisConnectionFactory());
+
+        assertTrue(exception.getMessage().contains("redis.interno:puerto"));
+    }
+
+    private void assertHostAndPort(String host, int port, String expectedHost, int expectedPort) {
+        setAttributes(attributesWithHost(host, port));
+
+        LettuceConnectionFactory factory = (LettuceConnectionFactory) cacheConfig.createRedisConnectionFactory();
+
+        assertEquals(expectedHost, factory.getStandaloneConfiguration().getHostName());
+        assertEquals(expectedPort, factory.getStandaloneConfiguration().getPort());
+    }
+
+    private Map<String, Object> attributesWithHost(String host, int port) {
+        Map<String, Object> attributesMap = createBasicAttributesMap();
+        AnnotationAttributes hostEntry = new AnnotationAttributes();
+        hostEntry.put("host", host);
+        hostEntry.put("port", port);
+        attributesMap.put("hostEntries", new AnnotationAttributes[] {hostEntry});
+        return attributesMap;
+    }
+
+    /** Configuración base con la anotación de la librería. */
+    @EnableRedisLibrary(hostEntries = @HostEntry(host = "heredado.interno:6390"), keyPrefix = "heredada")
+    static class BaseConfiguration {
+    }
+
+    /** Configuración que hereda la anotación de su superclase. */
+    static class InheritingConfiguration extends BaseConfiguration {
+    }
+
+    /**
+     * La anotación puede estar en una superclase de la clase de configuración.
+     */
+    @Test
+    void setImportMetadata_ShouldFindAnnotationOnSuperclass() {
+        when(annotationMetadata.getAnnotationAttributes(EnableRedisLibrary.class.getName())).thenReturn(null);
+        when(annotationMetadata.getClassName()).thenReturn(InheritingConfiguration.class.getName());
+
+        cacheConfig.setImportMetadata(annotationMetadata);
+        LettuceConnectionFactory factory = (LettuceConnectionFactory) cacheConfig.createRedisConnectionFactory();
+
+        assertEquals("heredado.interno", factory.getStandaloneConfiguration().getHostName());
+        assertEquals(6390, factory.getStandaloneConfiguration().getPort());
+    }
+
+    /**
+     * Si la anotación no está en la clase ni en sus superclases, el arranque falla con un mensaje claro.
+     */
+    @Test
+    void setImportMetadata_WithoutAnnotationAnywhere_ShouldThrowException() {
+        when(annotationMetadata.getAnnotationAttributes(EnableRedisLibrary.class.getName())).thenReturn(null);
+        when(annotationMetadata.getClassName()).thenReturn(String.class.getName(), "clase.que.no.Existe");
+
+        assertThrows(IllegalStateException.class, () -> cacheConfig.setImportMetadata(annotationMetadata));
+        assertThrows(IllegalStateException.class, () -> cacheConfig.setImportMetadata(annotationMetadata));
     }
 }

@@ -1,6 +1,10 @@
 # Normaliza los finales de línea y protege los binarios
 * text=auto
 
+# Fuentes Java: siempre LF. Checkstyle rechaza los finales de linea de Windows,
+# asi que con CRLF el build falla al descargar el repositorio en Windows.
+*.java text eol=lf
+
 # Se ejecutan en Linux/Docker: siempre LF (un CRLF rompe run.sh en Alpine)
 *.sh text eol=lf
 Dockerfile text eol=lf
@@ -15,6 +19,7 @@ Dockerfile text eol=lf
 
 # Binarios: Git no los toca ni intenta mostrar diferencias de texto
 *.jar binary
+*.p12 binary
 *.png binary
 *.jpg binary
 *.jpeg binary

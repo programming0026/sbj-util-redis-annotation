@@ -7,27 +7,28 @@ import lombok.NoArgsConstructor;
 import java.time.LocalDateTime;
 
 /**
+ * Aviso que publica la instancia que tenía el bloqueo de una clave cuando termina de cargarla.
+ * No lleva el valor: quien espera lo lee de la caché.
+ *
  * @author Java Universe
  */
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class CoalescedResponseDto implements Serializable{
-    
-	private static final long serialVersionUID = 8579398868082295820L;
-	
-	/** Identificador de petición. */
-	private String requestId;
-    
+public class CoalescedResponseDto implements Serializable {
+
+    private static final long serialVersionUID = 2L;
+
     /** Clave de coalescencia. */
     private String coalescingKey;
-    
-    /** Resultado. */
-    private Object result;
-    
-    /** Error. */
-    private Throwable error;
-    
-    /** Momento en que se completó. */
+
+    /**
+     * Indica si el valor quedó guardado en la caché.
+     * Es {@code false} cuando la carga falló, cuando el resultado fue nulo
+     * o cuando no se pudo escribir en Redis.
+     */
+    private boolean cached;
+
+    /** Momento en que terminó la carga. */
     private LocalDateTime completedAt;
 }

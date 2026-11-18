@@ -1,6 +1,7 @@
 package io.github.programming0026.juniverse.redis.util;
 
 import io.github.programming0026.juniverse.redis.dto.HostsDto;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.util.StringUtils;
 
 import java.time.Duration;
@@ -8,6 +9,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.function.Supplier;
 
+@Slf4j
 public final class Validator {
 
     private Validator() {
@@ -58,6 +60,48 @@ public final class Validator {
     }
 
     /**
+     * Valida el prefijo de la aplicación. No puede contener espacios ni caracteres que Redis
+     * interpreta en los patrones, porque el prefijo forma parte de los patrones de borrado.
+     *
+     * @param keyPrefix prefijo; puede ser nulo o vacío
+     */
+    public static void validateKeyPrefix(String keyPrefix) {
+        if (keyPrefix == null) {
+            return;
+        }
+        for (char c : keyPrefix.toCharArray()) {
+            if (Character.isWhitespace(c) || "*?[]\\".indexOf(c) >= 0) {
+                throw new IllegalArgumentException(
+                        String.format("Invalid keyPrefix '%s': it cannot contain whitespace or any of * ? [ ] \\",
+                                keyPrefix));
+            }
+        }
+    }
+
+    /**
+     * Valida los tiempos de la coalescencia.
+     *
+     * @param lockTimeout duración del bloqueo en milisegundos
+     * @param waitTimeout espera máxima en milisegundos
+     */
+    public static void validateCoalesceTimeouts(Long lockTimeout, Long waitTimeout) {
+
+        Objects.requireNonNull(lockTimeout, "Coalesce lock timeout cannot be null");
+        Objects.requireNonNull(waitTimeout, "Coalesce wait timeout cannot be null");
+
+        if (lockTimeout < 1) {
+            throw new IllegalArgumentException(
+                    String.format("Invalid coalesceLockTimeout %d.", lockTimeout)
+            );
+        }
+        if (waitTimeout < 1) {
+            throw new IllegalArgumentException(
+                    String.format("Invalid coalesceWaitTimeout %d.", waitTimeout)
+            );
+        }
+    }
+
+    /**
      * Valida los servidores del modo standalone.
      *
      * @param hosts servidores
@@ -73,21 +117,25 @@ public final class Validator {
 
     /**
      * Valida los servidores del modo clúster.
+     * Basta un nodo para descubrir el clúster completo (es lo que ofrecen los servicios
+     * gestionados con un único punto de entrada), así que un solo servidor es válido;
+     * solo se avisa de que la conexión inicial no tiene nodo alternativo.
      *
      * @param hosts servidores
      */
     public static void validateClusterHosts(List<HostsDto> hosts) {
         validateHosts(hosts);
-        if (hosts.size() > 1) {
-            return;
+        if (hosts.size() == 1) {
+            log.warn("Cluster mode configured with a single host entry: "
+                    + "the initial connection has no alternative node if {} is unreachable",
+                    hosts.getFirst().getHostName());
         }
-        throw new IllegalArgumentException(
-                "Cluster mode requires host entries for proper redundancy"
-        );
     }
 
     /**
      * Valida los servidores del modo sentinel.
+     * Un solo sentinel es válido; solo se avisa de que la conexión inicial
+     * no tiene alternativa.
      *
      * @param hosts servidores
      * @param sentinelMaster nombre del maestro de sentinel
@@ -99,12 +147,11 @@ public final class Validator {
                     "sentinelMaster must be configured when using SENTINEL mode"
             );
         }
-        if (hosts.size() > 1) {
-            return;
+        if (hosts.size() == 1) {
+            log.warn("Sentinel mode configured with a single host entry: "
+                    + "the initial connection has no alternative sentinel if {} is unreachable",
+                    hosts.getFirst().getHostName());
         }
-        throw new IllegalArgumentException(
-                "Sentinel mode requires host entries for proper redundancy"
-        );
     }
     /**
      * Valida los campos obligatorios.

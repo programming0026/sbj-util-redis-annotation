@@ -39,7 +39,11 @@ class DefaultObjectMapperConfigTest {
     void configure_ShouldSupportJavaTimeWithoutModules() {
         ObjectMapper mapper = config.configure();
 
-        assertEquals("\"2026-01-02\"", mapper.writeValueAsString(java.time.LocalDate.of(2026, 1, 2)));
+        // Fecha en texto ISO, acompañada de su tipo para poder reconstruirla sin saberlo de antemano.
+        assertEquals("[\"java.time.LocalDate\",\"2026-01-02\"]",
+                mapper.writeValueAsString(java.time.LocalDate.of(2026, 1, 2)));
+        assertEquals(java.time.LocalDate.of(2026, 1, 2),
+                mapper.readValue("[\"java.time.LocalDate\",\"2026-01-02\"]", Object.class));
     }
 
     /**

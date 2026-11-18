@@ -87,7 +87,7 @@ class CoalescePutAspectTest {
         resolvingAspect.handleSinglePut(joinPoint, put);
         resolvingAspect.handleSinglePut(joinPoint, put);
 
-        verify(cacheManager, times(2)).put("users-v2:123", "result", 120);
+        verify(cacheManager, times(2)).put(eq("users-v2:123"), eq("result"), eq(120L), any());
     }
 
     /**
@@ -101,7 +101,7 @@ class CoalescePutAspectTest {
 
         aspect.handleSinglePut(joinPoint, put);
 
-        verify(cacheManager).put("cache:123", "result", 300);
+        verify(cacheManager).put(eq("cache:123"), eq("result"), eq(300L), any());
     }
 
     /**
@@ -116,7 +116,7 @@ class CoalescePutAspectTest {
         Object result = aspect.handleSinglePut(joinPoint, put);
 
         assertEquals("result", result);
-        verify(cacheManager, never()).put(anyString(), any(), anyLong());
+        verify(cacheManager, never()).put(anyString(), any(), anyLong(), any());
     }
 
 
@@ -132,7 +132,7 @@ class CoalescePutAspectTest {
         Object result = aspect.handleSinglePut(joinPoint, put);
 
         assertEquals("result", result);
-        verify(cacheManager, never()).put(anyString(), any(), anyLong());
+        verify(cacheManager, never()).put(anyString(), any(), anyLong(), any());
     }
 
     /**
@@ -147,7 +147,7 @@ class CoalescePutAspectTest {
         Object result = aspect.handleSinglePut(joinPoint, put);
 
         assertEquals("result", result);
-        verify(cacheManager).put("cache:123", "result", 300);
+        verify(cacheManager).put(eq("cache:123"), eq("result"), eq(300L), any());
     }
 
 
@@ -163,7 +163,7 @@ class CoalescePutAspectTest {
         Object result = aspect.handleSinglePut(joinPoint, put);
 
         assertEquals(null, result);
-        verify(cacheManager, never()).put(anyString(), any(), anyLong());
+        verify(cacheManager, never()).put(anyString(), any(), anyLong(), any());
     }
 
     /**
@@ -182,7 +182,7 @@ class CoalescePutAspectTest {
         Object result = aspect.handleSinglePut(joinPoint, put);
 
         assertEquals("result", result);
-        verify(cacheManager, never()).put(anyString(), any(), anyLong());
+        verify(cacheManager, never()).put(anyString(), any(), anyLong(), any());
     }
 
 

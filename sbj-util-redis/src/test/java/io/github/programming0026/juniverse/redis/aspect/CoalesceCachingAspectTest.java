@@ -4,6 +4,7 @@ import io.github.programming0026.juniverse.redis.annotation.CoalesceCacheable;
 import io.github.programming0026.juniverse.redis.annotation.CoalesceCaching;
 import io.github.programming0026.juniverse.redis.annotation.CoalesceEvict;
 import io.github.programming0026.juniverse.redis.annotation.CoalescePut;
+import io.github.programming0026.juniverse.redis.dto.CacheResult;
 import io.github.programming0026.juniverse.redis.service.CoalesceCacheManager;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.reflect.MethodSignature;
@@ -14,7 +15,6 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.lang.reflect.Method;
-import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
@@ -52,6 +52,8 @@ class CoalesceCachingAspectTest {
     @BeforeEach
     void setUp() {
         aspect = new CoalesceCachingAspect(cacheManager);
+        // Por defecto, ninguna clave está en caché.
+        when(cacheManager.lookup(anyString(), any())).thenReturn(CacheResult.miss(null));
     }
 
     /**
@@ -80,12 +82,12 @@ class CoalesceCachingAspectTest {
         when(joinPoint.getArgs()).thenReturn(new Object[]{"123"});
         when(methodSignature.getParameterNames()).thenReturn(new String[]{"id"});
         when(methodSignature.getMethod()).thenReturn(getTestMethod());
-        when(cacheManager.get("cache:123")).thenReturn(Optional.of("cachedValue"));
+        when(cacheManager.lookup(eq("cache:123"), any())).thenReturn(CacheResult.hit("cachedValue"));
 
         Object result = aspect.handleCaching(joinPoint, caching);
 
         assertEquals("cachedValue", result);
-        verify(cacheManager).get("cache:123");
+        verify(cacheManager).lookup(eq("cache:123"), any());
         verify(joinPoint, never()).proceed();
     }
 
@@ -105,14 +107,14 @@ class CoalesceCachingAspectTest {
         when(joinPoint.getArgs()).thenReturn(new Object[]{"123"});
         when(methodSignature.getParameterNames()).thenReturn(new String[]{"id"});
         when(methodSignature.getMethod()).thenReturn(getTestMethod());
-        when(cacheManager.get("cache:123")).thenReturn(Optional.empty());
+        when(cacheManager.lookup(eq("cache:123"), any())).thenReturn(CacheResult.miss(null));
         when(joinPoint.proceed()).thenReturn("newValue");
 
         Object result = aspect.handleCaching(joinPoint, caching);
 
         assertEquals("newValue", result);
         verify(joinPoint).proceed();
-        verify(cacheManager).put("cache:123", "newValue", 300);
+        verify(cacheManager).put(eq("cache:123"), eq("newValue"), eq(300L), any());
     }
 
     /**
@@ -131,13 +133,13 @@ class CoalesceCachingAspectTest {
         when(joinPoint.getArgs()).thenReturn(new Object[]{"123"});
         when(methodSignature.getParameterNames()).thenReturn(new String[]{"id"});
         when(methodSignature.getMethod()).thenReturn(getTestMethod());
-        when(cacheManager.get("cache:123")).thenReturn(Optional.empty());
+        when(cacheManager.lookup(eq("cache:123"), any())).thenReturn(CacheResult.miss(null));
         when(joinPoint.proceed()).thenReturn(null);
 
         Object result = aspect.handleCaching(joinPoint, caching);
 
         assertNull(result);
-        verify(cacheManager, never()).put(anyString(), any(), anyLong());
+        verify(cacheManager, never()).put(anyString(), any(), anyLong(), any());
     }
 
     /**
@@ -156,13 +158,13 @@ class CoalesceCachingAspectTest {
         when(joinPoint.getArgs()).thenReturn(new Object[]{"123"});
         when(methodSignature.getParameterNames()).thenReturn(new String[]{"id"});
         when(methodSignature.getMethod()).thenReturn(getTestMethod());
-        when(cacheManager.get("cache:123")).thenReturn(Optional.empty());
+        when(cacheManager.lookup(eq("cache:123"), any())).thenReturn(CacheResult.miss(null));
         when(joinPoint.proceed()).thenReturn(null);
 
         Object result = aspect.handleCaching(joinPoint, caching);
 
         assertNull(result);
-        verify(cacheManager).put("cache:123", null, 300);
+        verify(cacheManager).put(eq("cache:123"), isNull(), eq(300L), any());
     }
 
 
@@ -211,7 +213,7 @@ class CoalesceCachingAspectTest {
         Object result = aspect.handleCaching(joinPoint, caching);
 
         assertNull(result);
-        verify(cacheManager, never()).put(anyString(), any(), anyLong());
+        verify(cacheManager, never()).put(anyString(), any(), anyLong(), any());
     }
 
     /**
@@ -230,7 +232,7 @@ class CoalesceCachingAspectTest {
 
         aspect.handleCaching(joinPoint, caching);
 
-        verify(cacheManager).put("cache:123", "result", 300L);
+        verify(cacheManager).put(eq("cache:123"), eq("result"), eq(300L), any());
     }
 
     /**
@@ -249,7 +251,7 @@ class CoalesceCachingAspectTest {
 
         aspect.handleCaching(joinPoint, caching);
 
-        verify(cacheManager).put("cache:123", "result", 300L);
+        verify(cacheManager).put(eq("cache:123"), eq("result"), eq(300L), any());
     }
 
     /**
@@ -268,7 +270,7 @@ class CoalesceCachingAspectTest {
 
         aspect.handleCaching(joinPoint, caching);
 
-        verify(cacheManager, never()).put(anyString(), any(), anyLong());
+        verify(cacheManager, never()).put(anyString(), any(), anyLong(), any());
     }
 
     /**
@@ -285,7 +287,7 @@ class CoalesceCachingAspectTest {
      * Procesar con clave vacía debe usar el hash de los argumentos.
      */
     @Test
-    void handleCaching_WithEmptyKey_ShouldUseArgsHashcode() throws Throwable {
+    void handleCaching_WithEmptyKey_ShouldUseArgumentsContent() throws Throwable {
         CoalesceCacheable cacheable = createMockCacheable("cache", "", 300, "", false, true);
         CoalesceCaching caching = createMockCaching(
                 new CoalesceCacheable[]{cacheable},
@@ -294,19 +296,19 @@ class CoalesceCachingAspectTest {
         );
 
         Object[] args = new Object[]{"123"};
-        String expectedKey = "cache:" + java.util.Arrays.hashCode(args);
+        String expectedKey = "cache:[\"123\"]";
 
         when(joinPoint.getSignature()).thenReturn(methodSignature);
         when(joinPoint.getArgs()).thenReturn(args);
         when(methodSignature.getParameterNames()).thenReturn(new String[]{"id"});
         when(methodSignature.getMethod()).thenReturn(getTestMethod());
-        when(cacheManager.get(expectedKey)).thenReturn(Optional.empty());
+        when(cacheManager.lookup(eq(expectedKey), any())).thenReturn(CacheResult.miss(null));
         when(joinPoint.proceed()).thenReturn("result");
 
         Object result = aspect.handleCaching(joinPoint, caching);
 
         assertEquals("result", result);
-        verify(cacheManager).put(expectedKey, "result", 300L);
+        verify(cacheManager).put(eq(expectedKey), eq("result"), eq(300L), any());
     }
 
 

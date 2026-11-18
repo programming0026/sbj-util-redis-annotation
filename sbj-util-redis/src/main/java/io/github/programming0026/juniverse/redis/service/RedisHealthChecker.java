@@ -21,6 +21,9 @@ import java.util.concurrent.TimeoutException;
 @Slf4j
 public class RedisHealthChecker {
 
+    /** Segundos que se espera como máximo la respuesta de la orden INFO. */
+    private static final long INFO_TIMEOUT_SECONDS = 5;
+
     /**
      * Plantilla de Redis.
      */
@@ -69,9 +72,9 @@ public class RedisHealthChecker {
 
             try (RedisConnection connection = connectionFactory.getConnection()) {
 
-                long startTime = System.currentTimeMillis();
+                long startTime = System.nanoTime();
                 String pong = connection.ping();
-                long endTime = System.currentTimeMillis() - startTime;
+                long endTime = TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - startTime);
 
                 Map<String, String> info = getRedisInfo(connection);
 
@@ -85,7 +88,8 @@ public class RedisHealthChecker {
                 }
 
                 long usedMemory = parseLong(info.get("used_memory"), 0L);
-                long maxMemory = parseLong(info.get("total_system_memory"), 0L);
+                // maxmemory es el límite configurado en Redis; 0 significa «sin límite».
+                long maxMemory = parseLong(info.get("maxmemory"), 0L);
                 int connectedClients = parseInt(info.get("connected_clients"), 0);
                 String redisVersion = info.getOrDefault("redis_version", "");
 
@@ -104,7 +108,7 @@ public class RedisHealthChecker {
             log.error("Error checking Redis status: {}", e.getMessage());
             return createStatus(String.format("Error checking Redis status: %s", e.getMessage()));
         } catch (Exception e) {
-            log.error("Unexpected error checking Redis status: {}", e.getMessage());
+            log.error("Unexpected error checking Redis status", e);
             return createStatus(String.format("Unexpected error checking Redis status: %s", e.getMessage()));
         }
     }
@@ -114,7 +118,7 @@ public class RedisHealthChecker {
      * Admite los modos standalone, clúster y sentinel.
      *
      * @param connection conexión a Redis
-     * @return propiedades de información de Redis de de de mapa
+     * @return propiedades de la orden INFO, por nombre
      */
     private Map<String, String> getRedisInfo(RedisConnection connection) {
         Map<String, String> info = new HashMap<>();
@@ -129,12 +133,12 @@ public class RedisHealthChecker {
                 log.debug("Detected Redis Cluster connection");
                 RedisAdvancedClusterAsyncCommands<?, ?> clusterCommands =
                         (RedisAdvancedClusterAsyncCommands<?, ?>) nativeConnection;
-                infoString = clusterCommands.info().get(5, TimeUnit.SECONDS);
+                infoString = clusterCommands.info().get(INFO_TIMEOUT_SECONDS, TimeUnit.SECONDS);
 
             } else if (nativeConnection instanceof RedisAsyncCommands) {
                 log.debug("Detected Redis Standalone/Sentinel connection");
                 RedisAsyncCommands<?, ?> asyncCommands = (RedisAsyncCommands<?, ?>) nativeConnection;
-                infoString = asyncCommands.info().get(5, TimeUnit.SECONDS);
+                infoString = asyncCommands.info().get(INFO_TIMEOUT_SECONDS, TimeUnit.SECONDS);
             } else {
                 log.warn("Unknown native connection type: {}. Attempting fallback to serverCommands",
                         nativeConnection.getClass().getName());

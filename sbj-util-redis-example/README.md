@@ -33,7 +33,7 @@ La aplicación administra cuatro entidades de dominio (productos, usuarios, cuen
 - **Spring Data Redis**
 - **Maven**
 - **Lombok**
-- **sbj-util-redis-annotation 2.0.1 (`io.github.programming0026`)**
+- **sbj-util-redis-annotation 3.0.0 (`io.github.programming0026`)**
 - **Jackson 3** (serialización JSON; el soporte de java.time viene integrado)
 
 ## Requisitos previos
@@ -66,7 +66,7 @@ Para cambiar a SENTINEL o CLUSTER, edite `src/main/java/com/juniverse/redis/exam
 
 ### 3. Instalar la librería
 
-El ejemplo depende de `io.github.programming0026:sbj-util-redis-annotation:2.0.1`, que es el módulo `sbj-util-redis` de este repositorio. Instálela una vez en su repositorio local de Maven:
+El ejemplo depende de `io.github.programming0026:sbj-util-redis-annotation:3.0.0`, que es el módulo `sbj-util-redis` de este repositorio. Instálela una vez en su repositorio local de Maven:
 
 ```bash
 cd ../sbj-util-redis
