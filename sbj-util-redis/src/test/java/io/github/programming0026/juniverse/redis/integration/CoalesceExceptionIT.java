@@ -26,25 +26,25 @@ class CoalesceExceptionIT extends AbstractRedisIT {
     /**
      * Service whose methods always fail.
      */
-     private static class FailingService {
+     public static class FailingService {
 
         @CoalesceCacheable(value = "errors", key = "#id", coalesce = false)
-         String failWithoutCoalesce(String id) {
+        public String failWithoutCoalesce(String id) {
             throw new IllegalStateException("boom " + id);
         }
 
         @CoalesceCacheable(value = "errors", key = "#id")
-         String fail(String id) {
+        public String fail(String id) {
             throw new IllegalStateException("boom " + id);
         }
 
         @CoalesceCacheable(value = "errors", key = "#id")
-         String failChecked(String id) throws IOException {
+        public String failChecked(String id) throws IOException {
             throw new IOException("io " + id);
         }
 
         @CoalesceCacheable(value = "errors", key = "#id", ttl = 20)
-         String failSlowly(String id) throws InterruptedException {
+        public String failSlowly(String id) throws InterruptedException {
             Thread.sleep(600);
             throw new IllegalStateException("boom " + id);
         }
