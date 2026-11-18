@@ -20,19 +20,19 @@ import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
-class ProductControllerTest {
+public class ProductControllerTest {
 
     private ProductService service;
     private MockMvc mvc;
 
     @BeforeEach
-    void setUp() {
+    public void setUp() {
         service = mock(ProductService.class);
         mvc = MockMvcBuilders.standaloneSetup(new ProductController(service)).build();
     }
 
     @Test
-    void listsProducts() throws Exception {
+    public void listsProducts() throws Exception {
         when(service.getProducts()).thenReturn(List.of(
                 new ProductDTO(1L, "A", 1.5, LocalDate.of(2026, 1, 2)),
                 new ProductDTO(2L, "B", 2.5, LocalDate.of(2026, 1, 3))));
@@ -45,7 +45,7 @@ class ProductControllerTest {
     }
 
     @Test
-    void returnsOneProduct() throws Exception {
+    public void returnsOneProduct() throws Exception {
         when(service.getProductById(1L)).thenReturn(new ProductDTO(1L, "A", 1.5, LocalDate.of(2026, 1, 2)));
 
         mvc.perform(get("/api/v1/products/1"))
@@ -55,23 +55,23 @@ class ProductControllerTest {
     }
 
     @Test
-    void unknownProductIs404() throws Exception {
+    public void unknownProductIs404() throws Exception {
         mvc.perform(get("/api/v1/products/99")).andExpect(status().isNotFound());
     }
 
     @Test
-    void createsAProduct() throws Exception {
-        when(service.saveOrUpdateProduct(any())).thenReturn(new ProductDTO(11L, "Nuevo", 5.5, LocalDate.now()));
+    public void createsAProduct() throws Exception {
+        when(service.saveOrUpdateProduct(any())).thenReturn(new ProductDTO(11L, "New", 5.5, LocalDate.now()));
 
         mvc.perform(post("/api/v1/products").contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"name\":\"Nuevo\",\"mount\":5.5}"))
+                        .content("{\"name\":\"New\",\"mount\":5.5}"))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.id").value(11))
-                .andExpect(jsonPath("$.name").value("Nuevo"));
+                .andExpect(jsonPath("$.name").value("New"));
     }
 
     @Test
-    void deleteReturns204OrTheNotFound() throws Exception {
+    public void deleteReturns204OrTheNotFound() throws Exception {
         when(service.deleteProduct(1L)).thenReturn(true);
 
         mvc.perform(delete("/api/v1/products/1")).andExpect(status().isNoContent());
@@ -79,7 +79,7 @@ class ProductControllerTest {
     }
 
     @Test
-    void refreshClearsTheCache() throws Exception {
+    public void refreshClearsTheCache() throws Exception {
         mvc.perform(get("/api/v1/products/refresh")).andExpect(status().isOk());
 
         verify(service).clearCache();

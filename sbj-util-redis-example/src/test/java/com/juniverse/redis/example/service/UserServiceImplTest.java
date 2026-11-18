@@ -30,7 +30,7 @@ import org.springframework.cache.CacheManager;
 /** Con RedisCacheService simulado: comprueba cómo el servicio usa la librería, sin necesitar un Redis. */
 @ExtendWith(MockitoExtension.class)
 @MockitoSettings(strictness = Strictness.LENIENT)
-class UserServiceImplTest {
+public class UserServiceImplTest {
 
     @Mock
     private CacheManager cacheManager;
@@ -42,7 +42,7 @@ class UserServiceImplTest {
 
     @BeforeEach
     @SuppressWarnings("unchecked")
-    void setUp() {
+    public void setUp() {
         service = new UserServiceImpl(cacheManager, redisCacheService);
         // "cache vacía": cada cacheable() ejecuta el cargador que le pasa el servicio
         when(redisCacheService.cacheable(any(), any(), any(Supplier.class), any(Duration.class)))
@@ -50,7 +50,7 @@ class UserServiceImplTest {
     }
 
     @Test
-    void cacheMissLoadsTheUserFromTheStore() {
+    public void cacheMissLoadsTheUserFromTheStore() {
         UserDTO user = service.getUserById(1L, false);
 
         assertEquals("user1", user.getUsername());
@@ -59,7 +59,7 @@ class UserServiceImplTest {
     }
 
     @Test
-    void forceRefreshEvictsTheEntryFirst() {
+    public void forceRefreshEvictsTheEntryFirst() {
         service.getUserById(2L, true);
 
         verify(redisCacheService).cacheEvict("users", "2");
@@ -67,16 +67,16 @@ class UserServiceImplTest {
     }
 
     @Test
-    void cacheHitReturnsWhatTheCacheHolds() {
-        UserDTO cached = new UserDTO(7L, "en-caché", "c@example.com", LocalDateTime.now());
+    public void cacheHitReturnsWhatTheCacheHolds() {
+        UserDTO cached = new UserDTO(7L, "in-cache", "c@example.com", LocalDateTime.now());
         when(redisCacheService.cacheable(eq("users"), eq("7"), any(Supplier.class), any(Duration.class)))
                 .thenReturn(cached);
 
-        assertEquals("en-caché", service.getUserById(7L, false).getUsername());
+        assertEquals("in-cache", service.getUserById(7L, false).getUsername());
     }
 
     @Test
-    void listIsCachedUnderTheAllKey() {
+    public void listIsCachedUnderTheAllKey() {
         List<UserDTO> users = service.getUsers();
 
         assertTrue(users.size() >= 10);
@@ -84,16 +84,16 @@ class UserServiceImplTest {
     }
 
     @Test
-    void listReturnsEmptyWhenTheCacheFails() {
+    public void listReturnsEmptyWhenTheCacheFails() {
         when(redisCacheService.cacheable(eq("users"), eq("all"), any(Supplier.class), any(Duration.class)))
-                .thenThrow(new IllegalStateException("redis caído"));
+                .thenThrow(new IllegalStateException("redis down"));
 
         assertTrue(service.getUsers().isEmpty());
     }
 
     @Test
-    void savingCreatesTheUserPutsItInCacheAndEvictsTheList() {
-        UserDTO saved = service.saveOrUpdateUser(new UserDTO(null, "nuevo", "n@example.com", null));
+    public void savingCreatesTheUserPutsItInCacheAndEvictsTheList() {
+        UserDTO saved = service.saveOrUpdateUser(new UserDTO(null, "new", "n@example.com", null));
 
         assertNotNull(saved.getId());
         assertNotNull(saved.getCreatedAt());
@@ -103,17 +103,17 @@ class UserServiceImplTest {
     }
 
     @Test
-    void savingWithExistingIdUpdatesIt() {
-        UserDTO created = service.saveOrUpdateUser(new UserDTO(null, "antes", "a@example.com", null));
+    public void savingWithExistingIdUpdatesIt() {
+        UserDTO created = service.saveOrUpdateUser(new UserDTO(null, "before", "a@example.com", null));
 
-        service.saveOrUpdateUser(new UserDTO(created.getId(), "después", "d@example.com", created.getCreatedAt()));
+        service.saveOrUpdateUser(new UserDTO(created.getId(), "after", "d@example.com", created.getCreatedAt()));
 
-        assertEquals("después", service.getUserById(created.getId(), false).getUsername());
+        assertEquals("after", service.getUserById(created.getId(), false).getUsername());
     }
 
     @Test
-    void deleteEvictsTheEntryAndTheListOnlyIfTheUserExists() {
-        UserDTO created = service.saveOrUpdateUser(new UserDTO(null, "borrar", "b@example.com", null));
+    public void deleteEvictsTheEntryAndTheListOnlyIfTheUserExists() {
+        UserDTO created = service.saveOrUpdateUser(new UserDTO(null, "delete", "b@example.com", null));
 
         assertTrue(service.deleteUser(created.getId()));
         verify(redisCacheService).cacheEvict("users", String.valueOf(created.getId()));
@@ -123,7 +123,7 @@ class UserServiceImplTest {
     }
 
     @Test
-    void clearCacheClearsTheUsersCache() {
+    public void clearCacheClearsTheUsersCache() {
         Cache cache = org.mockito.Mockito.mock(Cache.class);
         when(cacheManager.getCache("users")).thenReturn(cache);
 

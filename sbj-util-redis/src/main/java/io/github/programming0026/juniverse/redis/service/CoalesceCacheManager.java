@@ -1,6 +1,6 @@
 package io.github.programming0026.juniverse.redis.service;
 
-import io.github.programming0026.juniverse.redis.config.CoalesceSettings;
+import io.github.programming0026.juniverse.redis.dto.CoalesceSettings;
 import io.github.programming0026.juniverse.redis.dto.CacheResult;
 import io.github.programming0026.juniverse.redis.dto.CoalescedResponseDto;
 import io.github.programming0026.juniverse.redis.exception.CoalesceException;

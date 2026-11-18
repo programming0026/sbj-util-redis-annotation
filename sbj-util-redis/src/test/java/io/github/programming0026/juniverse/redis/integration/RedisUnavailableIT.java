@@ -61,14 +61,14 @@ class RedisUnavailableIT extends AbstractRedisIT {
      * Arranca Redis, crea la instancia y luego detiene Redis.
      */
     @BeforeEach
-    void setUp() {
+    public void setUp() {
         container = RedisContainers.newStandalone();
         container.start();
         instance = register(new RedisInstance(
                 RedisContainers.standaloneFactory(container, Duration.ofSeconds(1))));
         service = instance.proxy(new UserService());
 
-        assertEquals("user-0", service.find("0"), "con Redis activo debe funcionar");
+        assertEquals("user-0", service.find("0"), "it must work while Redis is up");
         container.stop();
     }
 
@@ -76,7 +76,7 @@ class RedisUnavailableIT extends AbstractRedisIT {
      * Elimina el contenedor por si la prueba falló antes de detenerlo.
      */
     @AfterEach
-    void stopContainer() {
+    public void stopContainer() {
         container.stop();
     }
 
@@ -86,22 +86,22 @@ class RedisUnavailableIT extends AbstractRedisIT {
     }
 
     @Test
-    void cacheable_ShouldRunMethod_WhenRedisIsDown() {
+    public void cacheable_ShouldRunMethod_WhenRedisIsDown() {
         assertEquals("user-1", service.find("1"));
     }
 
     @Test
-    void cacheableWithoutCoalesce_ShouldRunMethod_WhenRedisIsDown() {
+    public void cacheableWithoutCoalesce_ShouldRunMethod_WhenRedisIsDown() {
         assertEquals("user-2", service.findWithoutCoalesce("2"));
     }
 
     @Test
-    void put_ShouldReturnResult_WhenRedisIsDown() {
+    public void put_ShouldReturnResult_WhenRedisIsDown() {
         assertEquals("saved-3", service.save("3"));
     }
 
     @Test
-    void evict_ShouldNotFail_WhenRedisIsDown() {
+    public void evict_ShouldNotFail_WhenRedisIsDown() {
         assertDoesNotThrow(() -> service.delete("4"));
     }
 }

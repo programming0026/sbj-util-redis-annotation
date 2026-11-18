@@ -28,7 +28,7 @@ public class CacheMetricsConfiguration {
      */
     @Bean
     @ConditionalOnMissingBean
-    CacheMetrics cacheMetrics(ObjectProvider<MeterRegistry> registry) {
+    public CacheMetrics cacheMetrics(ObjectProvider<MeterRegistry> registry) {
         MeterRegistry meterRegistry = registry.getIfUnique();
         return meterRegistry != null ? new MicrometerCacheMetrics(meterRegistry) : CacheMetrics.NOOP;
     }

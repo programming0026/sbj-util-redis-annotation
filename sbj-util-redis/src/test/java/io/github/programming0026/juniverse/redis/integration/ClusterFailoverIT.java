@@ -1,11 +1,12 @@
 package io.github.programming0026.juniverse.redis.integration;
 
+import io.github.programming0026.juniverse.redis.integration.dto.Cluster;
 import io.github.programming0026.juniverse.redis.annotation.EnableRedisLibrary;
 import io.github.programming0026.juniverse.redis.annotation.HostEntry;
 import io.github.programming0026.juniverse.redis.integration.LibraryApplication.CatalogService;
 import io.github.programming0026.juniverse.redis.service.CoalesceCacheManager;
 import io.github.programming0026.juniverse.redis.service.RedisCacheService;
-import io.github.programming0026.juniverse.redis.util.Mode;
+import io.github.programming0026.juniverse.redis.enums.Mode;
 import java.time.Duration;
 import java.util.Map;
 
@@ -38,7 +39,7 @@ class ClusterFailoverIT {
     private static final int MANY_KEYS = 600;
 
     /** Clúster compartido por las pruebas de la clase. */
-    private static RedisTopologies.Cluster topology;
+    private static Cluster topology;
 
     /** Aplicación de la prueba en curso. */
     private LibraryApplication application;
@@ -53,14 +54,14 @@ class ClusterFailoverIT {
             keyPrefix = "cluster",
             connectionTimeout = 2000,
             readTimeout = 2000)
-    static class Application {
+    public static class Application {
     }
 
     /**
      * Arranca el clúster.
      */
     @BeforeAll
-    static void startTopology() {
+    public static void startTopology() {
         topology = RedisTopologies.startCluster();
     }
 
@@ -68,7 +69,7 @@ class ClusterFailoverIT {
      * Elimina el contenedor.
      */
     @AfterAll
-    static void stopTopology() {
+    public static void stopTopology() {
         if (topology != null) {
             topology.container().stop();
         }
@@ -78,7 +79,7 @@ class ClusterFailoverIT {
      * Arranca la aplicación contra el primer nodo.
      */
     @BeforeEach
-    void startApplication() {
+    public void startApplication() {
         application = LibraryApplication.start(Application.class,
                 Map.of("it.cluster.seed", RedisTopologies.host() + ":" + topology.ports()[0]));
     }
@@ -87,7 +88,7 @@ class ClusterFailoverIT {
      * Cierra la aplicación.
      */
     @AfterEach
-    void closeApplication() {
+    public void closeApplication() {
         application.close();
     }
 
@@ -102,7 +103,7 @@ class ClusterFailoverIT {
      */
     @Test
     @Order(1)
-    void application_ShouldDiscoverClusterAndSpreadKeysAcrossMasters() {
+    public void application_ShouldDiscoverClusterAndSpreadKeysAcrossMasters() {
         CatalogService catalog = application.catalog();
         RedisCacheService cacheService = application.cacheService();
 
@@ -116,14 +117,14 @@ class ClusterFailoverIT {
         }
 
         assertEquals(120, catalog.callCount());
-        assertEquals("user-7", cacheService.cacheable("users", "7", () -> "no-debe-ejecutarse"));
+        assertEquals("user-7", cacheService.cacheable("users", "7", () -> "must-not-run"));
         int mastersWithKeys = 0;
         for (int port : topology.ports()) {
             if (topology.node(port, "role").startsWith("master") && keysOnNode(port) > 0) {
                 mastersWithKeys++;
             }
         }
-        assertEquals(3, mastersWithKeys, "las claves deben repartirse entre los tres maestros");
+        assertEquals(3, mastersWithKeys, "keys must be spread across the three masters");
     }
 
     /**
@@ -132,7 +133,7 @@ class ClusterFailoverIT {
      */
     @Test
     @Order(2)
-    void evictAll_ShouldRemoveKeysFromEveryNode() {
+    public void evictAll_ShouldRemoveKeysFromEveryNode() {
         CoalesceCacheManager cache = application.coalesceCache();
         RedisCacheService cacheService = application.cacheService();
         for (int i = 0; i < MANY_KEYS; i++) {
@@ -140,14 +141,14 @@ class ClusterFailoverIT {
             cache.put("bulk:" + i, "v" + i, 300, String.class);
             cacheService.cacheable("bulkService", key, () -> "v" + key);
         }
-        cache.put("other:1", "se-queda", 300, String.class);
+        cache.put("other:1", "stays", 300, String.class);
 
         cache.evictAll("bulk");
         cacheService.cacheEvictAll("bulkService");
 
         for (int i = 0; i < MANY_KEYS; i++) {
-            assertFalse(cache.exists("bulk:" + i), "sigue existiendo bulk:" + i);
-            assertFalse(cacheService.exists("bulkService", String.valueOf(i)), "sigue existiendo bulkService:" + i);
+            assertFalse(cache.exists("bulk:" + i), "still exists: bulk:" + i);
+            assertFalse(cacheService.exists("bulkService", String.valueOf(i)), "still exists: bulkService:" + i);
         }
         assertTrue(cache.exists("other:1"));
     }
@@ -157,13 +158,13 @@ class ClusterFailoverIT {
      */
     @Test
     @Order(3)
-    void coalescedLoad_ShouldWorkAcrossSlots() {
+    public void coalescedLoad_ShouldWorkAcrossSlots() {
         CoalesceCacheManager cache = application.coalesceCache();
 
         for (int i = 0; i < 50; i++) {
             String key = "coalesced:" + i;
             assertEquals("v" + i, cache.getOrLoad(key, () -> "v" + key.substring(10), 300, false, String.class));
-            assertEquals("v" + i, cache.getOrLoad(key, () -> "no-debe-ejecutarse", 300, false, String.class));
+            assertEquals("v" + i, cache.getOrLoad(key, () -> "must-not-run", 300, false, String.class));
         }
     }
 
@@ -174,7 +175,7 @@ class ClusterFailoverIT {
      */
     @Test
     @Order(4)
-    void whenAMasterDies_ApplicationShouldKeepServingAndRefreshTopology() {
+    public void whenAMasterDies_ApplicationShouldKeepServingAndRefreshTopology() {
         CatalogService catalog = application.catalog();
         CoalesceCacheManager cache = application.coalesceCache();
         for (long id = 100; id < 160; id++) {
@@ -182,7 +183,7 @@ class ClusterFailoverIT {
         }
 
         int victim = topology.ports()[0];
-        assertTrue(topology.node(victim, "role").startsWith("master"), "el primer nodo debe ser maestro");
+        assertTrue(topology.node(victim, "role").startsWith("master"), "the first node must be a master");
         topology.node(victim, "shutdown", "nosave");
 
         // Durante la conmutación ninguna petición falla, toque el slot que toque.
@@ -193,7 +194,7 @@ class ClusterFailoverIT {
 
         assertTrue(LibraryApplication.await(
                 () -> topology.node(topology.ports()[1], "cluster", "info").contains("cluster_state:ok"),
-                Duration.ofSeconds(40)), "el clúster no se recuperó de la caída del maestro");
+                Duration.ofSeconds(40)), "the cluster did not recover from the master failure");
 
         // La caché vuelve a funcionar en todos los slots, también en los del maestro caído.
         assertTrue(LibraryApplication.await(() -> {
@@ -205,13 +206,13 @@ class ClusterFailoverIT {
                 }
             }
             return true;
-        }, Duration.ofSeconds(90)), "tras la conmutación siguen fallando claves de algún slot");
+        }, Duration.ofSeconds(90)), "keys of some slot keep failing after the failover");
 
         int before = catalog.callCount();
         for (long id = 300; id < 360; id++) {
             catalog.find(id);
             catalog.find(id);
         }
-        assertEquals(before + 60, catalog.callCount(), "tras la conmutación debe volver a haber aciertos");
+        assertEquals(before + 60, catalog.callCount(), "cache hits must resume after the failover");
     }
 }

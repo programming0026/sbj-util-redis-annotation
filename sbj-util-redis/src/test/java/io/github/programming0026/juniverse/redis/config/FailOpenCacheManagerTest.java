@@ -38,7 +38,7 @@ import static org.mockito.Mockito.when;
 class FailOpenCacheManagerTest {
 
     /** Fallo de Redis simulado. */
-    private static final RuntimeException REDIS_DOWN = new QueryTimeoutException("sin respuesta");
+    private static final RuntimeException REDIS_DOWN = new QueryTimeoutException("no response");
 
     /** Administrador real simulado. */
     private CacheManager delegate;
@@ -54,9 +54,9 @@ class FailOpenCacheManagerTest {
      */
     @BeforeEach
     @SuppressWarnings("unchecked")
-    void setUp() {
+    public void setUp() {
         broken = mock(Cache.class);
-        when(broken.getName()).thenReturn("rota");
+        when(broken.getName()).thenReturn("broken");
         when(broken.get(any())).thenThrow(REDIS_DOWN);
         when(broken.get(any(), any(Class.class))).thenThrow(REDIS_DOWN);
         when(broken.get(any(), any(Callable.class))).thenThrow(REDIS_DOWN);
@@ -68,27 +68,27 @@ class FailOpenCacheManagerTest {
         doThrow(REDIS_DOWN).when(broken).clear();
 
         delegate = mock(CacheManager.class);
-        when(delegate.getCache("rota")).thenReturn(broken);
-        when(delegate.getCache("sana")).thenReturn(new ConcurrentMapCache("sana"));
-        when(delegate.getCacheNames()).thenReturn(List.of("rota", "sana"));
+        when(delegate.getCache("broken")).thenReturn(broken);
+        when(delegate.getCache("healthy")).thenReturn(new ConcurrentMapCache("healthy"));
+        when(delegate.getCacheNames()).thenReturn(List.of("broken", "healthy"));
         cacheManager = new FailOpenCacheManager(delegate);
     }
 
     @Test
-    void manager_ShouldExposeDelegateAndItsCaches() {
+    public void manager_ShouldExposeDelegateAndItsCaches() {
         assertSame(delegate, cacheManager.getDelegate());
-        assertEquals(List.of("rota", "sana"), cacheManager.getCacheNames());
-        assertNull(cacheManager.getCache("no-existe"));
-        assertSame(cacheManager.getCache("sana"), cacheManager.getCache("sana"));
-        assertEquals("rota", cacheManager.getCache("rota").getName());
+        assertEquals(List.of("broken", "healthy"), cacheManager.getCacheNames());
+        assertNull(cacheManager.getCache("does-not-exist"));
+        assertSame(cacheManager.getCache("healthy"), cacheManager.getCache("healthy"));
+        assertEquals("broken", cacheManager.getCache("broken").getName());
     }
 
     /**
      * Con Redis caído, leer es «no está», y guardar e invalidar no hacen nada ni fallan.
      */
     @Test
-    void brokenCache_ShouldBehaveAsEmptyAndNeverThrow() {
-        Cache cache = cacheManager.getCache("rota");
+    public void brokenCache_ShouldBehaveAsEmptyAndNeverThrow() {
+        Cache cache = cacheManager.getCache("broken");
 
         assertNull(cache.get("k"));
         assertNull(cache.get("k", String.class));
@@ -106,12 +106,12 @@ class FailOpenCacheManagerTest {
      * Con Redis caído antes de cargar, el cargador se ejecuta una vez y su valor se devuelve.
      */
     @Test
-    void brokenCache_GetWithLoader_ShouldRunLoaderOnce() {
+    public void brokenCache_GetWithLoader_ShouldRunLoaderOnce() {
         AtomicInteger calls = new AtomicInteger();
 
-        String value = cacheManager.getCache("rota").get("k", () -> "cargado-" + calls.incrementAndGet());
+        String value = cacheManager.getCache("broken").get("k", () -> "loaded-" + calls.incrementAndGet());
 
-        assertEquals("cargado-1", value);
+        assertEquals("loaded-1", value);
         assertEquals(1, calls.get());
     }
 
@@ -120,16 +120,16 @@ class FailOpenCacheManagerTest {
      */
     @Test
     @SuppressWarnings("unchecked")
-    void getWithLoader_WhenCacheFailsAfterLoading_ShouldNotLoadTwice() {
+    public void getWithLoader_WhenCacheFailsAfterLoading_ShouldNotLoadTwice() {
         when(broken.get(any(), any(Callable.class))).thenAnswer(invocation -> {
             invocation.<Callable<Object>>getArgument(1).call();
             throw REDIS_DOWN;
         });
         AtomicInteger calls = new AtomicInteger();
 
-        String value = cacheManager.getCache("rota").get("k", () -> "cargado-" + calls.incrementAndGet());
+        String value = cacheManager.getCache("broken").get("k", () -> "loaded-" + calls.incrementAndGet());
 
-        assertEquals("cargado-1", value);
+        assertEquals("loaded-1", value);
         assertEquals(1, calls.get());
     }
 
@@ -137,16 +137,16 @@ class FailOpenCacheManagerTest {
      * La excepción del cargador se propaga como hace Spring, venga de la caché real o del respaldo.
      */
     @Test
-    void getWithLoader_WhenLoaderFails_ShouldPropagateItsException() {
-        IllegalStateException failure = new IllegalStateException("fallo de negocio");
+    public void getWithLoader_WhenLoaderFails_ShouldPropagateItsException() {
+        IllegalStateException failure = new IllegalStateException("business failure");
         Callable<String> failing = () -> {
             throw failure;
         };
 
         Cache.ValueRetrievalException fromFallback = assertThrows(Cache.ValueRetrievalException.class,
-                () -> cacheManager.getCache("rota").get("k", failing));
+                () -> cacheManager.getCache("broken").get("k", failing));
         Cache.ValueRetrievalException fromRealCache = assertThrows(Cache.ValueRetrievalException.class,
-                () -> cacheManager.getCache("sana").get("k", failing));
+                () -> cacheManager.getCache("healthy").get("k", failing));
 
         assertSame(failure, fromFallback.getCause());
         assertSame(failure, fromRealCache.getCause());
@@ -156,14 +156,14 @@ class FailOpenCacheManagerTest {
      * Cuando la caché real funciona, el envoltorio no cambia nada.
      */
     @Test
-    void healthyCache_ShouldWorkNormally() {
-        Cache cache = cacheManager.getCache("sana");
+    public void healthyCache_ShouldWorkNormally() {
+        Cache cache = cacheManager.getCache("healthy");
 
         cache.put("k", "v");
         assertEquals("v", cache.get("k").get());
         assertEquals("v", cache.get("k", String.class));
-        assertEquals("v", cache.get("k", () -> "no-debe-cargar"));
-        assertEquals("v", cache.putIfAbsent("k", "otro").get());
+        assertEquals("v", cache.get("k", () -> "must-not-load"));
+        assertEquals("v", cache.putIfAbsent("k", "other").get());
         assertTrue(cache.evictIfPresent("k"));
         cache.put("k2", "v2");
         cache.evict("k2");
@@ -173,22 +173,22 @@ class FailOpenCacheManagerTest {
         assertNull(cache.get("k3"));
         cache.put("k4", "v4");
         assertTrue(cache.invalidate());
-        assertSame(cacheManager.getCache("sana").getNativeCache(), cache.getNativeCache());
+        assertSame(cacheManager.getCache("healthy").getNativeCache(), cache.getNativeCache());
     }
 
     /**
      * Las operaciones asíncronas se pasan tal cual a la caché real.
      */
     @Test
-    void retrieve_ShouldDelegate() {
+    public void retrieve_ShouldDelegate() {
         CompletableFuture<Object> pending = CompletableFuture.completedFuture(new SimpleValueWrapper("v"));
         when(broken.retrieve("k")).thenAnswer(invocation -> pending);
-        when(broken.retrieve(any(), any())).thenReturn(CompletableFuture.completedFuture("cargado"));
+        when(broken.retrieve(any(), any())).thenReturn(CompletableFuture.completedFuture("loaded"));
 
-        Cache cache = cacheManager.getCache("rota");
+        Cache cache = cacheManager.getCache("broken");
 
         assertSame(pending, cache.retrieve("k"));
-        assertEquals("cargado", cache.retrieve("k", () -> CompletableFuture.completedFuture("x")).join());
+        assertEquals("loaded", cache.retrieve("k", () -> CompletableFuture.completedFuture("x")).join());
         verify(broken).retrieve("k");
     }
 
@@ -198,14 +198,14 @@ class FailOpenCacheManagerTest {
      */
     @Test
     @SuppressWarnings("unchecked")
-    void openBreaker_ShouldSkipTheRealCache() {
+    public void openBreaker_ShouldSkipTheRealCache() {
         RedisCircuitBreaker breaker = new RedisCircuitBreaker(Duration.ofSeconds(30));
         FailOpenCacheManager guarded = new FailOpenCacheManager(delegate, breaker);
-        Cache cache = guarded.getCache("rota");
+        Cache cache = guarded.getCache("broken");
 
         assertNull(cache.get("k"));
         assertTrue(breaker.isOpen());
-        assertEquals("cargado", cache.get("k2", () -> "cargado"));
+        assertEquals("loaded", cache.get("k2", () -> "loaded"));
         cache.put("k3", "v");
         cache.evict("k4");
 

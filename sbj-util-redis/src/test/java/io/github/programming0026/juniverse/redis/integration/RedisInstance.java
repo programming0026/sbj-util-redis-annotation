@@ -3,7 +3,7 @@ package io.github.programming0026.juniverse.redis.integration;
 import io.github.programming0026.juniverse.redis.aspect.CoalesceCachingAspect;
 import io.github.programming0026.juniverse.redis.aspect.CoalesceEvictAspect;
 import io.github.programming0026.juniverse.redis.aspect.CoalescePutAspect;
-import io.github.programming0026.juniverse.redis.config.CoalesceSettings;
+import io.github.programming0026.juniverse.redis.dto.CoalesceSettings;
 import io.github.programming0026.juniverse.redis.config.CustomJacksonJsonRedisSerializer;
 import io.github.programming0026.juniverse.redis.config.DefaultObjectMapperConfig;
 import io.github.programming0026.juniverse.redis.service.CacheValueCodec;
@@ -29,7 +29,7 @@ import org.springframework.data.redis.serializer.StringRedisSerializer;
  *
  * @author Java Universe
  */
-final class RedisInstance implements AutoCloseable {
+public final class RedisInstance implements AutoCloseable {
 
     /** Fábrica de conexiones de esta instancia. */
     private final LettuceConnectionFactory connectionFactory;
@@ -46,15 +46,15 @@ final class RedisInstance implements AutoCloseable {
     /** Servicio de caché programático. */
     private final RedisCacheService cacheService;
 
-    RedisInstance(LettuceConnectionFactory connectionFactory) {
+    public RedisInstance(LettuceConnectionFactory connectionFactory) {
         this(connectionFactory, CoalesceSettings.defaults());
     }
 
-    RedisInstance(LettuceConnectionFactory connectionFactory, CoalesceSettings settings) {
+    public RedisInstance(LettuceConnectionFactory connectionFactory, CoalesceSettings settings) {
         this(connectionFactory, settings, "");
     }
 
-    RedisInstance(LettuceConnectionFactory connectionFactory, CoalesceSettings settings, String keyPrefix) {
+    public RedisInstance(LettuceConnectionFactory connectionFactory, CoalesceSettings settings, String keyPrefix) {
         this.connectionFactory = connectionFactory;
         connectionFactory.afterPropertiesSet();
 
@@ -86,15 +86,15 @@ final class RedisInstance implements AutoCloseable {
         cacheService = new RedisCacheService(template, keyPrefix, Map.of());
     }
 
-    RedisTemplate<String, Object> template() {
+    public RedisTemplate<String, Object> template() {
         return template;
     }
 
-    CoalesceCacheManager cacheManager() {
+    public CoalesceCacheManager cacheManager() {
         return cacheManager;
     }
 
-    RedisCacheService cacheService() {
+    public RedisCacheService cacheService() {
         return cacheService;
     }
 
@@ -105,7 +105,7 @@ final class RedisInstance implements AutoCloseable {
      * @param target servicio real
      * @return proxy interceptado por los aspectos
      */
-    <T> T proxy(T target) {
+    public <T> T proxy(T target) {
         AspectJProxyFactory factory = new AspectJProxyFactory(target);
         factory.setProxyTargetClass(true);
         factory.addAspect(new CoalesceCachingAspect(cacheManager));
@@ -120,7 +120,7 @@ final class RedisInstance implements AutoCloseable {
      * @param key clave completa
      * @return contenido como texto, o {@code null} si la clave no existe
      */
-    String rawValue(String key) {
+    public String rawValue(String key) {
         try (RedisConnection connection = connectionFactory.getConnection()) {
             byte[] bytes = connection.stringCommands().get(key.getBytes(StandardCharsets.UTF_8));
             return bytes == null ? null : new String(bytes, StandardCharsets.UTF_8);
@@ -130,7 +130,7 @@ final class RedisInstance implements AutoCloseable {
     /**
      * Borra todas las claves de Redis.
      */
-    void flushAll() {
+    public void flushAll() {
         try (RedisConnection connection = connectionFactory.getConnection()) {
             connection.serverCommands().flushAll();
         }

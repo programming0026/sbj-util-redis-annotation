@@ -35,7 +35,7 @@ import static org.mockito.Mockito.when;
 class RedisCircuitBreakerTest {
 
     @Test
-    void connectionFailures_ShouldBeRecognisedAlongTheCauseChain() {
+    public void connectionFailures_ShouldBeRecognisedAlongTheCauseChain() {
         assertTrue(RedisCircuitBreaker.isConnectionFailure(new QueryTimeoutException("x")));
         assertTrue(RedisCircuitBreaker.isConnectionFailure(new RedisConnectionFailureException("x")));
         assertTrue(RedisCircuitBreaker.isConnectionFailure(new RedisCommandTimeoutException("x")));
@@ -46,7 +46,7 @@ class RedisCircuitBreakerTest {
     }
 
     @Test
-    void otherFailures_ShouldNotCountAsConnectionFailures() {
+    public void otherFailures_ShouldNotCountAsConnectionFailures() {
         assertFalse(RedisCircuitBreaker.isConnectionFailure(
                 new RedisSystemException("x", new RedisCommandExecutionException("WRONGTYPE"))));
         assertFalse(RedisCircuitBreaker.isConnectionFailure(new IllegalStateException("x")));
@@ -54,13 +54,13 @@ class RedisCircuitBreakerTest {
     }
 
     @Test
-    void connectionFailure_ShouldOpenTheBreakerForThePause() throws InterruptedException {
+    public void connectionFailure_ShouldOpenTheBreakerForThePause() throws InterruptedException {
         RedisCircuitBreaker breaker = new RedisCircuitBreaker(Duration.ofMillis(150));
 
         assertFalse(breaker.isOpen());
-        assertFalse(breaker.recordFailure(new IllegalStateException("error de una orden")));
+        assertFalse(breaker.recordFailure(new IllegalStateException("command error")));
         assertFalse(breaker.isOpen());
-        assertTrue(breaker.recordFailure(new QueryTimeoutException("sin respuesta")));
+        assertTrue(breaker.recordFailure(new QueryTimeoutException("no response")));
         assertTrue(breaker.isOpen());
 
         Thread.sleep(300);
@@ -69,10 +69,10 @@ class RedisCircuitBreakerTest {
     }
 
     @Test
-    void zeroPause_ShouldNeverOpen() {
+    public void zeroPause_ShouldNeverOpen() {
         RedisCircuitBreaker breaker = new RedisCircuitBreaker(Duration.ZERO);
 
-        assertFalse(breaker.recordFailure(new QueryTimeoutException("sin respuesta")));
+        assertFalse(breaker.recordFailure(new QueryTimeoutException("no response")));
         assertFalse(breaker.isOpen());
         assertThrows(IllegalArgumentException.class, () -> new RedisCircuitBreaker(Duration.ofSeconds(-1)));
         assertThrows(IllegalArgumentException.class, () -> new RedisCircuitBreaker(null));
@@ -84,20 +84,20 @@ class RedisCircuitBreakerTest {
      */
     @Test
     @SuppressWarnings("unchecked")
-    void redisCacheService_ShouldSkipRedisWhileTheBreakerIsOpen() {
+    public void redisCacheService_ShouldSkipRedisWhileTheBreakerIsOpen() {
         RedisTemplate<String, Object> template = mock(RedisTemplate.class);
         ValueOperations<String, Object> values = mock(ValueOperations.class);
         when(template.opsForValue()).thenReturn(values);
-        when(values.get(anyString())).thenThrow(new QueryTimeoutException("sin respuesta"));
+        when(values.get(anyString())).thenThrow(new QueryTimeoutException("no response"));
         RedisCircuitBreaker breaker = new RedisCircuitBreaker(Duration.ofSeconds(30));
         RedisCacheService service = new RedisCacheService(template, "", Map.of(), breaker);
-        Supplier<String> loader = () -> "cargado";
+        Supplier<String> loader = () -> "loaded";
 
-        assertEquals("cargado", service.cacheable("users", "1", loader, Duration.ofMinutes(1)));
+        assertEquals("loaded", service.cacheable("users", "1", loader, Duration.ofMinutes(1)));
         assertTrue(breaker.isOpen());
 
-        assertEquals("cargado", service.cacheable("users", "2", loader, Duration.ofMinutes(1)));
-        assertEquals("cargado", service.cachePut("users", "3", loader, Duration.ofMinutes(1)));
+        assertEquals("loaded", service.cacheable("users", "2", loader, Duration.ofMinutes(1)));
+        assertEquals("loaded", service.cachePut("users", "3", loader, Duration.ofMinutes(1)));
         service.cacheEvict("users", "4");
         service.cacheEvictAll("users");
         service.cacheEvictMultiple("users", "5", "6");
@@ -118,9 +118,9 @@ class RedisCircuitBreakerTest {
      * @throws Exception si la prueba se interrumpe
      */
     @Test
-    void afterThePause_OnlyOneCallShouldProbeRedis() throws Exception {
+    public void afterThePause_OnlyOneCallShouldProbeRedis() throws Exception {
         RedisCircuitBreaker breaker = new RedisCircuitBreaker(Duration.ofMillis(100));
-        breaker.recordFailure(new QueryTimeoutException("sin respuesta"));
+        breaker.recordFailure(new QueryTimeoutException("no response"));
         Thread.sleep(150);
 
         int threads = 32;
@@ -143,8 +143,8 @@ class RedisCircuitBreakerTest {
         }
         executor.shutdown();
 
-        assertEquals(1, probes.get(), "solo una llamada debe probar Redis");
-        assertTrue(breaker.isOpen(), "mientras la prueba no termina, los demás siguen sin usar Redis");
+        assertEquals(1, probes.get(), "only one call must probe Redis");
+        assertTrue(breaker.isOpen(), "while the probe is running, the others keep skipping Redis");
     }
 
     /**
@@ -153,17 +153,17 @@ class RedisCircuitBreakerTest {
      * @throws Exception si la prueba se interrumpe
      */
     @Test
-    void probeResult_ShouldCloseOrReopenTheBreaker() throws Exception {
+    public void probeResult_ShouldCloseOrReopenTheBreaker() throws Exception {
         RedisCircuitBreaker breaker = new RedisCircuitBreaker(Duration.ofMillis(100));
-        breaker.recordFailure(new QueryTimeoutException("sin respuesta"));
+        breaker.recordFailure(new QueryTimeoutException("no response"));
         Thread.sleep(150);
 
-        assertFalse(breaker.isOpen(), "la primera llamada tras la pausa prueba Redis");
-        breaker.recordFailure(new QueryTimeoutException("sigue sin respuesta"));
-        assertTrue(breaker.isOpen(), "la prueba falló: nueva pausa");
+        assertFalse(breaker.isOpen(), "the first call after the pause probes Redis");
+        breaker.recordFailure(new QueryTimeoutException("still no response"));
+        assertTrue(breaker.isOpen(), "the probe failed: new pause");
 
         Thread.sleep(150);
-        assertFalse(breaker.isOpen(), "nueva prueba tras la segunda pausa");
+        assertFalse(breaker.isOpen(), "new probe after the second pause");
         breaker.recordSuccess();
         assertFalse(breaker.isOpen());
         assertFalse(breaker.isOpen());

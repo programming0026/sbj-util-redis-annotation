@@ -1,5 +1,6 @@
 package io.github.programming0026.juniverse.redis.integration;
 
+import io.github.programming0026.juniverse.redis.integration.dto.User;
 import io.github.programming0026.juniverse.redis.annotation.CoalesceCacheable;
 import io.github.programming0026.juniverse.redis.annotation.CoalesceEvict;
 import io.github.programming0026.juniverse.redis.annotation.EnableRedisLibrary;
@@ -53,10 +54,6 @@ class SpringContextIT {
     /** Contexto de la prueba en curso. */
     private AnnotationConfigApplicationContext context;
 
-    /** Usuario. */
-    public record User(Long id, String name, List<String> roles) {
-    }
-
     /**
      * Servicio de negocio de la aplicación de prueba.
      */
@@ -98,26 +95,26 @@ class SpringContextIT {
      */
     @Configuration
     @EnableRedisLibrary(
-            hostEntries = @HostEntry(host = "no-se-usa.invalid"),
-            keyPrefix = "contexto",
+            hostEntries = @HostEntry(host = "unused.invalid"),
+            keyPrefix = "context",
             ttlEntries = @TTLEntry(name = "users", ttl = 5))
     @Import(ApplicationBeans.class)
-    static class Application {
+    public static class Application {
     }
 
     /**
      * Beans propios de la aplicación de prueba.
      */
     @Configuration
-    static class ApplicationBeans {
+    public static class ApplicationBeans {
 
         @Bean
-        RedisConnectionFactory applicationConnectionFactory() {
+        public RedisConnectionFactory applicationConnectionFactory() {
             return RedisContainers.standaloneFactory();
         }
 
         @Bean
-        UserService userService() {
+        public UserService userService() {
             return new UserService();
         }
     }
@@ -126,12 +123,12 @@ class SpringContextIT {
      * La misma aplicación, que además define su propio administrador de caché de Spring.
      */
     @Configuration
-    @EnableRedisLibrary(hostEntries = @HostEntry(host = "no-se-usa.invalid"), keyPrefix = "contexto")
+    @EnableRedisLibrary(hostEntries = @HostEntry(host = "unused.invalid"), keyPrefix = "context")
     @Import(ApplicationBeans.class)
-    static class ApplicationWithOwnCacheManager {
+    public static class ApplicationWithOwnCacheManager {
 
         @Bean
-        CacheManager applicationCacheManager() {
+        public CacheManager applicationCacheManager() {
             return new ConcurrentMapCacheManager();
         }
     }
@@ -140,12 +137,12 @@ class SpringContextIT {
      * La misma aplicación con un registro de métricas de Micrometer.
      */
     @Configuration
-    @EnableRedisLibrary(hostEntries = @HostEntry(host = "no-se-usa.invalid"), keyPrefix = "contexto")
+    @EnableRedisLibrary(hostEntries = @HostEntry(host = "unused.invalid"), keyPrefix = "context")
     @Import(ApplicationBeans.class)
-    static class ApplicationWithMetrics {
+    public static class ApplicationWithMetrics {
 
         @Bean
-        MeterRegistry meterRegistry() {
+        public MeterRegistry meterRegistry() {
             return new SimpleMeterRegistry();
         }
     }
@@ -162,7 +159,7 @@ class SpringContextIT {
      * Vacía Redis y cierra el contexto.
      */
     @AfterEach
-    void closeContext() {
+    public void closeContext() {
         if (context != null) {
             try (RedisConnection connection = context.getBean(RedisConnectionFactory.class).getConnection()) {
                 connection.serverCommands().flushAll();
@@ -177,7 +174,7 @@ class SpringContextIT {
      * en lugar de crear otra.
      */
     @Test
-    void context_ShouldRegisterLibraryBeansAndReuseApplicationConnectionFactory() {
+    public void context_ShouldRegisterLibraryBeansAndReuseApplicationConnectionFactory() {
         start(Application.class);
 
         assertEquals(1, context.getBeansOfType(RedisConnectionFactory.class).size());
@@ -197,7 +194,7 @@ class SpringContextIT {
      * record reconstruido desde Redis, invalidación y prefijo de la aplicación en las claves.
      */
     @Test
-    void annotations_ShouldWorkThroughSpringProxies() {
+    public void annotations_ShouldWorkThroughSpringProxies() {
         start(Application.class);
         UserService service = context.getBean(UserService.class);
 
@@ -210,9 +207,9 @@ class SpringContextIT {
         assertTrue(context.getBean(CoalesceCacheManager.class).exists("users:1"));
         // TTL de @TTLEntry (5 minutos), porque la anotación no indica ttl.
         long ttl = context.getBean(CoalesceCacheManager.class).getTimeToLive("users:1");
-        assertTrue(ttl > 240 && ttl <= 300, "TTL inesperado: " + ttl);
+        assertTrue(ttl > 240 && ttl <= 300, "unexpected TTL: " + ttl);
         try (RedisConnection connection = context.getBean(RedisConnectionFactory.class).getConnection()) {
-            assertEquals(Boolean.TRUE, connection.keyCommands().exists("contexto:coalesce:cache:users:1".getBytes()));
+            assertEquals(Boolean.TRUE, connection.keyCommands().exists("context:coalesce:cache:users:1".getBytes()));
         }
 
         service.forget(1L);
@@ -224,7 +221,7 @@ class SpringContextIT {
      * El {@code @Cacheable} de Spring usa el administrador de caché de la librería.
      */
     @Test
-    void springCacheable_ShouldUseLibraryCacheManager() {
+    public void springCacheable_ShouldUseLibraryCacheManager() {
         start(Application.class);
         UserService service = context.getBean(UserService.class);
 
@@ -233,7 +230,7 @@ class SpringContextIT {
 
         assertEquals(1, service.callCount());
         try (RedisConnection connection = context.getBean(RedisConnectionFactory.class).getConnection()) {
-            assertEquals(Boolean.TRUE, connection.keyCommands().exists("contexto:springUsers::7".getBytes()));
+            assertEquals(Boolean.TRUE, connection.keyCommands().exists("context:springUsers::7".getBytes()));
         }
     }
 
@@ -241,7 +238,7 @@ class SpringContextIT {
      * Con un registro de Micrometer en el contexto, la librería publica sus contadores.
      */
     @Test
-    void metrics_ShouldBePublishedWhenApplicationHasMeterRegistry() {
+    public void metrics_ShouldBePublishedWhenApplicationHasMeterRegistry() {
         start(ApplicationWithMetrics.class);
         UserService service = context.getBean(UserService.class);
         MeterRegistry registry = context.getBean(MeterRegistry.class);
@@ -260,7 +257,7 @@ class SpringContextIT {
      * y sus propias anotaciones siguen funcionando.
      */
     @Test
-    void context_ShouldBackOffWhenApplicationDefinesItsOwnCacheManager() {
+    public void context_ShouldBackOffWhenApplicationDefinesItsOwnCacheManager() {
         start(ApplicationWithOwnCacheManager.class);
         UserService service = context.getBean(UserService.class);
 

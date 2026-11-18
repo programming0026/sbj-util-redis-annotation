@@ -1,9 +1,10 @@
 package io.github.programming0026.juniverse.redis.integration;
 
+import io.github.programming0026.juniverse.redis.integration.dto.Sentinel;
 import io.github.programming0026.juniverse.redis.annotation.EnableRedisLibrary;
 import io.github.programming0026.juniverse.redis.annotation.HostEntry;
 import io.github.programming0026.juniverse.redis.integration.LibraryApplication.CatalogService;
-import io.github.programming0026.juniverse.redis.util.Mode;
+import io.github.programming0026.juniverse.redis.enums.Mode;
 import java.time.Duration;
 import java.util.HashMap;
 import java.util.Map;
@@ -34,7 +35,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 class SentinelFailoverIT {
 
     /** Topología compartida por las pruebas de la clase. */
-    private static RedisTopologies.Sentinel topology;
+    private static Sentinel topology;
 
     /** Aplicación de la prueba en curso. */
     private LibraryApplication application;
@@ -53,17 +54,17 @@ class SentinelFailoverIT {
             },
             pwd = "${it.data.password}",
             sentinelPwd = "${it.sentinel.password}",
-            keyPrefix = "centinela",
+            keyPrefix = "sentinel",
             connectionTimeout = 2000,
             readTimeout = 2000)
-    static class Application {
+    public static class Application {
     }
 
     /**
      * Arranca la topología.
      */
     @BeforeAll
-    static void startTopology() {
+    public static void startTopology() {
         topology = RedisTopologies.startSentinel();
     }
 
@@ -71,7 +72,7 @@ class SentinelFailoverIT {
      * Elimina el contenedor.
      */
     @AfterAll
-    static void stopTopology() {
+    public static void stopTopology() {
         if (topology != null) {
             topology.container().stop();
         }
@@ -81,7 +82,7 @@ class SentinelFailoverIT {
      * Cierra la aplicación.
      */
     @AfterEach
-    void closeApplication() {
+    public void closeApplication() {
         if (application != null) {
             application.close();
         }
@@ -103,7 +104,7 @@ class SentinelFailoverIT {
      */
     @Test
     @Order(1)
-    void application_ShouldAuthenticateAgainstSentinelsAndDataNodes() {
+    public void application_ShouldAuthenticateAgainstSentinelsAndDataNodes() {
         application = LibraryApplication.start(Application.class,
                 properties(RedisTopologies.DATA_PASSWORD, RedisTopologies.SENTINEL_PASSWORD));
         CatalogService catalog = application.catalog();
@@ -115,7 +116,7 @@ class SentinelFailoverIT {
 
         assertEquals(2, catalog.callCount());
         assertTrue(application.health().isRedisActive().isConnected());
-        assertTrue(topology.data(topology.masterPort(), "keys", "*").contains("centinela:coalesce:cache:items:1"));
+        assertTrue(topology.data(topology.masterPort(), "keys", "*").contains("sentinel:coalesce:cache:items:1"));
     }
 
     /**
@@ -124,9 +125,9 @@ class SentinelFailoverIT {
      */
     @Test
     @Order(2)
-    void application_WithWrongDataPassword_ShouldServeWithoutCache() {
+    public void application_WithWrongDataPassword_ShouldServeWithoutCache() {
         application = LibraryApplication.start(Application.class,
-                properties("clave-equivocada", RedisTopologies.SENTINEL_PASSWORD));
+                properties("wrong-password", RedisTopologies.SENTINEL_PASSWORD));
         CatalogService catalog = application.catalog();
 
         assertEquals("item-2", catalog.find(2L).name());
@@ -142,7 +143,7 @@ class SentinelFailoverIT {
      */
     @Test
     @Order(3)
-    void whenMasterDies_ApplicationShouldKeepServingAndFollowTheNewMaster() {
+    public void whenMasterDies_ApplicationShouldKeepServingAndFollowTheNewMaster() {
         application = LibraryApplication.start(Application.class,
                 properties(RedisTopologies.DATA_PASSWORD, RedisTopologies.SENTINEL_PASSWORD));
         CatalogService catalog = application.catalog();
@@ -160,15 +161,15 @@ class SentinelFailoverIT {
         assertTrue(LibraryApplication.await(
                 () -> topology.sentinel("sentinel", "get-master-addr-by-name", RedisTopologies.MASTER_NAME)
                         .contains(String.valueOf(topology.replicaPort())),
-                Duration.ofSeconds(40)), "los sentinels no promovieron la réplica");
+                Duration.ofSeconds(40)), "the sentinels did not promote the replica");
         assertTrue(LibraryApplication.await(application::cacheWorks, Duration.ofSeconds(40)),
-                "la aplicación no siguió al nuevo maestro");
+                "the application did not follow the new master");
 
         int before = catalog.callCount();
         catalog.find(99L);
         catalog.find(99L);
-        assertEquals(before + 1, catalog.callCount(), "tras la conmutación debe volver a haber aciertos");
-        assertTrue(topology.data(topology.replicaPort(), "keys", "*").contains("centinela:coalesce:cache:items:99"));
+        assertEquals(before + 1, catalog.callCount(), "cache hits must resume after the failover");
+        assertTrue(topology.data(topology.replicaPort(), "keys", "*").contains("sentinel:coalesce:cache:items:99"));
     }
 
     /**
@@ -176,7 +177,7 @@ class SentinelFailoverIT {
      */
     @Test
     @Order(4)
-    void application_WithoutMasterName_ShouldFailFast() {
+    public void application_WithoutMasterName_ShouldFailFast() {
         assertThrows(RuntimeException.class,
                 () -> LibraryApplication.start(MissingMaster.class, properties("x", "y")));
     }
@@ -186,6 +187,6 @@ class SentinelFailoverIT {
      */
     @Configuration
     @EnableRedisLibrary(mode = Mode.SENTINEL, hostEntries = @HostEntry(host = "${it.sentinel.0}"))
-    static class MissingMaster {
+    public static class MissingMaster {
     }
 }

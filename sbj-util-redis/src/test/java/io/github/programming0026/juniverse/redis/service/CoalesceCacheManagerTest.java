@@ -54,7 +54,7 @@ class CoalesceCacheManagerTest {
      * Prepara el entorno antes de cada prueba.
      */
     @BeforeEach
-    void setUp() {
+    public void setUp() {
         cacheManager = new CoalesceCacheManager(redisTemplate, listenerContainer, codec);
     }
 
@@ -69,7 +69,7 @@ class CoalesceCacheManagerTest {
      * El constructor debe registrar el escucha de los avisos de coalescencia.
      */
     @Test
-    void constructor_ShouldRegisterSignalListener() {
+    public void constructor_ShouldRegisterSignalListener() {
         verify(listenerContainer).addMessageListener(
                 any(),
                 any(ChannelTopic.class));
@@ -79,7 +79,7 @@ class CoalesceCacheManagerTest {
      * Guardar con TTL debe establecer el valor con expiración.
      */
     @Test
-    void put_WithTTL_ShouldSetValueWithExpiration() {
+    public void put_WithTTL_ShouldSetValueWithExpiration() {
         setupValueOperations();
         String key = "testKey";
         Object value = "testValue";
@@ -97,7 +97,7 @@ class CoalesceCacheManagerTest {
      * Guardar sin TTL debe establecer el valor sin expiración.
      */
     @Test
-    void put_WithoutTTL_ShouldSetValueWithoutExpiration() {
+    public void put_WithoutTTL_ShouldSetValueWithoutExpiration() {
         setupValueOperations();
         String key = "testKey";
         Object value = "testValue";
@@ -114,7 +114,7 @@ class CoalesceCacheManagerTest {
      * Guardar con TTL negativo debe establecer el valor sin expiración.
      */
     @Test
-    void put_WithNegativeTTL_ShouldSetValueWithoutExpiration() {
+    public void put_WithNegativeTTL_ShouldSetValueWithoutExpiration() {
         setupValueOperations();
         String key = "testKey";
         Object value = "testValue";
@@ -131,7 +131,7 @@ class CoalesceCacheManagerTest {
      * Obtener ante un acierto de caché debe devolver el valor.
      */
     @Test
-    void get_WhenCacheHit_ShouldReturnValue() {
+    public void get_WhenCacheHit_ShouldReturnValue() {
         setupValueOperations();
         String key = "testKey";
         Object expectedValue = "testValue";
@@ -148,7 +148,7 @@ class CoalesceCacheManagerTest {
      * Obtener ante un fallo de caché debe devolver vacío.
      */
     @Test
-    void get_WhenCacheMiss_ShouldReturnEmpty() {
+    public void get_WhenCacheMiss_ShouldReturnEmpty() {
         setupValueOperations();
         String key = "testKey";
         when(valueOperations.get("coalesce:cache:testKey")).thenReturn(null);
@@ -163,7 +163,7 @@ class CoalesceCacheManagerTest {
      * Invalidar debe eliminar la clave sin publicar mensajes.
      */
     @Test
-    void evict_ShouldDeleteKey() {
+    public void evict_ShouldDeleteKey() {
         String key = "testKey";
         when(redisTemplate.delete(anyString())).thenReturn(true);
 
@@ -177,7 +177,7 @@ class CoalesceCacheManagerTest {
      * Invalidar varias claves debe eliminarlas todas sin publicar mensajes.
      */
     @Test
-    void evictMultiple_ShouldDeleteAllKeys() {
+    public void evictMultiple_ShouldDeleteAllKeys() {
         List<String> keys = Arrays.asList("key1", "key2", "key3");
 
         cacheManager.evictMultiple(keys);
@@ -198,7 +198,7 @@ class CoalesceCacheManagerTest {
      * Invalidar varias claves con lista vacía no debe eliminar nada.
      */
     @Test
-    void evictMultiple_WithEmptyList_ShouldNotDelete() {
+    public void evictMultiple_WithEmptyList_ShouldNotDelete() {
         List<String> keys = Collections.emptyList();
 
         cacheManager.evictMultiple(keys);
@@ -211,7 +211,7 @@ class CoalesceCacheManagerTest {
      * Existe cuando la clave existe debe devolver verdadero.
      */
     @Test
-    void exists_WhenKeyExists_ShouldReturnTrue() {
+    public void exists_WhenKeyExists_ShouldReturnTrue() {
         String key = "testKey";
         when(redisTemplate.hasKey("coalesce:cache:testKey")).thenReturn(true);
 
@@ -225,7 +225,7 @@ class CoalesceCacheManagerTest {
      * Existe cuando la clave no existe debe devolver falso.
      */
     @Test
-    void exists_WhenKeyDoesNotExist_ShouldReturnFalse() {
+    public void exists_WhenKeyDoesNotExist_ShouldReturnFalse() {
         String key = "testKey";
         when(redisTemplate.hasKey("coalesce:cache:testKey")).thenReturn(false);
 
@@ -239,7 +239,7 @@ class CoalesceCacheManagerTest {
      * Existe cuando el resultado es nulo debe devolver falso.
      */
     @Test
-    void exists_WhenResultIsNull_ShouldReturnFalse() {
+    public void exists_WhenResultIsNull_ShouldReturnFalse() {
         String key = "testKey";
         when(redisTemplate.hasKey("coalesce:cache:testKey")).thenReturn(null);
 
@@ -253,7 +253,7 @@ class CoalesceCacheManagerTest {
      * Obtener el tiempo de vida debe devolver el TTL.
      */
     @Test
-    void getTimeToLive_ShouldReturnTTL() {
+    public void getTimeToLive_ShouldReturnTTL() {
         String key = "testKey";
         when(redisTemplate.getExpire("coalesce:cache:testKey", TimeUnit.SECONDS))
                 .thenReturn(300L);
@@ -268,7 +268,7 @@ class CoalesceCacheManagerTest {
      * Obtener el tiempo de vida cuando es nulo debe devolver -1.
      */
     @Test
-    void getTimeToLive_WhenNull_ShouldReturnMinusOne() {
+    public void getTimeToLive_WhenNull_ShouldReturnMinusOne() {
         String key = "testKey";
         when(redisTemplate.getExpire("coalesce:cache:testKey", TimeUnit.SECONDS))
                 .thenReturn(null);
@@ -283,7 +283,7 @@ class CoalesceCacheManagerTest {
      * Expirar debe establecer la expiración.
      */
     @Test
-    void expire_ShouldSetExpiration() {
+    public void expire_ShouldSetExpiration() {
         String key = "testKey";
         long ttlSeconds = 600;
         when(redisTemplate.expire(anyString(), any(Duration.class))).thenReturn(true);
@@ -300,7 +300,7 @@ class CoalesceCacheManagerTest {
      * Invalidar todo recorre solo las claves de esa caché y las borra sin publicar mensajes.
      */
     @Test
-    void evictAll_ShouldScanTheCacheAndUnlinkItsKeys() {
+    public void evictAll_ShouldScanTheCacheAndUnlinkItsKeys() {
         FakeScan scan = new FakeScan(redisTemplate, "coalesce:cache:users:1", "coalesce:cache:users:2");
 
         cacheManager.evictAll("users");
@@ -315,7 +315,7 @@ class CoalesceCacheManagerTest {
      * Invalidar todo sin claves coincidentes no borra nada.
      */
     @Test
-    void evictAll_WithNoMatchingKeys_ShouldNotUnlink() {
+    public void evictAll_WithNoMatchingKeys_ShouldNotUnlink() {
         FakeScan scan = new FakeScan(redisTemplate);
 
         cacheManager.evictAll("users");
@@ -328,7 +328,7 @@ class CoalesceCacheManagerTest {
      * aunque contenga caracteres de patrón.
      */
     @Test
-    void evictAll_ShouldEscapeGlobCharactersInPrefix() {
+    public void evictAll_ShouldEscapeGlobCharactersInPrefix() {
         FakeScan scan = new FakeScan(redisTemplate);
 
         cacheManager.evictAll("us*rs[1]?");
@@ -340,7 +340,7 @@ class CoalesceCacheManagerTest {
      * Invalidar por patrón aplica el patrón dentro del espacio de claves de la caché.
      */
     @Test
-    void evictPattern_ShouldScanWithThePatternInsideTheCacheNamespace() {
+    public void evictPattern_ShouldScanWithThePatternInsideTheCacheNamespace() {
         FakeScan scan = new FakeScan(redisTemplate, "coalesce:cache:users:es-1");
 
         cacheManager.evictPattern("users:es-*");
@@ -353,7 +353,7 @@ class CoalesceCacheManagerTest {
      * Limpiar recorre todas las claves de la caché con coalescencia.
      */
     @Test
-    void clear_ShouldScanEveryCacheKey() {
+    public void clear_ShouldScanEveryCacheKey() {
         FakeScan scan = new FakeScan(redisTemplate, "coalesce:cache:users:1", "coalesce:cache:orders:1");
 
         cacheManager.clear();

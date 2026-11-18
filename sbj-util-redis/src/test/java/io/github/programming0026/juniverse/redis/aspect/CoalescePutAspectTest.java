@@ -47,7 +47,7 @@ class CoalescePutAspectTest {
      * Prepara el entorno antes de cada prueba.
      */
     @BeforeEach
-    void setUp() {
+    public void setUp() {
         aspect = new CoalescePutAspect(cacheManager);
     }
 
@@ -76,7 +76,7 @@ class CoalescePutAspectTest {
      * Con entorno, el prefijo con placeholder debe resolverse.
      */
     @Test
-    void handleSinglePut_WithEnvironment_ShouldResolvePlaceholders() throws Throwable {
+    public void handleSinglePut_WithEnvironment_ShouldResolvePlaceholders() throws Throwable {
         CoalescePutAspect resolvingAspect = new CoalescePutAspect(cacheManager,
                 new MockEnvironment().withProperty("cache.prefix", "users-v2"));
         CoalescePut put = getClass().getMethod("placeholderMethod", String.class)
@@ -94,7 +94,7 @@ class CoalescePutAspectTest {
      * Un guardado sin «unless» debe guardar en caché.
      */
     @Test
-    void handleSinglePut_WithEmptyUnless_ShouldCache() throws Throwable {
+    public void handleSinglePut_WithEmptyUnless_ShouldCache() throws Throwable {
         CoalescePut put = createMockPut("cache", "#id", 300, "", "");
         setupJoinPoint();
         when(joinPoint.proceed()).thenReturn("result");
@@ -108,7 +108,7 @@ class CoalescePutAspectTest {
      * Un guardado con condición falsa no debe guardar en caché.
      */
     @Test
-    void handleSinglePut_WithConditionFalse_ShouldNotCache() throws Throwable {
+    public void handleSinglePut_WithConditionFalse_ShouldNotCache() throws Throwable {
         CoalescePut put = createMockPut("cache", "#id", 300, "#id == '999'", "");
         setupJoinPoint();
         when(joinPoint.proceed()).thenReturn("result");
@@ -124,7 +124,7 @@ class CoalescePutAspectTest {
      * Un guardado con «unless» verdadero no debe guardar en caché.
      */
     @Test
-    void handleSinglePut_WithUnlessTrue_ShouldNotCache() throws Throwable {
+    public void handleSinglePut_WithUnlessTrue_ShouldNotCache() throws Throwable {
         CoalescePut put = createMockPut("cache", "#id", 300, "", "#result == 'result'");
         setupJoinPoint();
         when(joinPoint.proceed()).thenReturn("result");
@@ -139,7 +139,7 @@ class CoalescePutAspectTest {
      * Un guardado con «unless» falso debe guardar en caché.
      */
     @Test
-    void handleSinglePut_WithUnlessFalse_ShouldCache() throws Throwable {
+    public void handleSinglePut_WithUnlessFalse_ShouldCache() throws Throwable {
         CoalescePut put = createMockPut("cache", "#id", 300, "", "#result == 'other'");
         setupJoinPoint();
         when(joinPoint.proceed()).thenReturn("result");
@@ -155,7 +155,7 @@ class CoalescePutAspectTest {
      * Un guardado con comprobación de nulo en «unless» no debe guardar nulos.
      */
     @Test
-    void handleSinglePut_WithUnlessNullCheck_ShouldNotCacheNull() throws Throwable {
+    public void handleSinglePut_WithUnlessNullCheck_ShouldNotCacheNull() throws Throwable {
         CoalescePut put = createMockPut("cache", "#id", 300, "", "#result == null");
         setupJoinPoint();
         when(joinPoint.proceed()).thenReturn(null);
@@ -170,7 +170,7 @@ class CoalescePutAspectTest {
      * Un guardado con condición y «unless» verdaderos no debe guardar en caché.
      */
     @Test
-    void handleSinglePut_WithConditionAndUnlessBothTrue_ShouldNotCache() throws Throwable {
+    public void handleSinglePut_WithConditionAndUnlessBothTrue_ShouldNotCache() throws Throwable {
         CoalescePut put = createMockPut(
                 "cache", "#id", 300,
                 "#id == '123'",

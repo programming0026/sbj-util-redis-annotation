@@ -50,7 +50,7 @@ class CoalesceCachingAspectTest {
      * Prepara el entorno antes de cada prueba.
      */
     @BeforeEach
-    void setUp() {
+    public void setUp() {
         aspect = new CoalesceCachingAspect(cacheManager);
         // Por defecto, ninguna clave está en caché.
         when(cacheManager.lookup(anyString(), any())).thenReturn(CacheResult.miss(null));
@@ -70,7 +70,7 @@ class CoalesceCachingAspectTest {
      * Procesar con acierto de caché debe devolver el valor en caché.
      */
     @Test
-    void handleCaching_WithCacheHit_ShouldReturnCachedValue() throws Throwable {
+    public void handleCaching_WithCacheHit_ShouldReturnCachedValue() throws Throwable {
         CoalesceCacheable cacheable = createMockCacheable("cache", "#id", 300, "", false, true);
         CoalesceCaching caching = createMockCaching(
                 new CoalesceCacheable[]{cacheable},
@@ -95,7 +95,7 @@ class CoalesceCachingAspectTest {
      * Procesar con fallo de caché debe ejecutar el método y guardar el resultado.
      */
     @Test
-    void handleCaching_WithCacheMiss_ShouldExecuteMethodAndCacheResult() throws Throwable {
+    public void handleCaching_WithCacheMiss_ShouldExecuteMethodAndCacheResult() throws Throwable {
         CoalesceCacheable cacheable = createMockCacheable("cache", "#id", 300, "", false, true);
         CoalesceCaching caching = createMockCaching(
                 new CoalesceCacheable[]{cacheable},
@@ -121,7 +121,7 @@ class CoalesceCachingAspectTest {
      * Procesar con resultado nulo y cacheNull falso no debe guardar en caché.
      */
     @Test
-    void handleCaching_WithNullResultAndCacheNullFalse_ShouldNotCache() throws Throwable {
+    public void handleCaching_WithNullResultAndCacheNullFalse_ShouldNotCache() throws Throwable {
         CoalesceCacheable cacheable = createMockCacheable("cache", "#id", 300, "", false, true);
         CoalesceCaching caching = createMockCaching(
                 new CoalesceCacheable[]{cacheable},
@@ -146,7 +146,7 @@ class CoalesceCachingAspectTest {
      * Procesar con resultado nulo y cacheNull verdadero debe guardar en caché.
      */
     @Test
-    void handleCaching_WithNullResultAndCacheNullTrue_ShouldCache() throws Throwable {
+    public void handleCaching_WithNullResultAndCacheNullTrue_ShouldCache() throws Throwable {
         CoalesceCacheable cacheable = createMockCacheable("cache", "#id", 300, "", true, true);
         CoalesceCaching caching = createMockCaching(
                 new CoalesceCacheable[]{cacheable},
@@ -172,7 +172,7 @@ class CoalesceCachingAspectTest {
      * Procesar con invalidación posterior debe invalidar después de ejecutar.
      */
     @Test
-    void handleCaching_WithAfterEviction_ShouldEvictAfterExecution() throws Throwable {
+    public void handleCaching_WithAfterEviction_ShouldEvictAfterExecution() throws Throwable {
         CoalesceEvict evict = createMockEvict(new String[]{"cache"}, "", "", false, false, "");
         CoalesceCaching caching = createMockCaching(
                 new CoalesceCacheable[]{},
@@ -196,7 +196,7 @@ class CoalesceCachingAspectTest {
      * Procesar con guardado y condición «unless» verdadera no debe guardar en caché.
      */
     @Test
-    void handleCaching_WithPutAndUnlessConditionTrue_ShouldNotCache() throws Throwable {
+    public void handleCaching_WithPutAndUnlessConditionTrue_ShouldNotCache() throws Throwable {
         CoalescePut put = createMockPut("cache", "#id", 300, "", "#result == null");
         CoalesceCaching caching = createMockCaching(
                 new CoalesceCacheable[]{},
@@ -220,7 +220,7 @@ class CoalesceCachingAspectTest {
      * Procesar con guardado sin «unless» debe guardar en caché.
      */
     @Test
-    void handleCaching_WithPutAndEmptyUnless_ShouldCache() throws Throwable {
+    public void handleCaching_WithPutAndEmptyUnless_ShouldCache() throws Throwable {
         CoalescePut put = createMockPut("cache", "#id", 300, "", "");
         CoalesceCaching caching = createMockCaching(
                 new CoalesceCacheable[]{},
@@ -239,7 +239,7 @@ class CoalesceCachingAspectTest {
      * Procesar con guardado y «unless» falso debe guardar en caché.
      */
     @Test
-    void handleCaching_WithPutAndUnlessFalse_ShouldCache() throws Throwable {
+    public void handleCaching_WithPutAndUnlessFalse_ShouldCache() throws Throwable {
         CoalescePut put = createMockPut("cache", "#id", 300, "", "#result == null");
         CoalesceCaching caching = createMockCaching(
                 new CoalesceCacheable[]{},
@@ -258,7 +258,7 @@ class CoalesceCachingAspectTest {
      * Procesar con guardado y condición falsa no debe guardar en caché.
      */
     @Test
-    void handleCaching_WithPutAndConditionFalse_ShouldNotCache() throws Throwable {
+    public void handleCaching_WithPutAndConditionFalse_ShouldNotCache() throws Throwable {
         CoalescePut put = createMockPut("cache", "#id", 300, "#id == '999'", "");
         CoalesceCaching caching = createMockCaching(
                 new CoalesceCacheable[]{},
@@ -287,7 +287,7 @@ class CoalesceCachingAspectTest {
      * Procesar con clave vacía debe usar el hash de los argumentos.
      */
     @Test
-    void handleCaching_WithEmptyKey_ShouldUseArgumentsContent() throws Throwable {
+    public void handleCaching_WithEmptyKey_ShouldUseArgumentsContent() throws Throwable {
         CoalesceCacheable cacheable = createMockCacheable("cache", "", 300, "", false, true);
         CoalesceCaching caching = createMockCaching(
                 new CoalesceCacheable[]{cacheable},
@@ -316,7 +316,7 @@ class CoalesceCachingAspectTest {
      * Procesar con clave de invalidación debe invalidar esa clave.
      */
     @Test
-    void handleCaching_WithEvictKey_ShouldEvictSpecificKey() throws Throwable {
+    public void handleCaching_WithEvictKey_ShouldEvictSpecificKey() throws Throwable {
         CoalesceEvict evict = createMockEvict(new String[]{"cache"}, "#id", "", false, false, "");
         CoalesceCaching caching = createMockCaching(
                 new CoalesceCacheable[]{},

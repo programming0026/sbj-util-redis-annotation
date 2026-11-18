@@ -315,7 +315,7 @@ public class CoalesceCachingAspect {
         @Serial
         private static final long serialVersionUID = 1L;
 
-        CheckedFailure(Throwable cause) {
+        private CheckedFailure(Throwable cause) {
             super(null, cause, false, false);
         }
     }

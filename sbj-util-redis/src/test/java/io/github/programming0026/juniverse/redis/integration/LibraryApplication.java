@@ -1,5 +1,6 @@
 package io.github.programming0026.juniverse.redis.integration;
 
+import io.github.programming0026.juniverse.redis.integration.dto.Item;
 import io.github.programming0026.juniverse.redis.annotation.CoalesceCacheable;
 import io.github.programming0026.juniverse.redis.annotation.CoalesceEvict;
 import io.github.programming0026.juniverse.redis.service.CoalesceCacheManager;
@@ -28,7 +29,7 @@ import org.springframework.core.env.MapPropertySource;
  *
  * @author Java Universe
  */
-final class LibraryApplication implements AutoCloseable {
+public final class LibraryApplication implements AutoCloseable {
 
     /** Contexto de Spring. */
     private final AnnotationConfigApplicationContext context;
@@ -44,7 +45,7 @@ final class LibraryApplication implements AutoCloseable {
      * @param properties propiedades para los placeholders de la anotación
      * @return aplicación arrancada
      */
-    static LibraryApplication start(Class<?> configuration, Map<String, Object> properties) {
+    public static LibraryApplication start(Class<?> configuration, Map<String, Object> properties) {
         AnnotationConfigApplicationContext context = new AnnotationConfigApplicationContext();
         context.getEnvironment().getPropertySources().addFirst(new MapPropertySource("integration", properties));
         context.register(configuration, Beans.class);
@@ -57,19 +58,19 @@ final class LibraryApplication implements AutoCloseable {
         return new LibraryApplication(context);
     }
 
-    CatalogService catalog() {
+    public CatalogService catalog() {
         return context.getBean(CatalogService.class);
     }
 
-    CoalesceCacheManager coalesceCache() {
+    public CoalesceCacheManager coalesceCache() {
         return context.getBean(CoalesceCacheManager.class);
     }
 
-    RedisCacheService cacheService() {
+    public RedisCacheService cacheService() {
         return context.getBean(RedisCacheService.class);
     }
 
-    RedisHealthChecker health() {
+    public RedisHealthChecker health() {
         return context.getBean(RedisHealthChecker.class);
     }
 
@@ -78,7 +79,7 @@ final class LibraryApplication implements AutoCloseable {
      *
      * @return {@code true} si una escritura seguida de una lectura devuelve el valor
      */
-    boolean cacheWorks() {
+    public boolean cacheWorks() {
         String key = "probe:" + System.nanoTime();
         coalesceCache().put(key, "ok", 30, String.class);
         return "ok".equals(coalesceCache().lookup(key, String.class).getValue());
@@ -91,7 +92,7 @@ final class LibraryApplication implements AutoCloseable {
      * @param timeout espera máxima
      * @return {@code true} si se cumplió a tiempo
      */
-    static boolean await(BooleanSupplier condition, Duration timeout) {
+    public static boolean await(BooleanSupplier condition, Duration timeout) {
         long deadline = System.nanoTime() + timeout.toNanos();
         while (System.nanoTime() < deadline) {
             try {
@@ -114,10 +115,6 @@ final class LibraryApplication implements AutoCloseable {
     @Override
     public void close() {
         context.close();
-    }
-
-    /** Artículo del catálogo. */
-    public record Item(Long id, String name, List<String> tags) {
     }
 
     /**
@@ -165,10 +162,10 @@ final class LibraryApplication implements AutoCloseable {
      * Beans propios de la aplicación de prueba.
      */
     @Configuration
-    static class Beans {
+    public static class Beans {
 
         @Bean
-        CatalogService catalogService() {
+        public CatalogService catalogService() {
             return new CatalogService();
         }
     }

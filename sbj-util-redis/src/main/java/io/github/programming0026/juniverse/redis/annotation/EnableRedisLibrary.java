@@ -1,6 +1,6 @@
 package io.github.programming0026.juniverse.redis.annotation;
 
-import io.github.programming0026.juniverse.redis.util.Mode;
+import io.github.programming0026.juniverse.redis.enums.Mode;
 import io.github.programming0026.juniverse.redis.config.ObjectMapperConfig;
 import io.github.programming0026.juniverse.redis.config.DefaultObjectMapperConfig;
 import io.github.programming0026.juniverse.redis.config.RedisLibraryImportSelector;

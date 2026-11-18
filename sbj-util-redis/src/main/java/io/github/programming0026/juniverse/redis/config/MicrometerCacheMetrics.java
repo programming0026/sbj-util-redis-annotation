@@ -7,73 +7,73 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
- * Publica los contadores de la caché con coalescencia en Micrometer.
+ * Publishes the coalescing cache counters to Micrometer.
  *
  * <table>
- *   <caption>Métricas</caption>
- *   <tr><th>Nombre</th><th>Etiqueta</th><th>Qué cuenta</th></tr>
+ *   <caption>Metrics</caption>
+ *   <tr><th>Name</th><th>Tag</th><th>What it counts</th></tr>
  *   <tr><td>{@code sbj.redis.cache.requests}</td><td>{@code result}: hit, miss, coalesced</td>
- *       <td>Peticiones servidas de la caché, que no encontraron valor, o que recibieron el
- *       valor que cargó otra petición</td></tr>
- *   <tr><td>{@code sbj.redis.cache.loads}</td><td></td><td>Ejecuciones del método de negocio</td></tr>
+ *       <td>Requests served from the cache, requests that found no value, or requests that
+ *       received the value loaded by another request</td></tr>
+ *   <tr><td>{@code sbj.redis.cache.loads}</td><td></td><td>Executions of the business method</td></tr>
  *   <tr><td>{@code sbj.redis.cache.wait.timeouts}</td><td></td>
- *       <td>Peticiones que agotaron la espera del resultado de otra</td></tr>
+ *       <td>Requests that timed out waiting for another request's result</td></tr>
  *   <tr><td>{@code sbj.redis.cache.errors}</td><td>{@code operation}</td>
- *       <td>Operaciones contra Redis que fallaron</td></tr>
+ *       <td>Redis operations that failed</td></tr>
  * </table>
  *
  * @author Java Universe
  */
 public class MicrometerCacheMetrics implements CacheMetrics {
 
-    /** Nombre de la métrica de peticiones. */
-    static final String REQUESTS = "sbj.redis.cache.requests";
+    /** Name of the requests metric. */
+    public static final String REQUESTS = "sbj.redis.cache.requests";
 
-    /** Nombre de la métrica de cargas. */
-    static final String LOADS = "sbj.redis.cache.loads";
+    /** Name of the loads metric. */
+    public static final String LOADS = "sbj.redis.cache.loads";
 
-    /** Nombre de la métrica de esperas agotadas. */
-    static final String WAIT_TIMEOUTS = "sbj.redis.cache.wait.timeouts";
+    /** Name of the wait timeouts metric. */
+    public static final String WAIT_TIMEOUTS = "sbj.redis.cache.wait.timeouts";
 
-    /** Nombre de la métrica de errores de Redis. */
-    static final String ERRORS = "sbj.redis.cache.errors";
+    /** Name of the Redis errors metric. */
+    public static final String ERRORS = "sbj.redis.cache.errors";
 
-    /** Registro de métricas. */
+    /** Metrics registry. */
     private final MeterRegistry registry;
 
-    /** Peticiones servidas de la caché. */
+    /** Requests served from the cache. */
     private final Counter hits;
 
-    /** Peticiones que no encontraron valor. */
+    /** Requests that found no value. */
     private final Counter misses;
 
-    /** Peticiones que recibieron el valor que cargó otra. */
+    /** Requests that received the value loaded by another request. */
     private final Counter coalesced;
 
-    /** Ejecuciones del método de negocio. */
+    /** Executions of the business method. */
     private final Counter loads;
 
-    /** Esperas agotadas. */
+    /** Wait timeouts. */
     private final Counter waitTimeouts;
 
-    /** Errores de Redis, por operación. */
+    /** Redis errors, by operation. */
     private final Map<String, Counter> errors = new ConcurrentHashMap<>();
 
     /**
-     * Crea los contadores.
+     * Creates the counters.
      *
-     * @param registry registro de métricas de la aplicación
+     * @param registry application metrics registry
      */
     public MicrometerCacheMetrics(MeterRegistry registry) {
         this.registry = registry;
-        this.hits = requests("hit", "Peticiones servidas de la caché");
-        this.misses = requests("miss", "Peticiones que no encontraron su valor en la caché");
-        this.coalesced = requests("coalesced", "Peticiones que recibieron el valor que cargó otra");
+        this.hits = requests("hit", "Requests served from the cache");
+        this.misses = requests("miss", "Requests that did not find their value in the cache");
+        this.coalesced = requests("coalesced", "Requests that received the value loaded by another request");
         this.loads = Counter.builder(LOADS)
-                .description("Ejecuciones del método de negocio para cargar un valor")
+                .description("Executions of the business method to load a value")
                 .register(registry);
         this.waitTimeouts = Counter.builder(WAIT_TIMEOUTS)
-                .description("Peticiones que agotaron la espera del resultado de otra")
+                .description("Requests that timed out waiting for another request's result")
                 .register(registry);
     }
 
@@ -110,7 +110,7 @@ public class MicrometerCacheMetrics implements CacheMetrics {
     public void redisError(String operation) {
         errors.computeIfAbsent(operation, name -> Counter.builder(ERRORS)
                 .tag("operation", name)
-                .description("Operaciones contra Redis que fallaron")
+                .description("Redis operations that failed")
                 .register(registry)).increment();
     }
 }

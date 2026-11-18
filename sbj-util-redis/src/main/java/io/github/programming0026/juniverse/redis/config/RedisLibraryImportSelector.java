@@ -26,7 +26,7 @@ public class RedisLibraryImportSelector implements DeferredImportSelector, Order
      * Posición entre los selectores diferidos: por delante del de la autoconfiguración de
      * Spring Boot, que usa {@code Ordered.LOWEST_PRECEDENCE - 1}.
      */
-    static final int ORDER = Ordered.LOWEST_PRECEDENCE - 100;
+    public static final int ORDER = Ordered.LOWEST_PRECEDENCE - 100;
 
     /**
      * Devuelve la configuración de la librería.

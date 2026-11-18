@@ -1,6 +1,6 @@
 package io.github.programming0026.juniverse.redis.service;
 
-import io.github.programming0026.juniverse.redis.config.CoalesceSettings;
+import io.github.programming0026.juniverse.redis.dto.CoalesceSettings;
 import io.github.programming0026.juniverse.redis.config.DefaultObjectMapperConfig;
 import io.github.programming0026.juniverse.redis.dto.CacheResult;
 import io.github.programming0026.juniverse.redis.dto.CoalescedResponseDto;
@@ -109,7 +109,7 @@ class CoalesceCacheManagerGetOrLoadTest {
      * Prepara el entorno antes de cada prueba.
      */
     @BeforeEach
-    void setUp() {
+    public void setUp() {
         when(redisTemplate.opsForValue()).thenReturn(valueOperations);
         cacheManager = new CoalesceCacheManager(redisTemplate, listenerContainer, codec);
         executor = Executors.newCachedThreadPool();
@@ -119,7 +119,7 @@ class CoalesceCacheManagerGetOrLoadTest {
      * Detiene los hilos de la prueba.
      */
     @AfterEach
-    void tearDown() {
+    public void tearDown() {
         executor.shutdownNow();
     }
 
@@ -180,13 +180,13 @@ class CoalesceCacheManagerGetOrLoadTest {
      * Con el valor en caché no se ejecuta el cargador ni se toca el bloqueo.
      */
     @Test
-    void getOrLoad_WhenCacheHit_ShouldReturnCachedValue() {
-        when(valueOperations.get(CACHE_KEY)).thenReturn(json("en-cache"));
+    public void getOrLoad_WhenCacheHit_ShouldReturnCachedValue() {
+        when(valueOperations.get(CACHE_KEY)).thenReturn(json("in-cache"));
         Supplier<Object> loader = mockLoader();
 
         Object result = cacheManager.getOrLoad("users:1", loader, 300, false);
 
-        assertEquals("en-cache", result);
+        assertEquals("in-cache", result);
         verify(loader, never()).get();
         verify(valueOperations, never()).setIfAbsent(anyString(), any(), any(Duration.class));
     }
@@ -195,7 +195,7 @@ class CoalesceCacheManagerGetOrLoadTest {
      * Con el bloqueo libre se carga, se guarda, se suelta el bloqueo y se avisa.
      */
     @Test
-    void getOrLoad_WhenLockAcquired_ShouldLoadStoreReleaseAndSignal() {
+    public void getOrLoad_WhenLockAcquired_ShouldLoadStoreReleaseAndSignal() {
         lockIsFree();
 
         Object result = cacheManager.getOrLoad("users:1", () -> "ana", 300, false);
@@ -212,7 +212,7 @@ class CoalesceCacheManagerGetOrLoadTest {
      * El bloqueo se suelta con el mismo valor con el que se tomó, para no borrar el de otro.
      */
     @Test
-    void getOrLoad_ShouldReleaseLockWithTheTokenItAcquired() {
+    public void getOrLoad_ShouldReleaseLockWithTheTokenItAcquired() {
         lockIsFree();
 
         cacheManager.getOrLoad("users:1", () -> "ana", 300, false);
@@ -226,7 +226,7 @@ class CoalesceCacheManagerGetOrLoadTest {
      * Sin TTL positivo el valor se guarda sin caducidad.
      */
     @Test
-    void getOrLoad_WithZeroTtl_ShouldStoreWithoutExpiration() {
+    public void getOrLoad_WithZeroTtl_ShouldStoreWithoutExpiration() {
         lockIsFree();
 
         cacheManager.getOrLoad("users:1", () -> "ana", 0, false);
@@ -238,7 +238,7 @@ class CoalesceCacheManagerGetOrLoadTest {
      * Un resultado nulo con cacheNull se guarda como nulo y se avisa de que hay valor.
      */
     @Test
-    void getOrLoad_WhenLoaderReturnsNullAndCacheNullTrue_ShouldStoreNullAndSignalCached() {
+    public void getOrLoad_WhenLoaderReturnsNullAndCacheNullTrue_ShouldStoreNullAndSignalCached() {
         lockIsFree();
 
         Object result = cacheManager.getOrLoad("users:1", () -> null, 300, true);
@@ -252,7 +252,7 @@ class CoalesceCacheManagerGetOrLoadTest {
      * Un resultado nulo sin cacheNull no se guarda.
      */
     @Test
-    void getOrLoad_WhenLoaderReturnsNullAndCacheNullFalse_ShouldNotStore() {
+    public void getOrLoad_WhenLoaderReturnsNullAndCacheNullFalse_ShouldNotStore() {
         lockIsFree();
 
         Object result = cacheManager.getOrLoad("users:1", () -> null, 300, false);
@@ -266,9 +266,9 @@ class CoalesceCacheManagerGetOrLoadTest {
      * Si el cargador falla, su excepción llega intacta, se suelta el bloqueo y se avisa.
      */
     @Test
-    void getOrLoad_WhenLoaderThrows_ShouldRethrowSameExceptionReleaseAndSignal() {
+    public void getOrLoad_WhenLoaderThrows_ShouldRethrowSameExceptionReleaseAndSignal() {
         lockIsFree();
-        IllegalStateException failure = new IllegalStateException("fallo de negocio");
+        IllegalStateException failure = new IllegalStateException("business failure");
 
         IllegalStateException thrown = assertThrows(IllegalStateException.class,
                 () -> cacheManager.getOrLoad("users:1", () -> {
@@ -284,14 +284,14 @@ class CoalesceCacheManagerGetOrLoadTest {
      * Si falla guardar, soltar el bloqueo o avisar, el resultado del cargador se devuelve igual.
      */
     @Test
-    void getOrLoad_WhenRedisFailsAfterLoading_ShouldStillReturnResult() {
+    public void getOrLoad_WhenRedisFailsAfterLoading_ShouldStillReturnResult() {
         lockIsFree();
-        doThrow(new IllegalStateException("fallo al guardar"))
+        doThrow(new IllegalStateException("failure while saving"))
                 .when(valueOperations).set(anyString(), any(), any(Duration.class));
         when(redisTemplate.execute(any(RedisScript.class), any(List.class), any()))
-                .thenThrow(new IllegalStateException("fallo al soltar"));
+                .thenThrow(new IllegalStateException("failure while releasing"));
         when(redisTemplate.convertAndSend(anyString(), any()))
-                .thenThrow(new IllegalStateException("fallo al avisar"));
+                .thenThrow(new IllegalStateException("failure while notifying"));
 
         CoalesceCacheManager strict = managerWith(false, Duration.ofSeconds(30), Duration.ofSeconds(30));
 
@@ -305,14 +305,14 @@ class CoalesceCacheManagerGetOrLoadTest {
      * aunque no llegue ningún aviso.
      */
     @Test
-    void getOrLoad_WhenLockHeldAndValueAppears_ShouldReturnItWithoutLoading() {
+    public void getOrLoad_WhenLockHeldAndValueAppears_ShouldReturnItWithoutLoading() {
         lockIsHeldByAnother();
-        when(valueOperations.get(CACHE_KEY)).thenReturn(null, null, null, json("de-otra-instancia"));
+        when(valueOperations.get(CACHE_KEY)).thenReturn(null, null, null, json("de-other-instance"));
         Supplier<Object> loader = mockLoader();
 
         Object result = cacheManager.getOrLoad("users:1", loader, 300, false);
 
-        assertEquals("de-otra-instancia", result);
+        assertEquals("de-other-instance", result);
         verify(loader, never()).get();
     }
 
@@ -320,7 +320,7 @@ class CoalesceCacheManagerGetOrLoadTest {
      * Si el bloqueo ajeno desaparece sin dejar valor, se toma el bloqueo y se carga.
      */
     @Test
-    void getOrLoad_WhenLockIsReleasedWithoutValue_ShouldTakeLockAndLoad() {
+    public void getOrLoad_WhenLockIsReleasedWithoutValue_ShouldTakeLockAndLoad() {
         when(valueOperations.setIfAbsent(eq(LOCK_KEY), any(), any(Duration.class)))
                 .thenReturn(false, false, false, true);
 
@@ -336,7 +336,7 @@ class CoalesceCacheManagerGetOrLoadTest {
      * @throws Exception si la prueba se interrumpe
      */
     @Test
-    void getOrLoad_WhenSignalSaysNotCached_ShouldLoadWithoutLock() throws Exception {
+    public void getOrLoad_WhenSignalSaysNotCached_ShouldLoadWithoutLock() throws Exception {
         lockIsHeldByAnother();
 
         Future<Object> waiter = executor.submit(() -> cacheManager.getOrLoad("users:1", () -> "ana", 300, false));
@@ -353,7 +353,7 @@ class CoalesceCacheManagerGetOrLoadTest {
      * @throws Exception si la prueba se interrumpe
      */
     @Test
-    void getOrLoad_WhenSignalSaysCached_ShouldReadValueFromCache() throws Exception {
+    public void getOrLoad_WhenSignalSaysCached_ShouldReadValueFromCache() throws Exception {
         lockIsHeldByAnother();
         AtomicReference<byte[]> stored = new AtomicReference<>();
         when(valueOperations.get(CACHE_KEY)).thenAnswer(invocation -> stored.get());
@@ -361,10 +361,10 @@ class CoalesceCacheManagerGetOrLoadTest {
 
         Future<Object> waiter = executor.submit(() -> cacheManager.getOrLoad("users:1", loader, 300, false));
         Thread.sleep(50);
-        stored.set(json("de-otra-instancia"));
+        stored.set(json("de-other-instance"));
         Object result = deliverUntilDone(waiter, true);
 
-        assertEquals("de-otra-instancia", result);
+        assertEquals("de-other-instance", result);
         verify(loader, never()).get();
     }
 
@@ -372,7 +372,7 @@ class CoalesceCacheManagerGetOrLoadTest {
      * Si el bloqueo ajeno sigue vigente al agotarse la espera, la petición falla.
      */
     @Test
-    void getOrLoad_WhenWaitTimesOut_ShouldThrowCoalesceException() {
+    public void getOrLoad_WhenWaitTimesOut_ShouldThrowCoalesceException() {
         lockIsHeldByAnother();
         CoalesceCacheManager manager = managerWith(true, Duration.ofSeconds(30), Duration.ofMillis(250));
         Supplier<Object> loader = mockLoader();
@@ -388,7 +388,7 @@ class CoalesceCacheManagerGetOrLoadTest {
      * Una interrupción durante la espera se convierte en CoalesceException y conserva la marca.
      */
     @Test
-    void getOrLoad_WhenInterruptedWhileWaiting_ShouldThrowAndKeepInterruptFlag() {
+    public void getOrLoad_WhenInterruptedWhileWaiting_ShouldThrowAndKeepInterruptFlag() {
         lockIsHeldByAnother();
 
         Thread.currentThread().interrupt();
@@ -405,11 +405,11 @@ class CoalesceCacheManagerGetOrLoadTest {
      * Un aviso ilegible o de una clave que nadie espera no provoca ningún error.
      */
     @Test
-    void signalListener_WithUnreadableOrUnexpectedMessage_ShouldNotThrow() {
+    public void signalListener_WithUnreadableOrUnexpectedMessage_ShouldNotThrow() {
         MessageListener listener = signalListener();
         Message message = mock(Message.class);
 
-        when(message.getBody()).thenReturn("{esto no es JSON".getBytes(StandardCharsets.UTF_8));
+        when(message.getBody()).thenReturn("{this is not JSON".getBytes(StandardCharsets.UTF_8));
         listener.onMessage(message, null);
 
         when(message.getBody()).thenReturn(json(null));
@@ -426,7 +426,7 @@ class CoalesceCacheManagerGetOrLoadTest {
      * @throws Exception si la prueba se interrumpe
      */
     @Test
-    void getOrLoad_WithConcurrentLocalCalls_ShouldLoadOnce() throws Exception {
+    public void getOrLoad_WithConcurrentLocalCalls_ShouldLoadOnce() throws Exception {
         lockIsFree();
         AtomicInteger calls = new AtomicInteger();
         CountDownLatch loading = new CountDownLatch(1);
@@ -455,9 +455,9 @@ class CoalesceCacheManagerGetOrLoadTest {
      * @throws Exception si la prueba se interrumpe
      */
     @Test
-    void getOrLoad_WhenLocalLoadFails_ShouldGiveWaitersTheSameException() throws Exception {
+    public void getOrLoad_WhenLocalLoadFails_ShouldGiveWaitersTheSameException() throws Exception {
         lockIsFree();
-        IllegalStateException failure = new IllegalStateException("fallo de negocio");
+        IllegalStateException failure = new IllegalStateException("business failure");
         CountDownLatch loading = new CountDownLatch(1);
         CountDownLatch release = new CountDownLatch(1);
         Supplier<Object> loader = () -> {
@@ -485,7 +485,7 @@ class CoalesceCacheManagerGetOrLoadTest {
      * @throws Exception si la prueba se interrumpe
      */
     @Test
-    void getOrLoad_WhenLocalLoadOutlivesLock_ShouldKeepWaitingAndRenewLock() throws Exception {
+    public void getOrLoad_WhenLocalLoadOutlivesLock_ShouldKeepWaitingAndRenewLock() throws Exception {
         lockIsFree();
         CoalesceCacheManager manager = managerWith(true, Duration.ofMillis(200), Duration.ofSeconds(30));
         AtomicInteger calls = new AtomicInteger();
@@ -523,7 +523,7 @@ class CoalesceCacheManagerGetOrLoadTest {
      * @throws Exception si la prueba se interrumpe
      */
     @Test
-    void getOrLoad_AfterLoading_ShouldStopRenewingLock() throws Exception {
+    public void getOrLoad_AfterLoading_ShouldStopRenewingLock() throws Exception {
         lockIsFree();
         CoalesceCacheManager manager = managerWith(true, Duration.ofMillis(90), Duration.ofSeconds(30));
 
@@ -540,7 +540,7 @@ class CoalesceCacheManagerGetOrLoadTest {
      * @throws Exception si la prueba se interrumpe
      */
     @Test
-    void getOrLoad_WhenLocalWaitTimesOut_ShouldThrowCoalesceException() throws Exception {
+    public void getOrLoad_WhenLocalWaitTimesOut_ShouldThrowCoalesceException() throws Exception {
         lockIsFree();
         CoalesceCacheManager manager = managerWith(true, Duration.ofSeconds(30), Duration.ofMillis(200));
         CountDownLatch loading = new CountDownLatch(1);
@@ -555,7 +555,7 @@ class CoalesceCacheManagerGetOrLoadTest {
         assertTrue(loading.await(MAX_WAIT_SECONDS, TimeUnit.SECONDS));
         try {
             assertThrows(CoalesceException.class,
-                    () -> manager.getOrLoad("users:1", () -> "no-debe-ejecutarse", 300, false));
+                    () -> manager.getOrLoad("users:1", () -> "must-not-run", 300, false));
         } finally {
             release.countDown();
         }
@@ -568,8 +568,8 @@ class CoalesceCacheManagerGetOrLoadTest {
      * Si Redis no responde al leer, se carga directamente y no se intenta nada más contra Redis.
      */
     @Test
-    void getOrLoad_WhenReadFails_ShouldLoadWithoutTouchingRedisAgain() {
-        when(valueOperations.get(CACHE_KEY)).thenThrow(new QueryTimeoutException("sin respuesta"));
+    public void getOrLoad_WhenReadFails_ShouldLoadWithoutTouchingRedisAgain() {
+        when(valueOperations.get(CACHE_KEY)).thenThrow(new QueryTimeoutException("no response"));
 
         Object result = cacheManager.getOrLoad("users:1", () -> "ana", 300, false);
 
@@ -583,9 +583,9 @@ class CoalesceCacheManagerGetOrLoadTest {
      * Si Redis no responde al tomar el bloqueo, se carga directamente.
      */
     @Test
-    void getOrLoad_WhenLockFails_ShouldLoad() {
+    public void getOrLoad_WhenLockFails_ShouldLoad() {
         when(valueOperations.setIfAbsent(eq(LOCK_KEY), any(), any(Duration.class)))
-                .thenThrow(new RedisConnectionFailureException("sin conexión"));
+                .thenThrow(new RedisConnectionFailureException("no connection"));
 
         assertEquals("ana", cacheManager.getOrLoad("users:1", () -> "ana", 300, false));
     }
@@ -594,8 +594,8 @@ class CoalesceCacheManagerGetOrLoadTest {
      * Con la degradación desactivada, el fallo de Redis llega a quien llama y no se carga.
      */
     @Test
-    void getOrLoad_WhenReadFailsAndFailOpenIsOff_ShouldPropagate() {
-        when(valueOperations.get(CACHE_KEY)).thenThrow(new QueryTimeoutException("sin respuesta"));
+    public void getOrLoad_WhenReadFailsAndFailOpenIsOff_ShouldPropagate() {
+        when(valueOperations.get(CACHE_KEY)).thenThrow(new QueryTimeoutException("no response"));
         CoalesceCacheManager strict = managerWith(false, Duration.ofSeconds(30), Duration.ofSeconds(30));
         Supplier<Object> loader = mockLoader();
 
@@ -609,8 +609,8 @@ class CoalesceCacheManagerGetOrLoadTest {
      * siguientes responden como si no hubiera caché, sin esperar otro tiempo de espera.
      */
     @Test
-    void connectionFailure_ShouldPauseRedisUsage() {
-        when(valueOperations.get(CACHE_KEY)).thenThrow(new QueryTimeoutException("sin respuesta"));
+    public void connectionFailure_ShouldPauseRedisUsage() {
+        when(valueOperations.get(CACHE_KEY)).thenThrow(new QueryTimeoutException("no response"));
 
         assertEquals(Optional.empty(), cacheManager.get("users:1"));
         assertEquals(Optional.empty(), cacheManager.get("users:1"));
@@ -631,9 +631,9 @@ class CoalesceCacheManagerGetOrLoadTest {
      * @throws Exception si la prueba se interrumpe
      */
     @Test
-    void connectionFailure_ShouldRetryAfterPause() throws Exception {
+    public void connectionFailure_ShouldRetryAfterPause() throws Exception {
         when(valueOperations.get(CACHE_KEY))
-                .thenThrow(new QueryTimeoutException("sin respuesta"))
+                .thenThrow(new QueryTimeoutException("no response"))
                 .thenReturn(json("ana"));
         CoalesceCacheManager manager = new CoalesceCacheManager(redisTemplate,
                 mock(RedisMessageListenerContainer.class), codec,
@@ -650,8 +650,8 @@ class CoalesceCacheManagerGetOrLoadTest {
      * Un error que no es de conexión se trata como fallo de caché pero no pausa el uso de Redis.
      */
     @Test
-    void otherFailure_ShouldNotPauseRedisUsage() {
-        when(valueOperations.get(CACHE_KEY)).thenThrow(new IllegalStateException("error de una orden"));
+    public void otherFailure_ShouldNotPauseRedisUsage() {
+        when(valueOperations.get(CACHE_KEY)).thenThrow(new IllegalStateException("command error"));
 
         assertEquals(Optional.empty(), cacheManager.get("users:1"));
         assertEquals(Optional.empty(), cacheManager.get("users:1"));
@@ -663,8 +663,8 @@ class CoalesceCacheManagerGetOrLoadTest {
      * Una entrada que no se puede deserializar se borra y cuenta como ausente.
      */
     @Test
-    void get_WhenEntryIsUnreadable_ShouldDeleteItAndReturnEmpty() {
-        when(valueOperations.get(CACHE_KEY)).thenReturn("{esto no es JSON".getBytes(StandardCharsets.UTF_8));
+    public void get_WhenEntryIsUnreadable_ShouldDeleteItAndReturnEmpty() {
+        when(valueOperations.get(CACHE_KEY)).thenReturn("{this is not JSON".getBytes(StandardCharsets.UTF_8));
 
         assertEquals(Optional.empty(), cacheManager.get("users:1"));
 
@@ -675,11 +675,11 @@ class CoalesceCacheManagerGetOrLoadTest {
      * Con la degradación desactivada, los fallos de las operaciones directas se propagan.
      */
     @Test
-    void directOperations_WhenFailOpenIsOff_ShouldPropagateFailures() {
+    public void directOperations_WhenFailOpenIsOff_ShouldPropagateFailures() {
         CoalesceCacheManager strict = managerWith(false, Duration.ofSeconds(30), Duration.ofSeconds(30));
-        doThrow(new QueryTimeoutException("sin respuesta"))
+        doThrow(new QueryTimeoutException("no response"))
                 .when(valueOperations).set(anyString(), any(), any(Duration.class));
-        when(redisTemplate.delete(anyString())).thenThrow(new QueryTimeoutException("sin respuesta"));
+        when(redisTemplate.delete(anyString())).thenThrow(new QueryTimeoutException("no response"));
 
         assertThrows(QueryTimeoutException.class, () -> strict.put("users:1", "ana", 300));
         assertThrows(QueryTimeoutException.class, () -> strict.evict("users:1"));
@@ -691,8 +691,8 @@ class CoalesceCacheManagerGetOrLoadTest {
      * Con la degradación activa, los fallos de las operaciones directas no se propagan.
      */
     @Test
-    void directOperations_WhenFailOpenIsOn_ShouldSwallowFailures() {
-        IllegalStateException failure = new IllegalStateException("error de una orden");
+    public void directOperations_WhenFailOpenIsOn_ShouldSwallowFailures() {
+        IllegalStateException failure = new IllegalStateException("command error");
         doThrow(failure).when(valueOperations).set(anyString(), any(), any(Duration.class));
         when(redisTemplate.delete(anyString())).thenThrow(failure);
         when(redisTemplate.delete(any(List.class))).thenThrow(failure);
@@ -719,7 +719,7 @@ class CoalesceCacheManagerGetOrLoadTest {
      * Con el tipo del valor se reconstruye exactamente ese tipo, sin nombres de clase en el JSON.
      */
     @Test
-    void lookup_WithType_ShouldRebuildThatType() {
+    public void lookup_WithType_ShouldRebuildThatType() {
         when(valueOperations.get(CACHE_KEY)).thenReturn("5".getBytes(StandardCharsets.UTF_8));
 
         CacheResult<Object> result = cacheManager.lookup("users:1", Long.class);
@@ -732,7 +732,7 @@ class CoalesceCacheManagerGetOrLoadTest {
      * Un nulo guardado es un acierto con valor nulo, distinto de una clave ausente.
      */
     @Test
-    void lookup_ShouldTellStoredNullFromAbsentKey() {
+    public void lookup_ShouldTellStoredNullFromAbsentKey() {
         when(valueOperations.get(CACHE_KEY)).thenReturn(json(null));
         when(valueOperations.get("coalesce:cache:users:2")).thenReturn(null);
 
@@ -748,7 +748,7 @@ class CoalesceCacheManagerGetOrLoadTest {
      * Con un nulo guardado, getOrLoad lo devuelve sin ejecutar el cargador.
      */
     @Test
-    void getOrLoad_WhenNullIsStored_ShouldReturnNullWithoutLoading() {
+    public void getOrLoad_WhenNullIsStored_ShouldReturnNullWithoutLoading() {
         when(valueOperations.get(CACHE_KEY)).thenReturn(json(null));
         Supplier<Object> loader = mockLoader();
 
@@ -761,22 +761,22 @@ class CoalesceCacheManagerGetOrLoadTest {
      * Con prefijo de aplicación, las claves, el bloqueo y el canal lo llevan delante.
      */
     @Test
-    void keyPrefix_ShouldBeAppliedToKeysLockAndChannel() {
+    public void keyPrefix_ShouldBeAppliedToKeysLockAndChannel() {
         RedisMessageListenerContainer container = mock(RedisMessageListenerContainer.class);
         CoalesceCacheManager manager = new CoalesceCacheManager(
-                redisTemplate, container, codec, CoalesceSettings.defaults(), "tienda");
+                redisTemplate, container, codec, CoalesceSettings.defaults(), "shop");
         when(valueOperations.setIfAbsent(anyString(), any(), any(Duration.class))).thenReturn(true);
 
         manager.getOrLoad("users:1", () -> "ana", 300, false, String.class);
         FakeScan scan = new FakeScan(redisTemplate);
         manager.evictAll("users");
 
-        verify(container).addMessageListener(any(), eq(new ChannelTopic("tienda:coalesce:signal")));
-        verify(valueOperations).get("tienda:coalesce:cache:users:1");
-        verify(valueOperations).setIfAbsent(eq("tienda:coalesce:lock:users:1"), any(), any(Duration.class));
-        verify(valueOperations).set(eq("tienda:coalesce:cache:users:1"), any(), eq(Duration.ofSeconds(300)));
-        verify(redisTemplate).convertAndSend(eq("tienda:coalesce:signal"), any());
-        assertEquals("tienda:coalesce:cache:users:*", scan.pattern());
+        verify(container).addMessageListener(any(), eq(new ChannelTopic("shop:coalesce:signal")));
+        verify(valueOperations).get("shop:coalesce:cache:users:1");
+        verify(valueOperations).setIfAbsent(eq("shop:coalesce:lock:users:1"), any(), any(Duration.class));
+        verify(valueOperations).set(eq("shop:coalesce:cache:users:1"), any(), eq(Duration.ofSeconds(300)));
+        verify(redisTemplate).convertAndSend(eq("shop:coalesce:signal"), any());
+        assertEquals("shop:coalesce:cache:users:*", scan.pattern());
     }
 
     // ------------------------------------------------------------------ utilidades
@@ -823,19 +823,19 @@ class CoalesceCacheManagerGetOrLoadTest {
                 // Todavía esperando: se vuelve a entregar.
             }
         }
-        throw new TimeoutException("la petición no terminó");
+        throw new TimeoutException("the request did not finish");
     }
 
     /**
      * Con el cliente configurado para rechazar órdenes mientras está desconectado, el fallo
-     * también cuenta como de conexión y pausa el uso de Redis; un error del servidor, no.
+     * también cuenta como de conexión y pausa el uso de Redis; un server error, no.
      */
     @Test
-    void rejectedCommandWhileDisconnected_ShouldPauseRedisUsage() {
+    public void rejectedCommandWhileDisconnected_ShouldPauseRedisUsage() {
         when(valueOperations.get(CACHE_KEY)).thenThrow(new RedisSystemException(
                 "desconectado", new RedisException("Currently not connected. Commands are rejected.")));
         when(valueOperations.get("coalesce:cache:users:2")).thenThrow(new RedisSystemException(
-                "error del servidor", new RedisCommandExecutionException("WRONGTYPE")));
+                "server error", new RedisCommandExecutionException("WRONGTYPE")));
 
         CoalesceCacheManager other = managerWith(true, Duration.ofSeconds(30), Duration.ofSeconds(30));
         other.get("users:2");
@@ -858,7 +858,7 @@ class CoalesceCacheManagerGetOrLoadTest {
      * Aciertos, fallos y cargas se cuentan una vez por petición.
      */
     @Test
-    void metrics_ShouldCountHitsMissesAndLoads() {
+    public void metrics_ShouldCountHitsMissesAndLoads() {
         CacheMetrics metrics = mock(CacheMetrics.class);
         CoalesceCacheManager manager = managerWith(metrics, Duration.ofSeconds(30));
         lockIsFree();
@@ -879,11 +879,11 @@ class CoalesceCacheManagerGetOrLoadTest {
      * Quien recibe el valor que cargó otra instancia cuenta como coalescida, no como carga.
      */
     @Test
-    void metrics_ShouldCountRequestsServedByAnotherInstanceAsCoalesced() {
+    public void metrics_ShouldCountRequestsServedByAnotherInstanceAsCoalesced() {
         CacheMetrics metrics = mock(CacheMetrics.class);
         CoalesceCacheManager manager = managerWith(metrics, Duration.ofSeconds(30));
         lockIsHeldByAnother();
-        when(valueOperations.get(CACHE_KEY)).thenReturn(null, null, json("de-otra-instancia"));
+        when(valueOperations.get(CACHE_KEY)).thenReturn(null, null, json("de-other-instance"));
 
         manager.getOrLoad("users:1", mockLoader(), 300, false);
 
@@ -899,7 +899,7 @@ class CoalesceCacheManagerGetOrLoadTest {
      * @throws Exception si la prueba se interrumpe
      */
     @Test
-    void metrics_ShouldCountLocalWaitersAsCoalesced() throws Exception {
+    public void metrics_ShouldCountLocalWaitersAsCoalesced() throws Exception {
         CacheMetrics metrics = mock(CacheMetrics.class);
         CoalesceCacheManager manager = managerWith(metrics, Duration.ofSeconds(30));
         lockIsFree();
@@ -927,13 +927,13 @@ class CoalesceCacheManagerGetOrLoadTest {
      * Las esperas agotadas y los errores de Redis tienen su propio contador.
      */
     @Test
-    void metrics_ShouldCountWaitTimeoutsAndRedisErrors() {
+    public void metrics_ShouldCountWaitTimeoutsAndRedisErrors() {
         CacheMetrics metrics = mock(CacheMetrics.class);
         CoalesceCacheManager manager = managerWith(metrics, Duration.ofMillis(200));
         lockIsHeldByAnother();
 
         assertThrows(CoalesceException.class, () -> manager.getOrLoad("users:1", mockLoader(), 300, false));
-        when(redisTemplate.hasKey(anyString())).thenThrow(new IllegalStateException("error de una orden"));
+        when(redisTemplate.hasKey(anyString())).thenThrow(new IllegalStateException("command error"));
         manager.exists("users:1");
 
         verify(metrics).waitTimeout();

@@ -77,7 +77,7 @@ Agregue la anotación `@EnableRedisLibrary` a su aplicación Spring Boot:
 
 ```java
 import io.github.programming0026.juniverse.redis.annotation.EnableRedisLibrary;
-import io.github.programming0026.juniverse.redis.util.Mode;
+import io.github.programming0026.juniverse.redis.enums.Mode;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 

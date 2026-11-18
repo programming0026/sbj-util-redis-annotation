@@ -7,18 +7,18 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.Modifier;
 import org.junit.jupiter.api.Test;
 
-class UtilityTest {
+public class UtilityTest {
 
     @Test
-    void delayIsDisabledInTests() {
+    public void delayIsDisabledInTests() {
         assertEquals(0L, Long.getLong(Utility.DELAY_PROPERTY));
         long start = System.nanoTime();
         Utility.simulateSlowService();
-        assertTrue((System.nanoTime() - start) / 1_000_000 < 1000, "no debe esperar los 3 s por defecto");
+        assertTrue((System.nanoTime() - start) / 1_000_000 < 1000, "must not wait the default 3 s");
     }
 
     @Test
-    void waitsTheConfiguredMillis() {
+    public void waitsTheConfiguredMillis() {
         String previous = System.getProperty(Utility.DELAY_PROPERTY);
         System.setProperty(Utility.DELAY_PROPERTY, "120");
         try {
@@ -31,20 +31,20 @@ class UtilityTest {
     }
 
     @Test
-    void interruptionKeepsTheInterruptedFlag() {
+    public void interruptionKeepsTheInterruptedFlag() {
         String previous = System.getProperty(Utility.DELAY_PROPERTY);
         System.setProperty(Utility.DELAY_PROPERTY, "5000");
         try {
             Thread.currentThread().interrupt();
             Utility.simulateSlowService();
-            assertTrue(Thread.interrupted(), "debe restablecer la marca de interrupción");
+            assertTrue(Thread.interrupted(), "must restore the interrupted flag");
         } finally {
             System.setProperty(Utility.DELAY_PROPERTY, previous);
         }
     }
 
     @Test
-    void cannotBeInstantiated() throws Exception {
+    public void cannotBeInstantiated() throws Exception {
         Constructor<Utility> constructor = Utility.class.getDeclaredConstructor();
         assertTrue(Modifier.isPrivate(constructor.getModifiers()));
     }

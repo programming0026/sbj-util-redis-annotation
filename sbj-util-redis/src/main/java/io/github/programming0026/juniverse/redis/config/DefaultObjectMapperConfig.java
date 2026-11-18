@@ -97,7 +97,7 @@ public class DefaultObjectMapperConfig implements ObjectMapperConfig {
         @Serial
         private static final long serialVersionUID = 1L;
 
-        AllTypesResolverBuilder(PolymorphicTypeValidator typeValidator) {
+        private AllTypesResolverBuilder(PolymorphicTypeValidator typeValidator) {
             super(typeValidator, DefaultTyping.NON_FINAL, JsonTypeInfo.As.PROPERTY);
         }
 

@@ -31,27 +31,27 @@ class AnnotationPlaceholderResolverTest {
      * Métodos anotados que sirven de fuente de anotaciones.
      */
     @SuppressWarnings("unused")
-    static class Annotated {
+    public static class Annotated {
 
         @CoalesceCacheable(value = "${cache.users}", key = "#id", ttl = 60, coalesce = false)
-        void cacheable() {
+        public void cacheable() {
         }
 
         @CoalesceCacheable(value = "${cache.missing:fallback}")
-        void cacheableWithDefault() {
+        public void cacheableWithDefault() {
         }
 
         @CoalesceCacheable(value = "${cache.missing}")
-        void cacheableMissing() {
+        public void cacheableMissing() {
         }
 
         @CoalesceEvict(value = {"${cache.users}", "static"}, allEntries = true)
-        void evict() {
+        public void evict() {
         }
 
         @CoalesceCaching(cacheable = @CoalesceCacheable("${cache.users}"),
                 evict = @CoalesceEvict("${cache.ttl.name}"))
-        void caching() {
+        public void caching() {
         }
     }
 
@@ -67,7 +67,7 @@ class AnnotationPlaceholderResolverTest {
      * Los atributos de texto deben resolverse y el resto conservarse.
      */
     @Test
-    void resolve_ShouldReplaceStringAttributesAndKeepOthers() throws Exception {
+    public void resolve_ShouldReplaceStringAttributesAndKeepOthers() throws Exception {
         CoalesceCacheable resolved = AnnotationPlaceholderResolver.resolve(
                 annotation("cacheable", CoalesceCacheable.class), resolver);
 
@@ -81,7 +81,7 @@ class AnnotationPlaceholderResolverTest {
      * Debe aplicarse el valor por defecto del placeholder.
      */
     @Test
-    void resolve_WithDefaultValue_ShouldUseDefault() throws Exception {
+    public void resolve_WithDefaultValue_ShouldUseDefault() throws Exception {
         CoalesceCacheable resolved = AnnotationPlaceholderResolver.resolve(
                 annotation("cacheableWithDefault", CoalesceCacheable.class), resolver);
 
@@ -92,7 +92,7 @@ class AnnotationPlaceholderResolverTest {
      * Un placeholder sin propiedad debe fallar con el resolvedor estricto.
      */
     @Test
-    void resolve_WithMissingProperty_ShouldThrow() throws Exception {
+    public void resolve_WithMissingProperty_ShouldThrow() throws Exception {
         CoalesceCacheable annotation = annotation("cacheableMissing", CoalesceCacheable.class);
 
         assertThrows(IllegalArgumentException.class,
@@ -103,7 +103,7 @@ class AnnotationPlaceholderResolverTest {
      * Los arreglos de texto deben resolverse elemento por elemento.
      */
     @Test
-    void resolve_ShouldReplaceStringArrays() throws Exception {
+    public void resolve_ShouldReplaceStringArrays() throws Exception {
         CoalesceEvict resolved = AnnotationPlaceholderResolver.resolve(
                 annotation("evict", CoalesceEvict.class), resolver);
 
@@ -115,7 +115,7 @@ class AnnotationPlaceholderResolverTest {
      * Las anotaciones anidadas deben resolverse.
      */
     @Test
-    void resolve_ShouldReplaceNestedAnnotations() throws Exception {
+    public void resolve_ShouldReplaceNestedAnnotations() throws Exception {
         CoalesceCaching resolved = AnnotationPlaceholderResolver.resolve(
                 annotation("caching", CoalesceCaching.class), resolver);
 
@@ -127,7 +127,7 @@ class AnnotationPlaceholderResolverTest {
      * Los mapas de atributos deben resolverse, incluidos los anidados.
      */
     @Test
-    void resolve_WithAnnotationAttributes_ShouldReplaceNestedValues() {
+    public void resolve_WithAnnotationAttributes_ShouldReplaceNestedValues() {
         AnnotationAttributes host = new AnnotationAttributes();
         host.put("host", "${redis.host}");
         host.put("port", 6379);

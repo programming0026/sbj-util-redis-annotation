@@ -13,12 +13,12 @@ import org.junit.jupiter.api.Test;
  * Sin Spring los aspectos de la librería no actúan: aquí se prueba la lógica de los métodos y que lleven las
  * anotaciones {@code @Coalesce*} con la configuración esperada.
  */
-class OrderServiceImplTest {
+public class OrderServiceImplTest {
 
     private final OrderServiceImpl service = new OrderServiceImpl();
 
     @Test
-    void buildsAnOrderWithItemsAndNumber() {
+    public void buildsAnOrderWithItemsAndNumber() {
         OrderDTO order = service.getOrderById(5L);
 
         assertEquals(5L, order.getId());
@@ -29,7 +29,7 @@ class OrderServiceImplTest {
     }
 
     @Test
-    void listsThreeSampleOrders() {
+    public void listsThreeSampleOrders() {
         List<OrderDTO> orders = service.getOrders();
 
         assertEquals(3, orders.size());
@@ -37,7 +37,7 @@ class OrderServiceImplTest {
     }
 
     @Test
-    void ordersByCustomerCarryTheCustomerId() {
+    public void ordersByCustomerCarryTheCustomerId() {
         OrderDTO order = service.getOrdersByCustomer(42L).get(0);
 
         assertEquals(42L, order.getCustomerId());
@@ -45,12 +45,12 @@ class OrderServiceImplTest {
     }
 
     @Test
-    void ordersByStatusCarryTheStatus() {
+    public void ordersByStatusCarryTheStatus() {
         assertEquals("SHIPPED", service.getOrdersByStatus("SHIPPED").get(0).getStatus());
     }
 
     @Test
-    void updatingTheStatusChangesItAndTheUpdateDate() {
+    public void updatingTheStatusChangesItAndTheUpdateDate() {
         OrderDTO updated = service.updateOrderStatus(3L, "DELIVERED");
 
         assertEquals("DELIVERED", updated.getStatus());
@@ -59,12 +59,12 @@ class OrderServiceImplTest {
     }
 
     @Test
-    void clearSearchCacheDoesNothingByItself() {
+    public void clearSearchCacheDoesNothingByItself() {
         service.clearSearchCache(); // el borrado lo hace el aspecto @CoalesceEvict
     }
 
     @Test
-    void getOrderByIdIsCoalescedWithA300SecondTtl() throws Exception {
+    public void getOrderByIdIsCoalescedWithA300SecondTtl() throws Exception {
         Method method = OrderServiceImpl.class.getMethod("getOrderById", Long.class);
         CoalesceCacheable annotation = method.getAnnotation(CoalesceCacheable.class);
 

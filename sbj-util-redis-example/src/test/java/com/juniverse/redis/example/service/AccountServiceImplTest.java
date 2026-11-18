@@ -27,7 +27,7 @@ import org.springframework.cache.CacheManager;
  * Usa el CacheOperationBuilder.Factory real de la librería sobre un RedisCacheService simulado: así se comprueba
  * también que el servicio construye bien las operaciones (nombre de caché, clave, TTL y condición).
  */
-class AccountServiceImplTest {
+public class AccountServiceImplTest {
 
     private CacheManager cacheManager;
     private RedisCacheService redisCacheService;
@@ -35,7 +35,7 @@ class AccountServiceImplTest {
 
     @BeforeEach
     @SuppressWarnings("unchecked")
-    void setUp() {
+    public void setUp() {
         cacheManager = mock(CacheManager.class);
         redisCacheService = mock(RedisCacheService.class);
         service = new AccountServiceImpl(cacheManager, new CacheOperationBuilder.Factory(redisCacheService));
@@ -46,7 +46,7 @@ class AccountServiceImplTest {
 
     @Test
     @SuppressWarnings("unchecked")
-    void loadsAnAccountThroughTheBuilderWithTheConfiguredTtl() {
+    public void loadsAnAccountThroughTheBuilderWithTheConfiguredTtl() {
         AccountDTO account = service.getAccountById(1L, false);
 
         assertEquals("ACC000001", account.getAccountNumber());
@@ -57,23 +57,23 @@ class AccountServiceImplTest {
 
     @Test
     @SuppressWarnings("unchecked")
-    void forceRefreshSkipsTheCache() {
+    public void forceRefreshSkipsTheCache() {
         service.getAccountById(2L, true);
 
         verify(redisCacheService, never()).cacheableWithResult(any(), any(), any(Supplier.class), any(Duration.class));
     }
 
     @Test
-    void listAggregatesAllAccounts() {
+    public void listAggregatesAllAccounts() {
         List<AccountDTO> accounts = service.getAccounts();
 
         assertTrue(accounts.size() >= 10);
     }
 
     @Test
-    void savingAssignsAnIdAndUpdatesTheCache() {
+    public void savingAssignsAnIdAndUpdatesTheCache() {
         AccountDTO saved = service.saveOrUpdateAccount(
-                new AccountDTO(null, "ACC-NEW", "Titular", BigDecimal.TEN, "SAVINGS", null));
+                new AccountDTO(null, "ACC-NEW", "Holder", BigDecimal.TEN, "SAVINGS", null));
 
         assertNotNull(saved.getId());
         assertNotNull(saved.getCreatedAt());
@@ -81,9 +81,9 @@ class AccountServiceImplTest {
     }
 
     @Test
-    void deleteEvictsOnlyIfTheAccountExists() {
+    public void deleteEvictsOnlyIfTheAccountExists() {
         AccountDTO saved = service.saveOrUpdateAccount(
-                new AccountDTO(null, "ACC-DEL", "Titular", BigDecimal.ONE, "CHECKING", null));
+                new AccountDTO(null, "ACC-DEL", "Holder", BigDecimal.ONE, "CHECKING", null));
 
         assertTrue(service.deleteAccount(saved.getId()));
         verify(redisCacheService).cacheEvict("accounts", String.valueOf(saved.getId()));
@@ -91,7 +91,7 @@ class AccountServiceImplTest {
     }
 
     @Test
-    void clearCacheClearsTheAccountsCache() {
+    public void clearCacheClearsTheAccountsCache() {
         Cache cache = mock(Cache.class);
         when(cacheManager.getCache("accounts")).thenReturn(cache);
 

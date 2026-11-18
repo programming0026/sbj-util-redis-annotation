@@ -12,10 +12,10 @@ import org.junit.jupiter.api.Test;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
-class RedisHealthControllerTest {
+public class RedisHealthControllerTest {
 
     @Test
-    void reportsTheStatusReturnedByTheLibraryChecker() throws Exception {
+    public void reportsTheStatusReturnedByTheLibraryChecker() throws Exception {
         RedisHealthChecker checker = mock(RedisHealthChecker.class);
         RedisStatusDto dto = RedisStatusDto.builder().connected(true).responseTime(3L).redisVersion("7.4.5").build();
         when(checker.isRedisActive()).thenReturn(dto);

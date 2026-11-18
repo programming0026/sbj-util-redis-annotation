@@ -17,24 +17,24 @@ import org.junit.jupiter.api.Test;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
-class OrderControllerTest {
+public class OrderControllerTest {
 
     private OrderService service;
     private MockMvc mvc;
 
     @BeforeEach
-    void setUp() {
+    public void setUp() {
         service = mock(OrderService.class);
         mvc = MockMvcBuilders.standaloneSetup(new OrderController(service)).build();
     }
 
     private static OrderDTO order(long id, String status) {
-        return OrderDTO.builder().id(id).orderNumber("ORD-00000" + id).customerName("Cliente").total(10.0)
+        return OrderDTO.builder().id(id).orderNumber("ORD-00000" + id).customerName("Customer").total(10.0)
                 .status(status).build();
     }
 
     @Test
-    void listsOrders() throws Exception {
+    public void listsOrders() throws Exception {
         when(service.getOrders()).thenReturn(List.of(order(1, "PENDING"), order(2, "SHIPPED")));
 
         mvc.perform(get("/api/v1/orders"))
@@ -43,7 +43,7 @@ class OrderControllerTest {
     }
 
     @Test
-    void returnsOneOrder() throws Exception {
+    public void returnsOneOrder() throws Exception {
         when(service.getOrderById(1L)).thenReturn(order(1, "PENDING"));
 
         mvc.perform(get("/api/v1/orders/1"))
@@ -52,7 +52,7 @@ class OrderControllerTest {
     }
 
     @Test
-    void ordersByCustomer() throws Exception {
+    public void ordersByCustomer() throws Exception {
         when(service.getOrdersByCustomer(101L)).thenReturn(List.of(order(1, "PENDING")));
 
         mvc.perform(get("/api/v1/orders/customer/101"))
@@ -61,7 +61,7 @@ class OrderControllerTest {
     }
 
     @Test
-    void ordersByStatus() throws Exception {
+    public void ordersByStatus() throws Exception {
         when(service.getOrdersByStatus("SHIPPED")).thenReturn(List.of(order(2, "SHIPPED")));
 
         mvc.perform(get("/api/v1/orders/status/SHIPPED"))
@@ -70,7 +70,7 @@ class OrderControllerTest {
     }
 
     @Test
-    void updatesTheStatusFromTheQueryParameter() throws Exception {
+    public void updatesTheStatusFromTheQueryParameter() throws Exception {
         when(service.updateOrderStatus(1L, "DELIVERED")).thenReturn(order(1, "DELIVERED"));
 
         mvc.perform(patch("/api/v1/orders/1/status?status=DELIVERED"))
@@ -79,12 +79,12 @@ class OrderControllerTest {
     }
 
     @Test
-    void updatingWithoutStatusIsABadRequest() throws Exception {
+    public void updatingWithoutStatusIsABadRequest() throws Exception {
         mvc.perform(patch("/api/v1/orders/1/status")).andExpect(status().isBadRequest());
     }
 
     @Test
-    void clearCacheDelegatesToTheService() throws Exception {
+    public void clearCacheDelegatesToTheService() throws Exception {
         mvc.perform(delete("/api/v1/orders/cache/clear")).andExpect(status().is2xxSuccessful());
 
         verify(service).clearSearchCache();

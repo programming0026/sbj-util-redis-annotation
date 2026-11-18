@@ -38,14 +38,14 @@ class CacheOperationsIT extends AbstractRedisIT {
      * Crea la instancia.
      */
     @BeforeEach
-    void setUp() {
+    public void setUp() {
         RedisInstance instance = newInstance();
         cacheService = instance.cacheService();
         cacheManager = instance.cacheManager();
     }
 
     @Test
-    void cacheable_ShouldMissThenHit() {
+    public void cacheable_ShouldMissThenHit() {
         AtomicInteger calls = new AtomicInteger();
 
         CacheResult<String> first = cacheService.cacheableWithResult("users", "1",
@@ -60,25 +60,25 @@ class CacheOperationsIT extends AbstractRedisIT {
     }
 
     @Test
-    void cacheable_ShouldStoreWithTtl() {
+    public void cacheable_ShouldStoreWithTtl() {
         cacheService.cacheable("users", "1", () -> "ana", Duration.ofSeconds(90));
 
         Long ttl = cacheService.getTTL("users", "1");
 
         assertNotNull(ttl);
-        assertTrue(ttl > 0 && ttl <= 90, "TTL fuera de rango: " + ttl);
+        assertTrue(ttl > 0 && ttl <= 90, "TTL out of range: " + ttl);
     }
 
     @Test
-    void cachePut_ShouldOverwrite() {
+    public void cachePut_ShouldOverwrite() {
         cacheService.cacheable("users", "1", () -> "ana");
-        cacheService.cachePut("users", "1", () -> "ana-nueva");
+        cacheService.cachePut("users", "1", () -> "ana-new");
 
-        assertEquals("ana-nueva", cacheService.cacheable("users", "1", () -> "no-debe-ejecutarse"));
+        assertEquals("ana-new", cacheService.cacheable("users", "1", () -> "must-not-run"));
     }
 
     @Test
-    void cacheEvict_ShouldRemoveOnlyThatKey() {
+    public void cacheEvict_ShouldRemoveOnlyThatKey() {
         cacheService.cacheable("users", "1", () -> "ana");
         cacheService.cacheable("users", "2", () -> "luis");
 
@@ -89,7 +89,7 @@ class CacheOperationsIT extends AbstractRedisIT {
     }
 
     @Test
-    void cacheEvictMultiple_ShouldRemoveGivenKeys() {
+    public void cacheEvictMultiple_ShouldRemoveGivenKeys() {
         cacheService.cacheable("users", "1", () -> "ana");
         cacheService.cacheable("users", "2", () -> "luis");
         cacheService.cacheable("users", "3", () -> "eva");
@@ -102,23 +102,23 @@ class CacheOperationsIT extends AbstractRedisIT {
     }
 
     @Test
-    void cacheEvictAll_ShouldRemoveEveryKeyOfThatCacheOnly() {
+    public void cacheEvictAll_ShouldRemoveEveryKeyOfThatCacheOnly() {
         for (int i = 0; i < MANY_KEYS; i++) {
             String key = String.valueOf(i);
             cacheService.cacheable("users", key, () -> "u" + key);
         }
-        cacheService.cacheable("orders", "1", () -> "pedido");
+        cacheService.cacheable("orders", "1", () -> "order");
 
         cacheService.cacheEvictAll("users");
 
         for (int i = 0; i < MANY_KEYS; i++) {
-            assertFalse(cacheService.exists("users", String.valueOf(i)), "sigue existiendo users:" + i);
+            assertFalse(cacheService.exists("users", String.valueOf(i)), "still exists: users:" + i);
         }
         assertTrue(cacheService.exists("orders", "1"));
     }
 
     @Test
-    void cacheEvictByPattern_ShouldRemoveMatchingKeysOnly() {
+    public void cacheEvictByPattern_ShouldRemoveMatchingKeysOnly() {
         cacheService.cacheable("users", "es-1", () -> "ana");
         cacheService.cacheable("users", "es-2", () -> "luis");
         cacheService.cacheable("users", "mx-1", () -> "eva");
@@ -131,16 +131,16 @@ class CacheOperationsIT extends AbstractRedisIT {
     }
 
     @Test
-    void manager_ShouldPutGetAndExpire() {
+    public void manager_ShouldPutGetAndExpire() {
         cacheManager.put("users:1", "ana", 90);
 
         assertEquals(Optional.of("ana"), cacheManager.get("users:1"));
         long ttl = cacheManager.getTimeToLive("users:1");
-        assertTrue(ttl > 0 && ttl <= 90, "TTL fuera de rango: " + ttl);
+        assertTrue(ttl > 0 && ttl <= 90, "TTL out of range: " + ttl);
     }
 
     @Test
-    void manager_ShouldEvictOneAndMany() {
+    public void manager_ShouldEvictOneAndMany() {
         cacheManager.put("users:1", "ana", 60);
         cacheManager.put("users:2", "luis", 60);
         cacheManager.put("users:3", "eva", 60);
@@ -154,16 +154,16 @@ class CacheOperationsIT extends AbstractRedisIT {
     }
 
     @Test
-    void manager_evictAll_ShouldRemoveEveryKeyOfThatCache() {
+    public void manager_evictAll_ShouldRemoveEveryKeyOfThatCache() {
         for (int i = 0; i < MANY_KEYS; i++) {
             cacheManager.put("users:" + i, "u" + i, 60);
         }
-        cacheManager.put("orders:1", "pedido", 60);
+        cacheManager.put("orders:1", "order", 60);
 
         cacheManager.evictAll("users");
 
         for (int i = 0; i < MANY_KEYS; i++) {
-            assertFalse(cacheManager.exists("users:" + i), "sigue existiendo users:" + i);
+            assertFalse(cacheManager.exists("users:" + i), "still exists: users:" + i);
         }
         assertTrue(cacheManager.exists("orders:1"));
     }
@@ -172,20 +172,20 @@ class CacheOperationsIT extends AbstractRedisIT {
      * Borrar la caché {@code user} no debe tocar otras cachés cuyo nombre empieza igual.
      */
     @Test
-    void manager_evictAll_ShouldNotTouchCachesSharingThePrefix() {
+    public void manager_evictAll_ShouldNotTouchCachesSharingThePrefix() {
         cacheManager.put("user:1", "ana", 60);
-        cacheManager.put("users:1", "lista", 60);
-        cacheManager.put("userProfile:1", "perfil", 60);
+        cacheManager.put("users:1", "list", 60);
+        cacheManager.put("userProfile:1", "profile", 60);
 
         cacheManager.evictAll("user");
 
         assertFalse(cacheManager.exists("user:1"));
-        assertTrue(cacheManager.exists("users:1"), "se borró la caché users");
-        assertTrue(cacheManager.exists("userProfile:1"), "se borró la caché userProfile");
+        assertTrue(cacheManager.exists("users:1"), "the users cache was cleared");
+        assertTrue(cacheManager.exists("userProfile:1"), "the userProfile cache was cleared");
     }
 
     @Test
-    void manager_evictPattern_ShouldRemoveMatchingKeysOnly() {
+    public void manager_evictPattern_ShouldRemoveMatchingKeysOnly() {
         cacheManager.put("users:es-1", "ana", 60);
         cacheManager.put("users:mx-1", "eva", 60);
 
@@ -196,7 +196,7 @@ class CacheOperationsIT extends AbstractRedisIT {
     }
 
     @Test
-    void manager_getOrLoad_ShouldLoadOnceAndThenHit() {
+    public void manager_getOrLoad_ShouldLoadOnceAndThenHit() {
         AtomicInteger calls = new AtomicInteger();
 
         Object first = cacheManager.getOrLoad("users:1", () -> "ana-" + calls.incrementAndGet(), 60, false);

@@ -1,7 +1,7 @@
 package io.github.programming0026.juniverse.redis.integration;
 
 import io.github.programming0026.juniverse.redis.annotation.CoalesceCacheable;
-import io.github.programming0026.juniverse.redis.config.CoalesceSettings;
+import io.github.programming0026.juniverse.redis.dto.CoalesceSettings;
 import io.github.programming0026.juniverse.redis.exception.CoalesceException;
 import java.time.Duration;
 import java.util.ArrayList;
@@ -71,7 +71,7 @@ class CoalesceConcurrencyIT extends AbstractRedisIT {
      * @throws Exception si alguna petición falla o tarda demasiado
      */
     @RepeatedTest(5)
-    void loader_ShouldRunOnce_AcrossTwoInstances() throws Exception {
+    public void loader_ShouldRunOnce_AcrossTwoInstances() throws Exception {
         AtomicInteger calls = new AtomicInteger();
         SlowService first = newInstance().proxy(new SlowService(calls));
         SlowService second = newInstance().proxy(new SlowService(calls));
@@ -85,7 +85,7 @@ class CoalesceConcurrencyIT extends AbstractRedisIT {
         for (Future<String> future : runTogether(tasks)) {
             assertEquals("order-1", future.get(MAX_WAIT_SECONDS, TimeUnit.SECONDS));
         }
-        assertEquals(1, calls.get(), "el método real debe ejecutarse una sola vez");
+        assertEquals(1, calls.get(), "the real method must run only once");
     }
 
     /**
@@ -95,7 +95,7 @@ class CoalesceConcurrencyIT extends AbstractRedisIT {
      * @throws Exception si alguna petición falla o tarda demasiado
      */
     @Test
-    void waiters_ShouldGetNull_WhenLoaderReturnsNull() throws Exception {
+    public void waiters_ShouldGetNull_WhenLoaderReturnsNull() throws Exception {
         AtomicInteger calls = new AtomicInteger();
         SlowService service = newInstance().proxy(new SlowService(calls));
 
@@ -105,7 +105,7 @@ class CoalesceConcurrencyIT extends AbstractRedisIT {
 
         assertNull(holder.get(MAX_WAIT_SECONDS, TimeUnit.SECONDS));
         assertNull(waiter.get(MAX_WAIT_SECONDS, TimeUnit.SECONDS));
-        assertEquals(1, calls.get(), "el método real debe ejecutarse una sola vez");
+        assertEquals(1, calls.get(), "the real method must run only once");
     }
 
     /**
@@ -116,13 +116,13 @@ class CoalesceConcurrencyIT extends AbstractRedisIT {
      * @throws Exception si la petición falla o tarda demasiado
      */
     @Test
-    void waiter_ShouldRecover_WhenLockIsReleasedWithoutNotification() throws Exception {
+    public void waiter_ShouldRecover_WhenLockIsReleasedWithoutNotification() throws Exception {
         AtomicInteger calls = new AtomicInteger();
         RedisInstance instance = newInstance();
         SlowService service = instance.proxy(new SlowService(calls));
 
         // Otra instancia tiene el bloqueo...
-        instance.template().opsForValue().set(LOCK_PREFIX + "orders:3", "otra-instancia");
+        instance.template().opsForValue().set(LOCK_PREFIX + "orders:3", "other-instance");
         Future<String> waiter = runAsync(() -> service.find("3"));
         Thread.sleep(300);
         // ...y lo suelta sin publicar el resultado ni dejarlo en caché.
@@ -139,7 +139,7 @@ class CoalesceConcurrencyIT extends AbstractRedisIT {
      * @throws Exception si alguna petición falla o tarda demasiado
      */
     @Test
-    void loadLongerThanLock_ShouldNotRunTwiceAcrossInstances() throws Exception {
+    public void loadLongerThanLock_ShouldNotRunTwiceAcrossInstances() throws Exception {
         CoalesceSettings shortLock = new CoalesceSettings(true, Duration.ofMillis(1500), Duration.ofSeconds(15));
         RedisInstance first = newInstance(shortLock);
         RedisInstance second = newInstance(shortLock);
@@ -149,22 +149,22 @@ class CoalesceConcurrencyIT extends AbstractRedisIT {
         Future<Object> slow = runAsync(() -> first.cacheManager().getOrLoad("orders:4", () -> {
             calls.incrementAndGet();
             sleepQuietly(4000);
-            return "de-la-primera";
+            return "from-the-first";
         }, 60, false, String.class));
         Thread.sleep(150);
         Future<Object> waiting = runAsync(() -> second.cacheManager().getOrLoad("orders:4", () -> {
             calls.incrementAndGet();
-            return "de-la-segunda";
+            return "from-the-second";
         }, 60, false, String.class));
 
-        // Pasado el doble de la duración del bloqueo, este sigue existiendo porque se renueva.
+        // Pasado el doble de la duración del bloqueo, este still exists: porque se renueva.
         Thread.sleep(3000);
-        assertTrue(first.rawValue(LOCK_PREFIX + "orders:4") != null, "el bloqueo caducó durante la carga");
+        assertTrue(first.rawValue(LOCK_PREFIX + "orders:4") != null, "the lock expired during the load");
 
-        assertEquals("de-la-primera", slow.get(MAX_WAIT_SECONDS, TimeUnit.SECONDS));
-        assertEquals("de-la-primera", waiting.get(MAX_WAIT_SECONDS, TimeUnit.SECONDS));
-        assertEquals(1, calls.get(), "la carga se ejecutó en las dos instancias");
-        assertFalse(first.template().hasKey(LOCK_PREFIX + "orders:4"), "el bloqueo no se soltó al terminar");
+        assertEquals("from-the-first", slow.get(MAX_WAIT_SECONDS, TimeUnit.SECONDS));
+        assertEquals("from-the-first", waiting.get(MAX_WAIT_SECONDS, TimeUnit.SECONDS));
+        assertEquals(1, calls.get(), "the load ran on both instances");
+        assertFalse(first.template().hasKey(LOCK_PREFIX + "orders:4"), "the lock was not released when finished");
     }
 
     /**
@@ -174,19 +174,19 @@ class CoalesceConcurrencyIT extends AbstractRedisIT {
      * @throws Exception si la petición falla o tarda demasiado
      */
     @Test
-    void lockOfDeadInstance_ShouldExpireAndLetAnotherInstanceLoad() throws Exception {
+    public void lockOfDeadInstance_ShouldExpireAndLetAnotherInstanceLoad() throws Exception {
         RedisInstance survivor = newInstance(
                 new CoalesceSettings(true, Duration.ofSeconds(30), Duration.ofSeconds(10)));
         // Bloqueo de una instancia que murió: tiene caducidad y nadie lo renueva.
-        survivor.template().opsForValue().set(LOCK_PREFIX + "orders:7", "instancia-muerta", Duration.ofMillis(800));
+        survivor.template().opsForValue().set(LOCK_PREFIX + "orders:7", "dead-instance", Duration.ofMillis(800));
 
         long start = System.nanoTime();
-        Object value = survivor.cacheManager().getOrLoad("orders:7", () -> "del-superviviente", 60, false,
+        Object value = survivor.cacheManager().getOrLoad("orders:7", () -> "from-the-survivor", 60, false,
                 String.class);
         long elapsedMillis = TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - start);
 
-        assertEquals("del-superviviente", value);
-        assertTrue(elapsedMillis >= 500 && elapsedMillis < 4000, "esperó " + elapsedMillis + " ms");
+        assertEquals("from-the-survivor", value);
+        assertTrue(elapsedMillis >= 500 && elapsedMillis < 4000, "waited " + elapsedMillis + " ms");
     }
 
     /**
@@ -194,10 +194,10 @@ class CoalesceConcurrencyIT extends AbstractRedisIT {
      * con CoalesceException en lugar de quedarse esperando.
      */
     @Test
-    void waiter_ShouldFail_WhenWaitTimeoutExpiresBeforeLock() {
+    public void waiter_ShouldFail_WhenWaitTimeoutExpiresBeforeLock() {
         RedisInstance instance = newInstance(
                 new CoalesceSettings(true, Duration.ofSeconds(30), Duration.ofMillis(600)));
-        instance.template().opsForValue().set(LOCK_PREFIX + "orders:5", "otra-instancia");
+        instance.template().opsForValue().set(LOCK_PREFIX + "orders:5", "other-instance");
         AtomicInteger calls = new AtomicInteger();
 
         long start = System.nanoTime();
@@ -206,7 +206,7 @@ class CoalesceConcurrencyIT extends AbstractRedisIT {
         long elapsedMillis = TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - start);
 
         assertEquals(0, calls.get());
-        assertTrue(elapsedMillis >= 500 && elapsedMillis < 3000, "esperó " + elapsedMillis + " ms");
+        assertTrue(elapsedMillis >= 500 && elapsedMillis < 3000, "waited " + elapsedMillis + " ms");
     }
 
     /**
@@ -216,21 +216,21 @@ class CoalesceConcurrencyIT extends AbstractRedisIT {
      * @throws Exception si alguna petición falla o tarda demasiado
      */
     @Test
-    void waiterInAnotherInstance_ShouldLoadItself_WhenHolderFails() throws Exception {
+    public void waiterInAnotherInstance_ShouldLoadItself_WhenHolderFails() throws Exception {
         RedisInstance first = newInstance();
         RedisInstance second = newInstance();
 
         Future<Object> holder = runAsync(() -> first.cacheManager().getOrLoad("orders:6", () -> {
             sleepQuietly(400);
-            throw new IllegalStateException("fallo de la primera");
+            throw new IllegalStateException("failure of the first call");
         }, 60, false));
         Thread.sleep(150);
         Future<Object> waiter = runAsync(() ->
-                second.cacheManager().getOrLoad("orders:6", () -> "de-la-segunda", 60, false));
+                second.cacheManager().getOrLoad("orders:6", () -> "from-the-second", 60, false));
 
         assertThrows(ExecutionException.class, () -> holder.get(MAX_WAIT_SECONDS, TimeUnit.SECONDS));
-        assertEquals("de-la-segunda", waiter.get(MAX_WAIT_SECONDS, TimeUnit.SECONDS));
-        assertEquals(Optional.of("de-la-segunda"), first.cacheManager().get("orders:6"));
+        assertEquals("from-the-second", waiter.get(MAX_WAIT_SECONDS, TimeUnit.SECONDS));
+        assertEquals(Optional.of("from-the-second"), first.cacheManager().get("orders:6"));
     }
 
     private static void sleepQuietly(long millis) {

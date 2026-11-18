@@ -1,6 +1,6 @@
 package io.github.programming0026.juniverse.redis.integration;
 
-import io.github.programming0026.juniverse.redis.config.CoalesceSettings;
+import io.github.programming0026.juniverse.redis.dto.CoalesceSettings;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.Callable;
@@ -27,7 +27,7 @@ import org.testcontainers.junit.jupiter.Testcontainers;
  * @author Java Universe
  */
 @Testcontainers(disabledWithoutDocker = true)
-abstract class AbstractRedisIT {
+public abstract class AbstractRedisIT {
 
     /** Instancias creadas por la prueba en curso. */
     private final List<RedisInstance> instances = new ArrayList<>();
@@ -114,7 +114,7 @@ abstract class AbstractRedisIT {
      * Vacía Redis y cierra lo que abrió la prueba.
      */
     @AfterEach
-    void cleanUp() {
+    public void cleanUp() {
         executors.forEach(ExecutorService::shutdownNow);
         executors.clear();
         if (shouldFlush() && !instances.isEmpty()) {

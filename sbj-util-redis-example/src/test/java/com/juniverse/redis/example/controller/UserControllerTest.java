@@ -20,19 +20,19 @@ import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
-class UserControllerTest {
+public class UserControllerTest {
 
     private UserService service;
     private MockMvc mvc;
 
     @BeforeEach
-    void setUp() {
+    public void setUp() {
         service = mock(UserService.class);
         mvc = MockMvcBuilders.standaloneSetup(new UserController(service)).build();
     }
 
     @Test
-    void listsUsers() throws Exception {
+    public void listsUsers() throws Exception {
         when(service.getUsers()).thenReturn(List.of(new UserDTO(1L, "ana", "ana@example.com",
                 LocalDateTime.of(2026, 1, 2, 3, 4, 5))));
 
@@ -43,7 +43,7 @@ class UserControllerTest {
     }
 
     @Test
-    void returnsOneUserAndPassesForceRefresh() throws Exception {
+    public void returnsOneUserAndPassesForceRefresh() throws Exception {
         when(service.getUserById(1L, true)).thenReturn(new UserDTO(1L, "ana", "ana@example.com", null));
 
         mvc.perform(get("/api/v1/users/1?forceRefresh=true"))
@@ -54,7 +54,7 @@ class UserControllerTest {
     }
 
     @Test
-    void forceRefreshDefaultsToFalse() throws Exception {
+    public void forceRefreshDefaultsToFalse() throws Exception {
         when(service.getUserById(2L, false)).thenReturn(new UserDTO(2L, "luis", "l@example.com", null));
 
         mvc.perform(get("/api/v1/users/2")).andExpect(status().isOk());
@@ -63,22 +63,22 @@ class UserControllerTest {
     }
 
     @Test
-    void unknownUserIs404() throws Exception {
+    public void unknownUserIs404() throws Exception {
         mvc.perform(get("/api/v1/users/99")).andExpect(status().isNotFound());
     }
 
     @Test
-    void createsAUser() throws Exception {
-        when(service.saveOrUpdateUser(any())).thenReturn(new UserDTO(11L, "nuevo", "n@example.com", null));
+    public void createsAUser() throws Exception {
+        when(service.saveOrUpdateUser(any())).thenReturn(new UserDTO(11L, "new", "n@example.com", null));
 
         mvc.perform(post("/api/v1/users").contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"username\":\"nuevo\",\"email\":\"n@example.com\"}"))
+                        .content("{\"username\":\"new\",\"email\":\"n@example.com\"}"))
                 .andExpect(status().is2xxSuccessful())
                 .andExpect(jsonPath("$.id").value(11));
     }
 
     @Test
-    void deleteReturnsNoContentOrNotFound() throws Exception {
+    public void deleteReturnsNoContentOrNotFound() throws Exception {
         when(service.deleteUser(1L)).thenReturn(true);
 
         mvc.perform(delete("/api/v1/users/1")).andExpect(status().isNoContent());
@@ -86,7 +86,7 @@ class UserControllerTest {
     }
 
     @Test
-    void refreshClearsTheCache() throws Exception {
+    public void refreshClearsTheCache() throws Exception {
         mvc.perform(get("/api/v1/users/refresh")).andExpect(status().isOk());
 
         verify(service).clearCache();

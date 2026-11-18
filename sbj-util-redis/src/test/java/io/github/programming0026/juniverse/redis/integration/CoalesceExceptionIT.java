@@ -54,12 +54,12 @@ class CoalesceExceptionIT extends AbstractRedisIT {
      * Crea el servicio interceptado.
      */
     @BeforeEach
-    void setUp() {
+    public void setUp() {
         service = newInstance().proxy(new FailingService());
     }
 
     @Test
-    void exception_ShouldKeepItsType_WithoutCoalesce() {
+    public void exception_ShouldKeepItsType_WithoutCoalesce() {
         IllegalStateException ex = assertThrows(IllegalStateException.class,
                 () -> service.failWithoutCoalesce("1"));
 
@@ -71,14 +71,14 @@ class CoalesceExceptionIT extends AbstractRedisIT {
      * que lanzó su método.
      */
     @Test
-    void exception_ShouldKeepItsType_WithCoalesce() {
+    public void exception_ShouldKeepItsType_WithCoalesce() {
         IllegalStateException ex = assertThrows(IllegalStateException.class, () -> service.fail("2"));
 
         assertEquals("boom 2", ex.getMessage());
     }
 
     @Test
-    void checkedException_ShouldKeepItsType_WithCoalesce() {
+    public void checkedException_ShouldKeepItsType_WithCoalesce() {
         IOException ex = assertThrows(IOException.class, () -> service.failChecked("3"));
 
         assertEquals("io 3", ex.getMessage());
@@ -91,7 +91,7 @@ class CoalesceExceptionIT extends AbstractRedisIT {
      * @throws Exception si la prueba se interrumpe
      */
     @Test
-    void waiter_ShouldFailFast_WhenLoaderFails() throws Exception {
+    public void waiter_ShouldFailFast_WhenLoaderFails() throws Exception {
         Future<String> holder = runAsync(() -> service.failSlowly("4"));
         Thread.sleep(200);
         Future<String> waiter = runAsync(() -> service.failSlowly("4"));

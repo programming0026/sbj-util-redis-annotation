@@ -1,4 +1,4 @@
-package io.github.programming0026.juniverse.redis.config;
+package io.github.programming0026.juniverse.redis.dto;
 
 import java.time.Duration;
 import java.util.Objects;

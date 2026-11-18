@@ -1,5 +1,7 @@
 package io.github.programming0026.juniverse.redis.integration;
 
+import io.github.programming0026.juniverse.redis.integration.dto.Order;
+import io.github.programming0026.juniverse.redis.integration.enums.Status;
 import io.github.programming0026.juniverse.redis.annotation.EnableRedisLibrary;
 import io.github.programming0026.juniverse.redis.annotation.HostEntry;
 import io.github.programming0026.juniverse.redis.service.RedisCacheService;
@@ -42,13 +44,6 @@ class UntypedRoundTripIT {
 
     /** Contexto de Spring. */
     private AnnotationConfigApplicationContext context;
-
-    /** Estado de un pedido. */
-    public enum Status { OPEN, CLOSED }
-
-    /** Pedido inmutable. */
-    public record Order(Long id, BigDecimal total, Status status, LocalDateTime createdAt, List<String> tags) {
-    }
 
     /**
      * Servicio con métodos {@code @Cacheable} de Spring que devuelven tipos que antes se perdían.
@@ -93,7 +88,7 @@ class UntypedRoundTripIT {
         }
     }
 
-    static Order sampleOrder(Long id) {
+    public static Order sampleOrder(Long id) {
         return new Order(id, new BigDecimal("19.90"), Status.OPEN, LocalDateTime.of(2026, 1, 15, 10, 30),
                 List.of("a", "b"));
     }
@@ -102,11 +97,11 @@ class UntypedRoundTripIT {
      * Aplicación con la configuración predeterminada de la librería.
      */
     @Configuration
-    @EnableRedisLibrary(hostEntries = @HostEntry(host = "${it.redis.address}"), keyPrefix = "sintipo")
-    static class Application {
+    @EnableRedisLibrary(hostEntries = @HostEntry(host = "${it.redis.address}"), keyPrefix = "untyped")
+    public static class Application {
 
         @Bean
-        SpringCachedService springCachedService() {
+        public SpringCachedService springCachedService() {
             return new SpringCachedService();
         }
     }
@@ -115,7 +110,7 @@ class UntypedRoundTripIT {
      * Arranca la aplicación contra el Redis compartido de las pruebas.
      */
     @BeforeEach
-    void start() {
+    public void start() {
         LettuceConnectionFactory shared = RedisContainers.standaloneFactory();
         String address = shared.getStandaloneConfiguration().getHostName() + ":"
                 + shared.getStandaloneConfiguration().getPort();
@@ -130,7 +125,7 @@ class UntypedRoundTripIT {
      * Cierra la aplicación.
      */
     @AfterEach
-    void close() {
+    public void close() {
         context.close();
     }
 
@@ -138,7 +133,7 @@ class UntypedRoundTripIT {
      * El {@code @Cacheable} de Spring devuelve, desde Redis, el mismo valor y tipo que el método.
      */
     @Test
-    void springCacheable_ShouldReturnTheOriginalTypes() {
+    public void springCacheable_ShouldReturnTheOriginalTypes() {
         SpringCachedService service = context.getBean(SpringCachedService.class);
 
         assertServedFromCache(service, () -> service.order(7L), sampleOrder(7L));
@@ -157,14 +152,14 @@ class UntypedRoundTripIT {
         assertEquals(expected, second);
         assertEquals(expected.getClass().isRecord() || expected instanceof Long || expected instanceof Enum
                 || expected instanceof LocalDate ? expected.getClass() : second.getClass(), second.getClass());
-        assertEquals(before + 1, service.callCount(), "la segunda llamada debe salir de Redis");
+        assertEquals(before + 1, service.callCount(), "the second call must be served from Redis");
     }
 
     /**
      * {@code RedisCacheService} devuelve, desde Redis, el mismo valor y tipo que el cargador.
      */
     @Test
-    void redisCacheService_ShouldReturnTheOriginalTypes() {
+    public void redisCacheService_ShouldReturnTheOriginalTypes() {
         RedisCacheService service = context.getBean(RedisCacheService.class);
         Object[] values = {
             sampleOrder(3L), 5L, new BigDecimal("1.50"), Status.OPEN, LocalDate.of(2026, 2, 1),
@@ -176,9 +171,9 @@ class UntypedRoundTripIT {
             String key = "value" + i;
             service.cacheable("roundtrip", key, () -> value);
 
-            Object fromRedis = service.cacheable("roundtrip", key, () -> "no-debe-ejecutarse");
+            Object fromRedis = service.cacheable("roundtrip", key, () -> "must-not-run");
 
-            assertEquals(value, fromRedis, "valor de tipo " + value.getClass().getName());
+            assertEquals(value, fromRedis, "value of type " + value.getClass().getName());
             if (!(value instanceof java.util.Collection) && !(value instanceof Map)) {
                 assertEquals(value.getClass(), fromRedis.getClass());
             }
@@ -190,14 +185,14 @@ class UntypedRoundTripIT {
      */
     @Test
     @SuppressWarnings("unchecked")
-    void redisTemplate_ShouldReturnTheOriginalTypes() {
+    public void redisTemplate_ShouldReturnTheOriginalTypes() {
         RedisTemplate<String, Object> template = context.getBean("redisTemplate", RedisTemplate.class);
 
-        template.opsForValue().set("sintipo:plantilla:pedido", sampleOrder(8L));
-        template.opsForValue().set("sintipo:plantilla:numero", 9L);
+        template.opsForValue().set("untyped:template:pedido", sampleOrder(8L));
+        template.opsForValue().set("untyped:template:number", 9L);
 
-        assertEquals(sampleOrder(8L), template.opsForValue().get("sintipo:plantilla:pedido"));
-        assertEquals(9L, template.opsForValue().get("sintipo:plantilla:numero"));
-        template.delete(List.of("sintipo:plantilla:pedido", "sintipo:plantilla:numero"));
+        assertEquals(sampleOrder(8L), template.opsForValue().get("untyped:template:pedido"));
+        assertEquals(9L, template.opsForValue().get("untyped:template:number"));
+        template.delete(List.of("untyped:template:pedido", "untyped:template:number"));
     }
 }

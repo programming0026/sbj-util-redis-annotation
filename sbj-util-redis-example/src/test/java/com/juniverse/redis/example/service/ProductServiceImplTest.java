@@ -11,12 +11,12 @@ import java.time.LocalDate;
 import org.junit.jupiter.api.Test;
 
 /** Sin Spring: las anotaciones de caché no actúan, así que se prueba solo la lógica del servicio. */
-class ProductServiceImplTest {
+public class ProductServiceImplTest {
 
     private final ProductServiceImpl service = new ProductServiceImpl();
 
     @Test
-    void startsWithTenSampleProducts() {
+    public void startsWithTenSampleProducts() {
         assertTrue(service.getProducts().size() >= 10);
         ProductDTO first = service.getProductById(1L);
         assertEquals("Sample1", first.getName());
@@ -25,36 +25,36 @@ class ProductServiceImplTest {
     }
 
     @Test
-    void unknownProductIsNull() {
+    public void unknownProductIsNull() {
         assertNull(service.getProductById(-5L));
     }
 
     @Test
-    void savingWithoutIdCreatesANewProduct() {
-        ProductDTO saved = service.saveOrUpdateProduct(new ProductDTO(null, "Nuevo", 3.5, null));
+    public void savingWithoutIdCreatesANewProduct() {
+        ProductDTO saved = service.saveOrUpdateProduct(new ProductDTO(null, "New", 3.5, null));
 
         assertNotNull(saved.getId());
         assertTrue(saved.getId() > 10);
         assertEquals(LocalDate.now(), saved.getDate());
-        assertEquals("Nuevo", service.getProductById(saved.getId()).getName());
+        assertEquals("New", service.getProductById(saved.getId()).getName());
     }
 
     @Test
-    void savingWithExistingIdUpdatesIt() {
-        ProductDTO created = service.saveOrUpdateProduct(new ProductDTO(null, "Antes", 1.0, null));
-        ProductDTO update = new ProductDTO(created.getId(), "Después", 9.0, LocalDate.of(2020, 1, 1));
+    public void savingWithExistingIdUpdatesIt() {
+        ProductDTO created = service.saveOrUpdateProduct(new ProductDTO(null, "Before", 1.0, null));
+        ProductDTO update = new ProductDTO(created.getId(), "After", 9.0, LocalDate.of(2020, 1, 1));
 
         service.saveOrUpdateProduct(update);
 
         ProductDTO read = service.getProductById(created.getId());
-        assertEquals("Después", read.getName());
+        assertEquals("After", read.getName());
         assertEquals(9.0, read.getMount());
         assertEquals(LocalDate.of(2020, 1, 1), read.getDate());
     }
 
     @Test
-    void deleteReturnsTrueOnlyTheFirstTime() {
-        ProductDTO created = service.saveOrUpdateProduct(new ProductDTO(null, "Borrar", 1.0, null));
+    public void deleteReturnsTrueOnlyTheFirstTime() {
+        ProductDTO created = service.saveOrUpdateProduct(new ProductDTO(null, "Delete", 1.0, null));
 
         assertTrue(service.deleteProduct(created.getId()));
         assertFalse(service.deleteProduct(created.getId()));
@@ -62,7 +62,7 @@ class ProductServiceImplTest {
     }
 
     @Test
-    void clearCacheDoesNotTouchTheData() {
+    public void clearCacheDoesNotTouchTheData() {
         service.clearCache();
         assertNotNull(service.getProductById(2L));
     }

@@ -122,7 +122,7 @@ public class FailOpenCacheManager implements CacheManager {
         /** Caché real. */
         private final Cache cache;
 
-        FailOpenCache(Cache cache) {
+        private FailOpenCache(Cache cache) {
             this.cache = cache;
         }
 

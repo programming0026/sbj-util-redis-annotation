@@ -3,7 +3,7 @@ package com.juniverse.redis.example.config;
 import io.github.programming0026.juniverse.redis.annotation.EnableRedisLibrary;
 import io.github.programming0026.juniverse.redis.annotation.HostEntry;
 import io.github.programming0026.juniverse.redis.annotation.TTLEntry;
-import io.github.programming0026.juniverse.redis.util.Mode;
+import io.github.programming0026.juniverse.redis.enums.Mode;
 import org.springframework.context.annotation.Configuration;
 
 /**

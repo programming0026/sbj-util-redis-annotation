@@ -20,23 +20,23 @@ import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
-class AccountControllerTest {
+public class AccountControllerTest {
 
     private AccountService service;
     private MockMvc mvc;
 
     @BeforeEach
-    void setUp() {
+    public void setUp() {
         service = mock(AccountService.class);
         mvc = MockMvcBuilders.standaloneSetup(new AccountController(service)).build();
     }
 
     private static AccountDTO account(long id) {
-        return new AccountDTO(id, "ACC00000" + id, "Titular " + id, BigDecimal.valueOf(1000.5), "SAVINGS", null);
+        return new AccountDTO(id, "ACC00000" + id, "Holder " + id, BigDecimal.valueOf(1000.5), "SAVINGS", null);
     }
 
     @Test
-    void listsAccounts() throws Exception {
+    public void listsAccounts() throws Exception {
         when(service.getAccounts()).thenReturn(List.of(account(1), account(2)));
 
         mvc.perform(get("/api/v1/accounts"))
@@ -46,7 +46,7 @@ class AccountControllerTest {
     }
 
     @Test
-    void returnsOneAccountAndPassesForceRefresh() throws Exception {
+    public void returnsOneAccountAndPassesForceRefresh() throws Exception {
         when(service.getAccountById(1L, true)).thenReturn(account(1));
 
         mvc.perform(get("/api/v1/accounts/1?forceRefresh=true"))
@@ -58,22 +58,22 @@ class AccountControllerTest {
     }
 
     @Test
-    void unknownAccountIs404() throws Exception {
+    public void unknownAccountIs404() throws Exception {
         mvc.perform(get("/api/v1/accounts/99")).andExpect(status().isNotFound());
     }
 
     @Test
-    void createsAnAccount() throws Exception {
+    public void createsAnAccount() throws Exception {
         when(service.saveOrUpdateAccount(any())).thenReturn(account(11));
 
         mvc.perform(post("/api/v1/accounts").contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"accountNumber\":\"ACC000011\",\"accountHolder\":\"Titular\",\"balance\":10}"))
+                        .content("{\"accountNumber\":\"ACC000011\",\"accountHolder\":\"Holder\",\"balance\":10}"))
                 .andExpect(status().is2xxSuccessful())
                 .andExpect(jsonPath("$.id").value(11));
     }
 
     @Test
-    void deleteReturnsNoContentOrNotFound() throws Exception {
+    public void deleteReturnsNoContentOrNotFound() throws Exception {
         when(service.deleteAccount(1L)).thenReturn(true);
 
         mvc.perform(delete("/api/v1/accounts/1")).andExpect(status().isNoContent());
@@ -81,7 +81,7 @@ class AccountControllerTest {
     }
 
     @Test
-    void refreshClearsTheCache() throws Exception {
+    public void refreshClearsTheCache() throws Exception {
         mvc.perform(get("/api/v1/accounts/refresh")).andExpect(status().isOk());
 
         verify(service).clearCache();

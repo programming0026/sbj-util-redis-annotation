@@ -2,6 +2,7 @@ package io.github.programming0026.juniverse.redis.aspect;
 
 import io.github.programming0026.juniverse.redis.annotation.CoalesceEvict;
 import io.github.programming0026.juniverse.redis.annotation.CoalescePut;
+import io.github.programming0026.juniverse.redis.dto.AnnotationKey;
 import io.github.programming0026.juniverse.redis.service.CoalesceCacheManager;
 import io.github.programming0026.juniverse.redis.util.AnnotationPlaceholderResolver;
 import io.github.programming0026.juniverse.redis.util.CacheDefaults;
@@ -41,7 +42,7 @@ import org.springframework.expression.spel.support.StandardEvaluationContext;
  * @author Java Universe
  */
 @Slf4j
-final class CacheAspectSupport {
+public final class CacheAspectSupport {
 
     /** Administrador de caché. */
     private final CoalesceCacheManager cacheManager;
@@ -64,16 +65,7 @@ final class CacheAspectSupport {
     /** Anotaciones con los placeholders ya resueltos, por método y tipo de anotación. */
     private final Map<AnnotationKey, Annotation> resolvedAnnotations = new ConcurrentHashMap<>();
 
-    /**
-     * Identifica la anotación de un tipo sobre un método.
-     *
-     * @param method método interceptado
-     * @param annotationType tipo de la anotación
-     */
-    private record AnnotationKey(Method method, Class<? extends Annotation> annotationType) {
-    }
-
-    CacheAspectSupport(
+    public CacheAspectSupport(
             CoalesceCacheManager cacheManager,
             Environment environment,
             Map<String, Long> configuredTtlSeconds) {
@@ -82,7 +74,7 @@ final class CacheAspectSupport {
         this.configuredTtlSeconds = Map.copyOf(configuredTtlSeconds);
     }
 
-    CoalesceCacheManager cacheManager() {
+    public CoalesceCacheManager cacheManager() {
         return cacheManager;
     }
 
@@ -96,7 +88,7 @@ final class CacheAspectSupport {
      * @return anotación resuelta
      */
     @SuppressWarnings("unchecked")
-    <A extends Annotation> A resolve(JoinPoint joinPoint, A annotation) {
+    public <A extends Annotation> A resolve(JoinPoint joinPoint, A annotation) {
         if (placeholderResolver == null) {
             return annotation;
         }
@@ -117,7 +109,7 @@ final class CacheAspectSupport {
      * @param result resultado del método, o {@code null} si todavía no se ejecutó
      * @return {@code true} si la expresión está vacía o da verdadero; un resultado nulo cuenta como falso
      */
-    boolean condition(JoinPoint joinPoint, String expression, Object result) {
+    public boolean condition(JoinPoint joinPoint, String expression, Object result) {
         return expression.isEmpty() || Boolean.TRUE.equals(evaluate(joinPoint, expression, result, Boolean.class));
     }
 
@@ -131,7 +123,7 @@ final class CacheAspectSupport {
      * @param resultType tipo al que se convierte el valor
      * @return valor de la expresión
      */
-    <T> T evaluate(JoinPoint joinPoint, String expression, Object result, Class<T> resultType) {
+    public <T> T evaluate(JoinPoint joinPoint, String expression, Object result, Class<T> resultType) {
         Expression parsed = expressions.computeIfAbsent(expression, parser::parseExpression);
         return parsed.getValue(evaluationContext(joinPoint, result), resultType);
     }
@@ -164,7 +156,7 @@ final class CacheAspectSupport {
      * @param keyExpression expresión SpEL de la clave; vacía para usar los argumentos
      * @return clave con la forma {@code nombre:clave}
      */
-    String cacheKey(JoinPoint joinPoint, String cacheName, String keyExpression) {
+    public String cacheKey(JoinPoint joinPoint, String cacheName, String keyExpression) {
         String name = cacheName.isEmpty() ? CacheKeyGenerator.defaultCacheName(joinPoint) : cacheName;
         String key = keyExpression.isEmpty()
                 ? CacheKeyGenerator.argumentsKey(joinPoint)
@@ -179,7 +171,7 @@ final class CacheAspectSupport {
      * @param cacheName nombre de la caché
      * @return segundos
      */
-    long ttl(long declared, String cacheName) {
+    public long ttl(long declared, String cacheName) {
         return CacheDefaults.resolveTtl(declared, cacheName, configuredTtlSeconds);
     }
 
@@ -191,7 +183,7 @@ final class CacheAspectSupport {
      * @param result resultado del método
      * @return {@code true} si se cumple la condición y no se cumple la excepción
      */
-    boolean shouldPut(JoinPoint joinPoint, CoalescePut put, Object result) {
+    public boolean shouldPut(JoinPoint joinPoint, CoalescePut put, Object result) {
         return condition(joinPoint, put.condition(), result)
                 && (put.unless().isEmpty() || !condition(joinPoint, put.unless(), result));
     }
@@ -206,7 +198,7 @@ final class CacheAspectSupport {
      * @param result resultado del método
      * @param returnType tipo de retorno del método
      */
-    void put(JoinPoint joinPoint, CoalescePut put, Object result, Type returnType) {
+    public void put(JoinPoint joinPoint, CoalescePut put, Object result, Type returnType) {
         String cacheKey = cacheKey(joinPoint, put.value(), put.key());
         if (result == null) {
             cacheManager.evict(cacheKey);
@@ -231,7 +223,7 @@ final class CacheAspectSupport {
      * @param joinPoint punto de unión del aspecto
      * @param evict anotación de invalidación
      */
-    void evict(JoinPoint joinPoint, CoalesceEvict evict) {
+    public void evict(JoinPoint joinPoint, CoalesceEvict evict) {
         if (evict.allEntries()) {
             for (String cacheName : evict.value()) {
                 cacheManager.evictAll(cacheName);

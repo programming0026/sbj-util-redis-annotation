@@ -1,5 +1,7 @@
 package io.github.programming0026.juniverse.redis.integration;
 
+import io.github.programming0026.juniverse.redis.integration.dto.Person;
+import io.github.programming0026.juniverse.redis.integration.enums.Status;
 import io.github.programming0026.juniverse.redis.annotation.CoalesceCacheable;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -35,13 +37,6 @@ class SerializationRoundTripIT extends AbstractRedisIT {
     /** Servicio real, para contar las ejecuciones. */
     private TypesService target;
 
-    /** Estado de un pedido. */
-    public enum Status { OPEN, CLOSED }
-
-    /** Valor inmutable; los records son clases finales. */
-    public record Person(Long id, String name) {
-    }
-
     /** Objeto de datos corriente, no final. */
     @Data
     @NoArgsConstructor
@@ -68,7 +63,7 @@ class SerializationRoundTripIT extends AbstractRedisIT {
         private final AtomicInteger calls = new AtomicInteger();
 
         private static Item item() {
-            return new Item(7L, "teclado", new BigDecimal("19.90"),
+            return new Item(7L, "keyboard", new BigDecimal("19.90"),
                     LocalDateTime.of(2026, 1, 15, 10, 30), Status.OPEN);
         }
 
@@ -81,7 +76,7 @@ class SerializationRoundTripIT extends AbstractRedisIT {
         @CoalesceCacheable(value = "types", key = "'string'")
         public String string() {
             calls.incrementAndGet();
-            return "hola";
+            return "hello";
         }
 
         @CoalesceCacheable(value = "types", key = "'arrayList'")
@@ -149,7 +144,7 @@ class SerializationRoundTripIT extends AbstractRedisIT {
      * Crea el servicio interceptado.
      */
     @BeforeEach
-    void setUp() {
+    public void setUp() {
         target = new TypesService();
         service = newInstance().proxy(target);
     }
@@ -164,61 +159,61 @@ class SerializationRoundTripIT extends AbstractRedisIT {
         Object second = call.get();
 
         assertEquals(first, second);
-        assertEquals(1, target.calls.get(), "la segunda llamada debe salir de la caché");
+        assertEquals(1, target.calls.get(), "the second call must be served from the cache");
     }
 
     @Test
-    void pojo_ShouldRoundTrip() {
+    public void pojo_ShouldRoundTrip() {
         assertServedFromCache(service::pojo);
     }
 
     @Test
-    void string_ShouldRoundTrip() {
+    public void string_ShouldRoundTrip() {
         assertServedFromCache(service::string);
     }
 
     @Test
-    void arrayList_ShouldRoundTrip() {
+    public void arrayList_ShouldRoundTrip() {
         assertServedFromCache(service::arrayList);
     }
 
     @Test
-    void map_ShouldRoundTrip() {
+    public void map_ShouldRoundTrip() {
         assertServedFromCache(service::map);
     }
 
     @Test
-    void record_ShouldRoundTrip() {
+    public void record_ShouldRoundTrip() {
         assertServedFromCache(service::record);
     }
 
     @Test
-    void long_ShouldRoundTrip() {
+    public void long_ShouldRoundTrip() {
         assertServedFromCache(service::longValue);
     }
 
     @Test
-    void bigDecimal_ShouldRoundTrip() {
+    public void bigDecimal_ShouldRoundTrip() {
         assertServedFromCache(service::bigDecimal);
     }
 
     @Test
-    void dateTime_ShouldRoundTrip() {
+    public void dateTime_ShouldRoundTrip() {
         assertServedFromCache(service::dateTime);
     }
 
     @Test
-    void enum_ShouldRoundTrip() {
+    public void enum_ShouldRoundTrip() {
         assertServedFromCache(service::enumValue);
     }
 
     @Test
-    void listOf_ShouldRoundTrip() {
+    public void listOf_ShouldRoundTrip() {
         assertServedFromCache(service::listOf);
     }
 
     @Test
-    void streamToList_ShouldRoundTrip() {
+    public void streamToList_ShouldRoundTrip() {
         assertServedFromCache(service::streamToList);
     }
 
@@ -226,10 +221,10 @@ class SerializationRoundTripIT extends AbstractRedisIT {
      * Con {@code cacheNull = true}, un resultado nulo también debe salir de la caché.
      */
     @Test
-    void nullValue_ShouldBeServedFromCache_WhenCacheNullIsTrue() {
+    public void nullValue_ShouldBeServedFromCache_WhenCacheNullIsTrue() {
         assertNull(service.nullValue());
         assertNull(service.nullValue());
 
-        assertEquals(1, target.calls.get(), "el nulo guardado debe evitar la segunda ejecución");
+        assertEquals(1, target.calls.get(), "the stored null must avoid the second execution");
     }
 }

@@ -25,7 +25,7 @@ import org.springframework.data.redis.core.ScanOptions;
 public final class RedisKeyScanner {
 
     /** Claves que se piden a Redis en cada tramo y que se borran en cada orden. */
-    static final int BATCH_SIZE = 500;
+    public static final int BATCH_SIZE = 500;
 
     private RedisKeyScanner() {
     }

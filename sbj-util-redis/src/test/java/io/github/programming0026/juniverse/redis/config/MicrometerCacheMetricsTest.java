@@ -25,7 +25,7 @@ class MicrometerCacheMetricsTest {
     }
 
     @Test
-    void counters_ShouldBePublishedWithTheirTags() {
+    public void counters_ShouldBePublishedWithTheirTags() {
         metrics.hit();
         metrics.hit();
         metrics.miss();
@@ -50,14 +50,14 @@ class MicrometerCacheMetricsTest {
      * paneles no muestren huecos antes de la primera petición.
      */
     @Test
-    void requestCounters_ShouldExistBeforeAnyRequest() {
+    public void requestCounters_ShouldExistBeforeAnyRequest() {
         assertEquals(0, requests("hit"));
         assertEquals(0, requests("miss"));
         assertEquals(0, requests("coalesced"));
     }
 
     @Test
-    void noopMetrics_ShouldAcceptEveryCall() {
+    public void noopMetrics_ShouldAcceptEveryCall() {
         CacheMetrics noop = CacheMetrics.NOOP;
 
         assertDoesNotThrow(() -> {

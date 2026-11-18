@@ -1,8 +1,9 @@
 package io.github.programming0026.juniverse.redis.integration;
 
+import io.github.programming0026.juniverse.redis.integration.dto.Filter;
 import io.github.programming0026.juniverse.redis.annotation.CoalesceCacheable;
 import io.github.programming0026.juniverse.redis.annotation.CoalesceEvict;
-import io.github.programming0026.juniverse.redis.config.CoalesceSettings;
+import io.github.programming0026.juniverse.redis.dto.CoalesceSettings;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -21,10 +22,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * @author Java Universe
  */
 class KeysAndNamespaceIT extends AbstractRedisIT {
-
-    /** Filtro de búsqueda. */
-    public record Filter(String name, List<String> tags) {
-    }
 
     /**
      * Servicio cuyas anotaciones no indican clave, y en algunos casos tampoco nombre de caché.
@@ -68,7 +65,7 @@ class KeysAndNamespaceIT extends AbstractRedisIT {
      * "Aa" y "BB" tienen el mismo hashCode: cada uno debe tener su propia entrada.
      */
     @Test
-    void argumentsWithSameHashCode_ShouldNotShareEntries() {
+    public void argumentsWithSameHashCode_ShouldNotShareEntries() {
         LookupService target = new LookupService();
         LookupService service = newInstance().proxy(target);
 
@@ -85,7 +82,7 @@ class KeysAndNamespaceIT extends AbstractRedisIT {
      * y dos distintos no.
      */
     @Test
-    void objectArguments_ShouldBeKeyedByContent() {
+    public void objectArguments_ShouldBeKeyedByContent() {
         LookupService target = new LookupService();
         LookupService service = newInstance().proxy(target);
 
@@ -102,7 +99,7 @@ class KeysAndNamespaceIT extends AbstractRedisIT {
      * se escriba igual.
      */
     @Test
-    void overloadsWithoutCacheName_ShouldNotShareEntries() {
+    public void overloadsWithoutCacheName_ShouldNotShareEntries() {
         LookupService target = new LookupService();
         LookupService service = newInstance().proxy(target);
 
@@ -118,7 +115,7 @@ class KeysAndNamespaceIT extends AbstractRedisIT {
      * La invalidación sin clave explícita encuentra la entrada que guardó la lectura sin clave.
      */
     @Test
-    void evictWithoutKey_ShouldMatchCacheableWithoutKey() {
+    public void evictWithoutKey_ShouldMatchCacheableWithoutKey() {
         LookupService target = new LookupService();
         LookupService service = newInstance().proxy(target);
 
@@ -134,20 +131,20 @@ class KeysAndNamespaceIT extends AbstractRedisIT {
      * ni con las anotaciones ni con el servicio programático, y borrar todo en una no toca la otra.
      */
     @Test
-    void applicationsWithDifferentPrefixes_ShouldBeIsolated() {
-        RedisInstance shop = register(new RedisInstance(connectionFactory(), CoalesceSettings.defaults(), "tienda"));
+    public void applicationsWithDifferentPrefixes_ShouldBeIsolated() {
+        RedisInstance shop = register(new RedisInstance(connectionFactory(), CoalesceSettings.defaults(), "shop"));
         RedisInstance billing = register(
-                new RedisInstance(connectionFactory(), CoalesceSettings.defaults(), "facturas"));
+                new RedisInstance(connectionFactory(), CoalesceSettings.defaults(), "billing"));
 
-        shop.cacheManager().put("users:1", "de-tienda", 60, String.class);
-        billing.cacheManager().put("users:1", "de-facturas", 60, String.class);
-        shop.cacheService().cacheable("users", "1", () -> "servicio-tienda");
-        billing.cacheService().cacheable("users", "1", () -> "servicio-facturas");
+        shop.cacheManager().put("users:1", "from-shop", 60, String.class);
+        billing.cacheManager().put("users:1", "from-billing", 60, String.class);
+        shop.cacheService().cacheable("users", "1", () -> "shop-service");
+        billing.cacheService().cacheable("users", "1", () -> "billing-service");
 
-        assertEquals("de-tienda", shop.cacheManager().lookup("users:1", String.class).getValue());
-        assertEquals("de-facturas", billing.cacheManager().lookup("users:1", String.class).getValue());
-        assertEquals("servicio-tienda", shop.cacheService().cacheable("users", "1", () -> "otro"));
-        assertEquals("servicio-facturas", billing.cacheService().cacheable("users", "1", () -> "otro"));
+        assertEquals("from-shop", shop.cacheManager().lookup("users:1", String.class).getValue());
+        assertEquals("from-billing", billing.cacheManager().lookup("users:1", String.class).getValue());
+        assertEquals("shop-service", shop.cacheService().cacheable("users", "1", () -> "other"));
+        assertEquals("billing-service", billing.cacheService().cacheable("users", "1", () -> "other"));
 
         shop.cacheManager().evictAll("users");
         shop.cacheManager().clear();
@@ -156,26 +153,26 @@ class KeysAndNamespaceIT extends AbstractRedisIT {
 
         assertFalse(shop.cacheManager().exists("users:1"));
         assertFalse(shop.cacheService().exists("users", "1"));
-        assertTrue(billing.cacheManager().exists("users:1"), "se borró una clave de otra aplicación");
-        assertTrue(billing.cacheService().exists("users", "1"), "se borró una clave de otra aplicación");
+        assertTrue(billing.cacheManager().exists("users:1"), "a key of another application was cleared");
+        assertTrue(billing.cacheService().exists("users", "1"), "a key of another application was cleared");
     }
 
     /**
      * Una carga coalescida en una aplicación no despierta ni bloquea a otra con distinto prefijo.
      */
     @Test
-    void applicationsWithDifferentPrefixes_ShouldLoadIndependently() {
-        RedisInstance shop = register(new RedisInstance(connectionFactory(), CoalesceSettings.defaults(), "tienda"));
+    public void applicationsWithDifferentPrefixes_ShouldLoadIndependently() {
+        RedisInstance shop = register(new RedisInstance(connectionFactory(), CoalesceSettings.defaults(), "shop"));
         RedisInstance billing = register(
-                new RedisInstance(connectionFactory(), CoalesceSettings.defaults(), "facturas"));
+                new RedisInstance(connectionFactory(), CoalesceSettings.defaults(), "billing"));
         Map<String, Long> totals = Map.of("a", 1L);
 
         Object fromShop = shop.cacheManager().getOrLoad("totals:1", () -> Optional.of(totals), 60, false,
                 Optional.class);
-        Object fromBilling = billing.cacheManager().getOrLoad("totals:1", () -> "otra-cosa", 60, false,
+        Object fromBilling = billing.cacheManager().getOrLoad("totals:1", () -> "something-else", 60, false,
                 String.class);
 
         assertEquals(Optional.of(totals), fromShop);
-        assertEquals("otra-cosa", fromBilling);
+        assertEquals("something-else", fromBilling);
     }
 }

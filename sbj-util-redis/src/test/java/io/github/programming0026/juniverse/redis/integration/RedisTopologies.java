@@ -1,5 +1,7 @@
 package io.github.programming0026.juniverse.redis.integration;
 
+import io.github.programming0026.juniverse.redis.integration.dto.Cluster;
+import io.github.programming0026.juniverse.redis.integration.dto.Sentinel;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.time.Duration;
@@ -20,70 +22,18 @@ import org.testcontainers.containers.GenericContainer;
  *
  * @author Java Universe
  */
-final class RedisTopologies {
+public final class RedisTopologies {
 
     /** Contraseña de los nodos de datos en la topología Sentinel. */
-    static final String DATA_PASSWORD = "clave-de-datos";
+    public static final String DATA_PASSWORD = "data-password";
 
     /** Contraseña de los sentinels. */
-    static final String SENTINEL_PASSWORD = "clave-de-centinelas";
+    public static final String SENTINEL_PASSWORD = "sentinel-password";
 
     /** Nombre del maestro vigilado por los sentinels. */
-    static final String MASTER_NAME = "mymaster";
+    public static final String MASTER_NAME = "mymaster";
 
     private RedisTopologies() {
-    }
-
-    /**
-     * Maestro, réplica y tres sentinels.
-     *
-     * @param container contenedor que los aloja
-     * @param masterPort puerto del maestro inicial
-     * @param replicaPort puerto de la réplica inicial
-     * @param sentinelPorts puertos de los sentinels
-     */
-    record Sentinel(GenericContainer<?> container, int masterPort, int replicaPort, int[] sentinelPorts) {
-
-        /**
-         * Ejecuta redis-cli contra un nodo de datos.
-         *
-         * @param port puerto del nodo
-         * @param command orden y argumentos
-         * @return salida de la orden
-         */
-        String data(int port, String... command) {
-            return cli(container, port, DATA_PASSWORD, command);
-        }
-
-        /**
-         * Ejecuta redis-cli contra el primer sentinel.
-         *
-         * @param command orden y argumentos
-         * @return salida de la orden
-         */
-        String sentinel(String... command) {
-            return cli(container, sentinelPorts[0], SENTINEL_PASSWORD, command);
-        }
-    }
-
-    /**
-     * Clúster de tres maestros y tres réplicas.
-     *
-     * @param container contenedor que los aloja
-     * @param ports puertos de los seis nodos
-     */
-    record Cluster(GenericContainer<?> container, int[] ports) {
-
-        /**
-         * Ejecuta redis-cli contra un nodo.
-         *
-         * @param port puerto del nodo
-         * @param command orden y argumentos
-         * @return salida de la orden
-         */
-        String node(int port, String... command) {
-            return cli(container, port, null, command);
-        }
     }
 
     /**
@@ -92,7 +42,7 @@ final class RedisTopologies {
      *
      * @return topología lista para usar
      */
-    static Sentinel startSentinel() {
+    public static Sentinel startSentinel() {
         int[] ports = RedisContainers.freePorts(5);
         int master = ports[0];
         int replica = ports[1];
@@ -123,7 +73,7 @@ final class RedisTopologies {
 
         GenericContainer<?> container = startWithPorts(script.toString(), ports);
         Sentinel topology = new Sentinel(container, master, replica, sentinels);
-        awaitOutput("los sentinels no se pusieron de acuerdo",
+        awaitOutput("the sentinels did not reach an agreement",
                 () -> topology.sentinel("sentinel", "master", MASTER_NAME),
                 output -> output.contains("num-other-sentinels\n2") && output.contains("num-slaves\n1"));
         return topology;
@@ -135,7 +85,7 @@ final class RedisTopologies {
      *
      * @return clúster listo para usar
      */
-    static Cluster startCluster() {
+    public static Cluster startCluster() {
         int[] ports = RedisContainers.freePorts(6);
         StringBuilder script = new StringBuilder();
         StringJoiner nodes = new StringJoiner(" ");
@@ -152,12 +102,11 @@ final class RedisTopologies {
 
         GenericContainer<?> container = startWithPorts(script.toString(), ports);
         Cluster topology = new Cluster(container, ports);
-        awaitOutput("el clúster no llegó al estado ok",
+        awaitOutput("the cluster did not reach the ok state",
                 () -> topology.node(ports[0], "cluster", "info"),
                 output -> output.contains("cluster_state:ok") && output.contains("cluster_known_nodes:6"));
-        // Todos los nodos deben conocer ya el reparto de slots antes de que se conecte un cliente.
         for (int port : ports) {
-            awaitOutput("el nodo " + port + " no conoce todavía el clúster",
+            awaitOutput("node " + port + " does not know the cluster yet",
                     () -> topology.node(port, "cluster", "info"),
                     output -> output.contains("cluster_state:ok") && output.contains("cluster_slots_ok:16384"));
         }
@@ -169,7 +118,7 @@ final class RedisTopologies {
      *
      * @return nombre o dirección del host
      */
-    static String host() {
+    public static String host() {
         return DockerClientFactory.instance().dockerHostIpAddress();
     }
 
@@ -196,14 +145,14 @@ final class RedisTopologies {
         try {
             if (!InetAddress.getByName(host()).isLoopbackAddress()) {
                 throw new IllegalStateException(
-                        "Las topologías de varios nodos necesitan un Docker local; el host es " + host());
+                        "Multi-node topologies need a local Docker; the host is " + host());
             }
         } catch (IOException e) {
-            throw new IllegalStateException("No se pudo resolver el host de Docker", e);
+            throw new IllegalStateException("Could not resolve the Docker host", e);
         }
     }
 
-    private static String cli(GenericContainer<?> container, int port, String password, String... command) {
+    public static String cli(GenericContainer<?> container, int port, String password, String... command) {
         List<String> arguments = new ArrayList<>(List.of("redis-cli", "-p", String.valueOf(port)));
         if (password != null) {
             arguments.addAll(List.of("--no-auth-warning", "-a", password));
@@ -212,10 +161,10 @@ final class RedisTopologies {
         try {
             return container.execInContainer(arguments.toArray(new String[0])).getStdout();
         } catch (IOException e) {
-            throw new IllegalStateException("No se pudo ejecutar redis-cli", e);
+            throw new IllegalStateException("Could not run redis-cli", e);
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
-            throw new IllegalStateException("Interrumpido al ejecutar redis-cli", e);
+            throw new IllegalStateException("Interrupted while running redis-cli", e);
         }
     }
 
@@ -227,7 +176,7 @@ final class RedisTopologies {
             return ready.test(last[0]);
         }, Duration.ofSeconds(40));
         if (!ok) {
-            throw new IllegalStateException(failure + ". Última salida: " + last[0]);
+            throw new IllegalStateException(failure + ". Last output: " + last[0]);
         }
     }
 }

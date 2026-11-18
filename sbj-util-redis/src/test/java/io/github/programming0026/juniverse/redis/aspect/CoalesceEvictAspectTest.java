@@ -53,7 +53,7 @@ class CoalesceEvictAspectTest {
      * Prepara el entorno antes de cada prueba.
      */
     @BeforeEach
-    void setUp() {
+    public void setUp() {
         aspect = new CoalesceEvictAspect(cacheManager);
     }
 
@@ -71,7 +71,7 @@ class CoalesceEvictAspectTest {
      * Una invalidación con todas las entradas debe invalidar todo.
      */
     @Test
-    void handleSingleEvict_WithAllEntries_ShouldEvictAll() throws Throwable {
+    public void handleSingleEvict_WithAllEntries_ShouldEvictAll() throws Throwable {
         CoalesceEvict evict = createMockEvict(new String[] { "cache" }, "", "", true, true, "");
         setupJoinPoint();
         when(joinPoint.proceed()).thenReturn("result");
@@ -89,7 +89,7 @@ class CoalesceEvictAspectTest {
      * Una invalidación con clave debe invalidar esa clave.
      */
     @Test
-    void handleSingleEvict_WithKey_ShouldEvictSpecificKey() throws Throwable {
+    public void handleSingleEvict_WithKey_ShouldEvictSpecificKey() throws Throwable {
         CoalesceEvict evict = createMockEvict(new String[] { "cache" }, "#id", "", true, false, "");
         setupJoinPoint();
         when(joinPoint.proceed()).thenReturn("result");
@@ -105,7 +105,7 @@ class CoalesceEvictAspectTest {
      * Una invalidación con clave vacía debe usar el contenido de los argumentos.
      */
     @Test
-    void handleSingleEvict_WithEmptyKey_ShouldUseArgumentsContent() throws Throwable {
+    public void handleSingleEvict_WithEmptyKey_ShouldUseArgumentsContent() throws Throwable {
         CoalesceEvict evict = createMockEvict(new String[] { "cache" }, "", "", true, false, "");
         Object[] args = new Object[] { "123" };
         String expectedKey = "cache:[\"123\"]";
@@ -126,7 +126,7 @@ class CoalesceEvictAspectTest {
      * Una invalidación con valor vacío debe usar la firma del método.
      */
     @Test
-    void handleSingleEvict_WithEmptyValue_ShouldUseMethodSignature() throws Throwable {
+    public void handleSingleEvict_WithEmptyValue_ShouldUseMethodSignature() throws Throwable {
         CoalesceEvict evict = createMockEvict(new String[] {}, "", "", true, false, "");
 
         when(joinPoint.getSignature()).thenReturn(signature);
@@ -144,7 +144,7 @@ class CoalesceEvictAspectTest {
      * Una invalidación previa a la invocación debe invalidar antes de continuar.
      */
     @Test
-    void handleSingleEvict_BeforeInvocation_ShouldEvictBeforeProceed() throws Throwable {
+    public void handleSingleEvict_BeforeInvocation_ShouldEvictBeforeProceed() throws Throwable {
         CoalesceEvict evict = createMockEvict(new String[] { "cache" }, "", "", true, true, "");
         setupJoinPoint();
         when(joinPoint.proceed()).thenReturn("result");
@@ -159,7 +159,7 @@ class CoalesceEvictAspectTest {
      * Una invalidación posterior a la invocación debe invalidar después de continuar.
      */
     @Test
-    void handleSingleEvict_AfterInvocation_ShouldEvictAfterProceed() throws Throwable {
+    public void handleSingleEvict_AfterInvocation_ShouldEvictAfterProceed() throws Throwable {
         CoalesceEvict evict = createMockEvict(new String[] { "cache" }, "", "", false, true, "");
         setupJoinPoint();
         when(joinPoint.proceed()).thenReturn("result");
@@ -174,7 +174,7 @@ class CoalesceEvictAspectTest {
      * Una invalidación con condición falsa no debe invalidar.
      */
     @Test
-    void handleSingleEvict_WithConditionFalse_ShouldNotEvict() throws Throwable {
+    public void handleSingleEvict_WithConditionFalse_ShouldNotEvict() throws Throwable {
         CoalesceEvict evict = createMockEvict(new String[] { "cache" }, "", "", true, true, "#id == '999'");
         setupJoinPoint();
         when(joinPoint.proceed()).thenReturn("result");
@@ -189,7 +189,7 @@ class CoalesceEvictAspectTest {
      * Una invalidación con condición verdadera debe invalidar.
      */
     @Test
-    void handleSingleEvict_WithConditionTrue_ShouldEvict() throws Throwable {
+    public void handleSingleEvict_WithConditionTrue_ShouldEvict() throws Throwable {
         CoalesceEvict evict = createMockEvict(new String[] { "cache" }, "", "", true, true, "#id == '123'");
         setupJoinPoint();
         when(joinPoint.proceed()).thenReturn("result");
@@ -204,7 +204,7 @@ class CoalesceEvictAspectTest {
      * Una invalidación con excepción debe relanzar la excepción.
      */
     @Test
-    void handleSingleEvict_WithException_ShouldThrowException() throws Throwable {
+    public void handleSingleEvict_WithException_ShouldThrowException() throws Throwable {
         CoalesceEvict evict = createMockEvict(new String[] { "cache" }, "", "", true, true, "");
         setupJoinPoint();
         when(joinPoint.proceed()).thenThrow(new RuntimeException("Test exception"));
@@ -217,7 +217,7 @@ class CoalesceEvictAspectTest {
      * Varias invalidaciones deben procesarse todas.
      */
     @Test
-    void handleMultipleEvicts_ShouldProcessAllEvictions() throws Throwable {
+    public void handleMultipleEvicts_ShouldProcessAllEvictions() throws Throwable {
         CoalesceEvict evict1 = createMockEvict(new String[] { "cache1" }, "", "", true, true, "");
         CoalesceEvict evict2 = createMockEvict(new String[] { "cache2" }, "", "", true, true, "");
         CoalesceEvicts evicts = createMockEvicts(new CoalesceEvict[] { evict1, evict2 });
@@ -236,7 +236,7 @@ class CoalesceEvictAspectTest {
      * Varias invalidaciones con momentos mezclados deben respetar el orden.
      */
     @Test
-    void handleMultipleEvicts_WithMixedTiming_ShouldRespectOrder() throws Throwable {
+    public void handleMultipleEvicts_WithMixedTiming_ShouldRespectOrder() throws Throwable {
         CoalesceEvict evict1 = createMockEvict(new String[] { "cache1" }, "", "", true, true, "");
         CoalesceEvict evict2 = createMockEvict(new String[] { "cache2" }, "", "", false, true, "");
         CoalesceEvicts evicts = createMockEvicts(new CoalesceEvict[] { evict1, evict2 });
@@ -256,7 +256,7 @@ class CoalesceEvictAspectTest {
      * prefijos.
      */
     @Test
-    void handleMultipleEvicts_WithAllEntries_ShouldEvictAllForMultiplePrefixes() throws Throwable {
+    public void handleMultipleEvicts_WithAllEntries_ShouldEvictAllForMultiplePrefixes() throws Throwable {
         CoalesceEvict evict = createMockEvict(
                 new String[] { "cache1", "cache2" }, "", "", true, true, "");
         CoalesceEvicts evicts = createMockEvicts(new CoalesceEvict[] { evict });
@@ -274,7 +274,7 @@ class CoalesceEvictAspectTest {
      * Una invalidación con expresión de patrón debe evaluar el patrón.
      */
     @Test
-    void handleSingleEvict_WithPatternExpression_ShouldEvaluatePattern() throws Throwable {
+    public void handleSingleEvict_WithPatternExpression_ShouldEvaluatePattern() throws Throwable {
         CoalesceEvict evict = createMockEvict(new String[] {}, "", "'cache:' + #id", true, false, "");
         setupJoinPoint();
         when(joinPoint.proceed()).thenReturn("result");

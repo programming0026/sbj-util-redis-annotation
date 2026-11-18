@@ -30,14 +30,14 @@ import static org.mockito.Mockito.when;
 class CacheKeyGeneratorTest {
 
     /** Estado de ejemplo. */
-    enum Status { OPEN }
+    public enum Status { OPEN }
 
     /** Filtro de búsqueda de ejemplo. */
-    record Filter(String name, int page) {
+    public record Filter(String name, int page) {
     }
 
     /** Objeto sin campos: no sirve para formar una clave. */
-    static class Empty {
+    public static class Empty {
     }
 
     /**
@@ -45,7 +45,7 @@ class CacheKeyGeneratorTest {
      *
      * @param <T> tipo de la entidad
      */
-    abstract static class GenericService<T> {
+    public abstract static class GenericService<T> {
 
         public T find(Long id) {
             return null;
@@ -57,7 +57,7 @@ class CacheKeyGeneratorTest {
     }
 
     /** Servicio concreto, que fija el tipo genérico. */
-    static class UserService extends GenericService<String> {
+    public static class UserService extends GenericService<String> {
 
         public String byName(String name) {
             return name;
@@ -96,7 +96,7 @@ class CacheKeyGeneratorTest {
      * Dos argumentos distintos con el mismo hashCode deben dar claves distintas.
      */
     @Test
-    void argumentsKey_ShouldDifferForArgumentsWithSameHashCode() {
+    public void argumentsKey_ShouldDifferForArgumentsWithSameHashCode() {
         assertEquals("Aa".hashCode(), "BB".hashCode());
 
         assertNotEquals(CacheKeyGenerator.argumentsKey(withArgs("Aa")),
@@ -104,7 +104,7 @@ class CacheKeyGeneratorTest {
     }
 
     @Test
-    void argumentsKey_WithSingleScalar_ShouldUseItsText() {
+    public void argumentsKey_WithSingleScalar_ShouldUseItsText() {
         UUID id = UUID.fromString("00000000-0000-0000-0000-000000000001");
 
         assertEquals("42", CacheKeyGenerator.argumentsKey(withArgs(42L)));
@@ -117,13 +117,13 @@ class CacheKeyGeneratorTest {
      * Las cadenas van entre comillas para distinguir un nulo de la cadena "null".
      */
     @Test
-    void argumentsKey_ShouldTellNullFromTheStringNull() {
+    public void argumentsKey_ShouldTellNullFromTheStringNull() {
         assertEquals("[\"null\"]", CacheKeyGenerator.argumentsKey(withArgs("null")));
         assertEquals("[null]", CacheKeyGenerator.argumentsKey(withArgs((Object) null)));
     }
 
     @Test
-    void argumentsKey_WithNoArguments_ShouldBeEmptyList() {
+    public void argumentsKey_WithNoArguments_ShouldBeEmptyList() {
         assertEquals("[]", CacheKeyGenerator.argumentsKey(withArgs()));
 
         JoinPoint withoutArgs = withArgs();
@@ -135,7 +135,7 @@ class CacheKeyGeneratorTest {
      * Los objetos se identifican por su contenido, con las entradas de los mapas ordenadas.
      */
     @Test
-    void argumentsKey_WithObjects_ShouldUseTheirContent() {
+    public void argumentsKey_WithObjects_ShouldUseTheirContent() {
         assertEquals("[{\"name\":\"ana\",\"page\":2},5]",
                 CacheKeyGenerator.argumentsKey(withArgs(new Filter("ana", 2), 5)));
         assertEquals(CacheKeyGenerator.argumentsKey(withArgs(new Filter("ana", 2))),
@@ -148,7 +148,7 @@ class CacheKeyGeneratorTest {
      * Unos argumentos muy largos se resumen con SHA-256, que sigue dependiendo del contenido.
      */
     @Test
-    void argumentsKey_WithLongArguments_ShouldUseDigest() {
+    public void argumentsKey_WithLongArguments_ShouldUseDigest() {
         String first = CacheKeyGenerator.argumentsKey(withArgs("x".repeat(300)));
         String second = CacheKeyGenerator.argumentsKey(withArgs("x".repeat(299) + "y"));
 
@@ -161,7 +161,7 @@ class CacheKeyGeneratorTest {
      * Un argumento que no se puede convertir a JSON obliga a indicar la clave en la anotación.
      */
     @Test
-    void argumentsKey_WithUnserializableArgument_ShouldAskForExplicitKey() {
+    public void argumentsKey_WithUnserializableArgument_ShouldAskForExplicitKey() {
         IllegalStateException exception = assertThrows(IllegalStateException.class,
                 () -> CacheKeyGenerator.argumentsKey(withArgs(new Empty())));
 
@@ -173,7 +173,7 @@ class CacheKeyGeneratorTest {
      * Dos sobrecargas del mismo método deben tener nombres de caché distintos.
      */
     @Test
-    void defaultCacheName_ShouldIncludeClassMethodAndParameterTypes() {
+    public void defaultCacheName_ShouldIncludeClassMethodAndParameterTypes() {
         UserService service = new UserService();
         String one = CacheKeyGenerator.defaultCacheName(
                 joinPoint(service, "byName", new Class<?>[] {String.class}, "ana"));
@@ -185,14 +185,14 @@ class CacheKeyGeneratorTest {
     }
 
     @Test
-    void defaultCacheName_WithoutMethodSignature_ShouldUseLongSignature() {
+    public void defaultCacheName_WithoutMethodSignature_ShouldUseLongSignature() {
         Signature signature = mock(Signature.class);
-        when(signature.toLongString()).thenReturn("firma larga");
+        when(signature.toLongString()).thenReturn("long signature");
         JoinPoint joinPoint = mock(JoinPoint.class);
         when(joinPoint.getSignature()).thenReturn(signature);
 
         assertNull(CacheKeyGenerator.methodOf(joinPoint));
-        assertEquals("firma larga", CacheKeyGenerator.defaultCacheName(joinPoint));
+        assertEquals("long signature", CacheKeyGenerator.defaultCacheName(joinPoint));
         assertEquals(Object.class, CacheKeyGenerator.returnTypeOf(joinPoint));
     }
 
@@ -200,7 +200,7 @@ class CacheKeyGeneratorTest {
      * El tipo de retorno genérico se resuelve contra la clase real del servicio.
      */
     @Test
-    void returnTypeOf_ShouldResolveGenericsAgainstTargetClass() {
+    public void returnTypeOf_ShouldResolveGenericsAgainstTargetClass() {
         UserService service = new UserService();
 
         Type single = CacheKeyGenerator.returnTypeOf(joinPoint(service, "find", new Class<?>[] {Long.class}, 1L));
@@ -213,7 +213,7 @@ class CacheKeyGeneratorTest {
     }
 
     @Test
-    void returnTypeOf_WithoutTarget_ShouldUseDeclaredType() {
+    public void returnTypeOf_WithoutTarget_ShouldUseDeclaredType() {
         JoinPoint joinPoint = joinPoint(new UserService(), "byName", new Class<?>[] {String.class}, "ana");
         when(joinPoint.getTarget()).thenReturn(null);
 

@@ -25,7 +25,7 @@ class RedisKeyScannerTest {
     private final RedisTemplate<String, Object> redisTemplate = mock(RedisTemplate.class);
 
     @Test
-    void deleteMatching_ShouldScanWithThePatternAndUnlinkEveryKey() {
+    public void deleteMatching_ShouldScanWithThePatternAndUnlinkEveryKey() {
         FakeScan scan = new FakeScan(redisTemplate, "users:1", "users:2", "users:3");
 
         long deleted = RedisKeyScanner.deleteMatching(redisTemplate, "users:*");
@@ -40,7 +40,7 @@ class RedisKeyScannerTest {
      * Con más claves que un lote, se borran en varias órdenes y nunca se acumulan todas.
      */
     @Test
-    void deleteMatching_WithManyKeys_ShouldUnlinkInBatches() {
+    public void deleteMatching_WithManyKeys_ShouldUnlinkInBatches() {
         int total = RedisKeyScanner.BATCH_SIZE * 2 + 200;
         String[] keys = IntStream.range(0, total).mapToObj(i -> "users:" + i).toArray(String[]::new);
         FakeScan scan = new FakeScan(redisTemplate, keys);
@@ -52,7 +52,7 @@ class RedisKeyScannerTest {
     }
 
     @Test
-    void deleteMatching_WithoutMatchingKeys_ShouldNotUnlink() {
+    public void deleteMatching_WithoutMatchingKeys_ShouldNotUnlink() {
         FakeScan scan = new FakeScan(redisTemplate);
 
         assertEquals(0, RedisKeyScanner.deleteMatching(redisTemplate, "users:*"));
@@ -65,7 +65,7 @@ class RedisKeyScannerTest {
      */
     @Test
     @SuppressWarnings("unchecked")
-    void deleteMatching_WhenTemplateReturnsNull_ShouldReturnZero() {
+    public void deleteMatching_WhenTemplateReturnsNull_ShouldReturnZero() {
         when(redisTemplate.execute(any(RedisCallback.class))).thenReturn(null);
 
         assertEquals(0, RedisKeyScanner.deleteMatching(redisTemplate, "users:*"));

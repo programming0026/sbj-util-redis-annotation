@@ -1,6 +1,6 @@
 package io.github.programming0026.juniverse.redis.service;
 
-import io.github.programming0026.juniverse.redis.config.CoalesceSettings;
+import io.github.programming0026.juniverse.redis.dto.CoalesceSettings;
 import io.github.programming0026.juniverse.redis.config.DefaultObjectMapperConfig;
 import io.github.programming0026.juniverse.redis.util.CacheDefaults;
 import java.lang.reflect.Type;
@@ -50,11 +50,11 @@ class CacheValueCodecTest {
         /** Etiquetas. */
         private List<String> tags = Stream.of("a", "b").toList();
 
-        Long id() {
+        public Long id() {
             return id;
         }
 
-        List<String> tags() {
+        public List<String> tags() {
             return tags;
         }
     }
@@ -68,7 +68,7 @@ class CacheValueCodecTest {
     }
 
     @Test
-    void knownTypes_ShouldRoundTripExactly() {
+    public void knownTypes_ShouldRoundTripExactly() {
         Type listOfPersons = new ParameterizedTypeReference<List<Person>>() { }.getType();
         Type mapOfLongs = new ParameterizedTypeReference<Map<String, Long>>() { }.getType();
         Type optional = new ParameterizedTypeReference<Optional<Person>>() { }.getType();
@@ -91,7 +91,7 @@ class CacheValueCodecTest {
      * Con tipo conocido el JSON no lleva nombres de clase, ni siquiera en los campos.
      */
     @Test
-    void knownTypes_ShouldNotWriteClassNames() {
+    public void knownTypes_ShouldNotWriteClassNames() {
         String json = text(codec.encode(new Item(), Item.class));
 
         assertFalse(json.contains("@class"), json);
@@ -106,7 +106,7 @@ class CacheValueCodecTest {
      * Un nombre de clase dentro del JSON no decide qué clase se instancia cuando hay tipo.
      */
     @Test
-    void knownTypes_ShouldIgnoreClassNamesInStoredJson() {
+    public void knownTypes_ShouldIgnoreClassNamesInStoredJson() {
         byte[] stored = "{\"@class\":\"javax.swing.JEditorPane\",\"id\":3,\"name\":\"Ana\"}"
                 .getBytes(StandardCharsets.UTF_8);
 
@@ -116,7 +116,7 @@ class CacheValueCodecTest {
     }
 
     @Test
-    void nullValue_ShouldBeStoredAsJsonNull() {
+    public void nullValue_ShouldBeStoredAsJsonNull() {
         byte[] bytes = codec.encode(null, Person.class);
 
         assertArrayEquals("null".getBytes(StandardCharsets.UTF_8), bytes);
@@ -128,7 +128,7 @@ class CacheValueCodecTest {
      * Sin tipo conocido se usa el formato con nombres de clase.
      */
     @Test
-    void unknownTypes_ShouldUseClassNames() {
+    public void unknownTypes_ShouldUseClassNames() {
         Type typeVariable = List.class.getTypeParameters()[0];
 
         for (Type unknown : new Type[] {Object.class, null, void.class, Void.class, typeVariable}) {
@@ -139,8 +139,8 @@ class CacheValueCodecTest {
     }
 
     @Test
-    void decode_WithBytesThatDoNotMatchTheType_ShouldThrowSerializationException() {
-        byte[] notJson = "{esto no es JSON".getBytes(StandardCharsets.UTF_8);
+    public void decode_WithBytesThatDoNotMatchTheType_ShouldThrowSerializationException() {
+        byte[] notJson = "{this is not JSON".getBytes(StandardCharsets.UTF_8);
         byte[] wrongShape = "[1,2]".getBytes(StandardCharsets.UTF_8);
 
         assertThrows(SerializationException.class, () -> codec.decode(notJson, Person.class));
@@ -149,7 +149,7 @@ class CacheValueCodecTest {
     }
 
     @Test
-    void encode_WithValueThatCannotBeSerialized_ShouldThrowSerializationException() {
+    public void encode_WithValueThatCannotBeSerialized_ShouldThrowSerializationException() {
         Object selfReferencing = new Object() {
             @SuppressWarnings("unused")
             private final Object self = this;
@@ -158,14 +158,12 @@ class CacheValueCodecTest {
         assertThrows(SerializationException.class, () -> codec.encode(selfReferencing, Person.class));
     }
 
-    // ------------------------------------------------------------------ paquetes de confianza
-
     /**
      * Con paquetes de confianza, el formato con nombres de clase solo instancia clases de esos
      * paquetes y los tipos básicos del JDK.
      */
     @Test
-    void trustedPackages_ShouldRestrictClassNamesInUntypedFormat() {
+    public void trustedPackages_ShouldRestrictClassNamesInUntypedFormat() {
         byte[] stored = codec.encode(new Item(), Object.class);
         byte[] list = codec.encode(new ArrayList<>(List.of("a", 1L)), Object.class);
 
@@ -182,16 +180,14 @@ class CacheValueCodecTest {
         assertInstanceOf(Item.class, trustingWithDot.decode(stored, Object.class));
         assertInstanceOf(Item.class, anyPackage.decode(stored, Object.class));
         assertThrows(SerializationException.class, () -> distrusting.decode(stored, Object.class));
-        // Los tipos básicos del JDK se admiten siempre.
         assertEquals(List.of("a", 1L), distrusting.decode(list, Object.class));
-        // Con tipo conocido no hay nombres de clase que validar.
         assertInstanceOf(Item.class, distrusting.decode(distrusting.encode(new Item(), Item.class), Item.class));
     }
 
     // ------------------------------------------------------------------ ajustes
 
     @Test
-    void cacheDefaults_ShouldResolveTtlAndNamespace() {
+    public void cacheDefaults_ShouldResolveTtlAndNamespace() {
         Map<String, Long> configured = Map.of("users", 1800L);
 
         assertEquals(60, CacheDefaults.resolveTtl(60, "users", configured));
@@ -202,11 +198,11 @@ class CacheValueCodecTest {
 
         assertEquals("", CacheDefaults.namespace(null));
         assertEquals("", CacheDefaults.namespace("  "));
-        assertEquals("tienda:", CacheDefaults.namespace(" tienda "));
+        assertEquals("shop:", CacheDefaults.namespace(" shop "));
     }
 
     @Test
-    void coalesceSettings_ShouldRejectInvalidValues() {
+    public void coalesceSettings_ShouldRejectInvalidValues() {
         Duration ok = Duration.ofSeconds(1);
 
         assertThrows(IllegalArgumentException.class, () -> new CoalesceSettings(true, Duration.ZERO, ok));
@@ -224,7 +220,7 @@ class CacheValueCodecTest {
      * con su tipo original, también los que el tipado predeterminado de Jackson no conservaba.
      */
     @Test
-    void unknownTypes_ShouldRoundTripWithTheirOriginalType() {
+    public void unknownTypes_ShouldRoundTripWithTheirOriginalType() {
         Person ana = new Person(1L, "Ana", List.of("x"));
         Object[] values = {
             5L, 5, 2.5d, 2.5f, (short) 3, "texto", true, new BigDecimal("10.50"), Status.CLOSED,
@@ -236,7 +232,7 @@ class CacheValueCodecTest {
 
         for (Object value : values) {
             Object back = roundTrip(value, Object.class);
-            assertEquals(value, back, "valor de tipo " + value.getClass().getName());
+            assertEquals(value, back, "value of type " + value.getClass().getName());
             if (!(value instanceof java.util.Collection) && !(value instanceof Map)) {
                 assertEquals(value.getClass(), back.getClass());
             }
@@ -244,7 +240,7 @@ class CacheValueCodecTest {
     }
 
     @Test
-    void unknownTypes_ShouldRoundTripArrays() {
+    public void unknownTypes_ShouldRoundTripArrays() {
         assertArrayEquals(new long[] {1, 2}, (long[]) roundTrip(new long[] {1, 2}, Object.class));
         assertArrayEquals(new byte[] {1, 2}, (byte[]) roundTrip(new byte[] {1, 2}, Object.class));
         assertArrayEquals(new String[] {"a"}, (String[]) roundTrip(new String[] {"a"}, Object.class));
@@ -256,7 +252,7 @@ class CacheValueCodecTest {
      * Un objeto con campos de todo tipo, incluidas listas inmutables y campos {@code Object}.
      */
     @Test
-    void unknownTypes_ShouldRoundTripNestedContent() {
+    public void unknownTypes_ShouldRoundTripNestedContent() {
         Holder holder = new Holder();
 
         Holder back = (Holder) roundTrip(holder, Object.class);

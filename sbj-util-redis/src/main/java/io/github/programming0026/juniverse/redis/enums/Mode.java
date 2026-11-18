@@ -1,4 +1,4 @@
-package io.github.programming0026.juniverse.redis.util;
+package io.github.programming0026.juniverse.redis.enums;
 
 /**
  * @author Java Universe

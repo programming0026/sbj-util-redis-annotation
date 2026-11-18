@@ -34,7 +34,7 @@ class CustomJacksonJsonRedisSerializerTest {
      * Prepara la prueba.
      */
     @BeforeEach
-    void setUp() {
+    public void setUp() {
         serializer = new CustomJacksonJsonRedisSerializer<>(objectMapper, Object.class);
     }
 
@@ -43,7 +43,7 @@ class CustomJacksonJsonRedisSerializerTest {
      * Serializar un valor nulo debe devolver un arreglo de bytes vacío.
      */
     @Test
-    void serialize_WithNullValue_ShouldReturnEmptyByteArray() {
+    public void serialize_WithNullValue_ShouldReturnEmptyByteArray() {
         byte[] result = serializer.serialize(null);
 
         assertNotNull(result);
@@ -57,7 +57,7 @@ class CustomJacksonJsonRedisSerializerTest {
      * @throws JacksonException si falla el procesamiento del JSON
      */
     @Test
-    void serialize_WithValidObject_ShouldReturnSerializedBytes() throws JacksonException {
+    public void serialize_WithValidObject_ShouldReturnSerializedBytes() throws JacksonException {
         String value = "test value";
         byte[] expectedBytes = new byte[]{1, 2, 3, 4};
 
@@ -76,7 +76,7 @@ class CustomJacksonJsonRedisSerializerTest {
      * @throws JacksonException si falla el procesamiento del JSON
      */
     @Test
-    void serialize_WhenJsonProcessingFails_ShouldThrowSerializationException() throws JacksonException {
+    public void serialize_WhenJsonProcessingFails_ShouldThrowSerializationException() throws JacksonException {
         String value = "test value";
         JacksonException exception = mock(JacksonException.class);
 
@@ -94,7 +94,7 @@ class CustomJacksonJsonRedisSerializerTest {
      * @throws JacksonException si falla el procesamiento del JSON
      */
     @Test
-    void serialize_WithComplexObject_ShouldSerializeCorrectly() throws JacksonException {
+    public void serialize_WithComplexObject_ShouldSerializeCorrectly() throws JacksonException {
         TestObject testObject = new TestObject("John", 30);
         byte[] expectedBytes = new byte[]{5, 6, 7, 8};
 
@@ -113,7 +113,7 @@ class CustomJacksonJsonRedisSerializerTest {
      * Deserializar bytes nulos debe devolver nulo.
      */
     @Test
-    void deserialize_WithNullByteArray_ShouldReturnNull() {
+    public void deserialize_WithNullByteArray_ShouldReturnNull() {
         Object result = serializer.deserialize(null);
 
         assertNull(result);
@@ -124,7 +124,7 @@ class CustomJacksonJsonRedisSerializerTest {
      * Deserializar un arreglo vacío debe devolver nulo.
      */
     @Test
-    void deserialize_WithEmptyByteArray_ShouldReturnNull() {
+    public void deserialize_WithEmptyByteArray_ShouldReturnNull() {
         byte[] emptyBytes = new byte[0];
 
         Object result = serializer.deserialize(emptyBytes);
@@ -138,7 +138,7 @@ class CustomJacksonJsonRedisSerializerTest {
      */
     @SuppressWarnings("unchecked")
 	@Test
-    void deserialize_WhenJacksonFails_ShouldThrowSerializationException() {
+    public void deserialize_WhenJacksonFails_ShouldThrowSerializationException() {
         byte[] bytes = new byte[]{1, 2, 3, 4};
         JacksonException exception = mock(JacksonException.class);
 

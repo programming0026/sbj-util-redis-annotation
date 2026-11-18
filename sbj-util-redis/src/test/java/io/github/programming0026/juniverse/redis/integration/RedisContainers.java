@@ -22,10 +22,10 @@ import org.testcontainers.utility.DockerImageName;
  *
  * @author Java Universe
  */
-final class RedisContainers {
+public final class RedisContainers {
 
     /** Imagen de Redis usada en todas las pruebas. */
-    static final DockerImageName IMAGE = DockerImageName.parse("redis:7-alpine");
+    public static final DockerImageName IMAGE = DockerImageName.parse("redis:7-alpine");
 
     /** Puerto de Redis dentro del contenedor standalone. */
     private static final int REDIS_PORT = 6379;
@@ -51,7 +51,7 @@ final class RedisContainers {
      *
      * @return contenedor sin arrancar
      */
-    static GenericContainer<?> newStandalone() {
+    public static GenericContainer<?> newStandalone() {
         return new GenericContainer<>(IMAGE).withExposedPorts(REDIS_PORT);
     }
 
@@ -60,7 +60,7 @@ final class RedisContainers {
      *
      * @return fábrica de conexiones sin inicializar
      */
-    static synchronized LettuceConnectionFactory standaloneFactory() {
+    public static synchronized LettuceConnectionFactory standaloneFactory() {
         if (standalone == null) {
             standalone = newStandalone();
             standalone.start();
@@ -74,7 +74,7 @@ final class RedisContainers {
      * @param container contenedor ya arrancado
      * @return fábrica de conexiones sin inicializar
      */
-    static LettuceConnectionFactory standaloneFactory(GenericContainer<?> container) {
+    public static LettuceConnectionFactory standaloneFactory(GenericContainer<?> container) {
         return standaloneFactory(container, COMMAND_TIMEOUT);
     }
 
@@ -85,7 +85,7 @@ final class RedisContainers {
      * @param commandTimeout tiempo máximo de cada orden
      * @return fábrica de conexiones sin inicializar
      */
-    static LettuceConnectionFactory standaloneFactory(GenericContainer<?> container, Duration commandTimeout) {
+    public static LettuceConnectionFactory standaloneFactory(GenericContainer<?> container, Duration commandTimeout) {
         RedisStandaloneConfiguration config = new RedisStandaloneConfiguration(
                 container.getHost(), container.getMappedPort(REDIS_PORT));
         return new LettuceConnectionFactory(config, clientConfiguration(commandTimeout));
@@ -96,7 +96,7 @@ final class RedisContainers {
      *
      * @return fábrica de conexiones sin inicializar
      */
-    static synchronized LettuceConnectionFactory clusterFactory() {
+    public static synchronized LettuceConnectionFactory clusterFactory() {
         if (cluster == null) {
             cluster = startCluster();
         }
@@ -143,10 +143,10 @@ final class RedisContainers {
             waitForClusterOk(container, port);
             return container;
         } catch (IOException e) {
-            throw new IllegalStateException("No se pudo arrancar el clúster de Redis", e);
+            throw new IllegalStateException("Could not start the Redis cluster", e);
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
-            throw new IllegalStateException("Interrumpido al arrancar el clúster de Redis", e);
+            throw new IllegalStateException("Interrupted while starting the Redis cluster", e);
         }
     }
 
@@ -160,7 +160,7 @@ final class RedisContainers {
             }
             Thread.sleep(100);
         }
-        throw new IllegalStateException("El clúster de Redis no llegó al estado ok");
+        throw new IllegalStateException("The Redis cluster did not reach the ok state");
     }
 
     /**
@@ -182,7 +182,7 @@ final class RedisContainers {
      * @param count cuántos puertos hacen falta
      * @return puertos libres
      */
-    static int[] freePorts(int count) {
+    public static int[] freePorts(int count) {
         java.util.Set<Integer> ports = new java.util.LinkedHashSet<>();
         for (int attempt = 0; attempt < 500 && ports.size() < count; attempt++) {
             int candidate = ThreadLocalRandom.current().nextInt(20000, 50000);
@@ -193,7 +193,7 @@ final class RedisContainers {
             }
         }
         if (ports.size() < count) {
-            throw new IllegalStateException("No se encontraron " + count + " puertos libres");
+            throw new IllegalStateException("Could not find " + count + " free ports");
         }
         return ports.stream().mapToInt(Integer::intValue).toArray();
     }

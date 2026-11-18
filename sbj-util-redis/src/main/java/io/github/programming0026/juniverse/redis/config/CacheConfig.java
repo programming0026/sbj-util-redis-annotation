@@ -4,6 +4,7 @@ import io.github.programming0026.juniverse.redis.annotation.EnableRedisLibrary;
 import io.github.programming0026.juniverse.redis.aspect.CoalesceCachingAspect;
 import io.github.programming0026.juniverse.redis.aspect.CoalesceEvictAspect;
 import io.github.programming0026.juniverse.redis.aspect.CoalescePutAspect;
+import io.github.programming0026.juniverse.redis.dto.CoalesceSettings;
 import io.github.programming0026.juniverse.redis.dto.HostsDto;
 import io.github.programming0026.juniverse.redis.service.CacheMetrics;
 import io.github.programming0026.juniverse.redis.service.CacheOperationBuilder;
@@ -14,7 +15,7 @@ import io.github.programming0026.juniverse.redis.service.RedisCircuitBreaker;
 import io.github.programming0026.juniverse.redis.service.RedisHealthChecker;
 import io.github.programming0026.juniverse.redis.util.AnnotationPlaceholderResolver;
 import io.github.programming0026.juniverse.redis.util.CacheDefaults;
-import io.github.programming0026.juniverse.redis.util.Mode;
+import io.github.programming0026.juniverse.redis.enums.Mode;
 import io.github.programming0026.juniverse.redis.util.Validator;
 import io.lettuce.core.ClientOptions;
 import io.lettuce.core.ReadFrom;
@@ -246,7 +247,7 @@ public class CacheConfig implements ImportAware, EnvironmentAware, BeanFactoryAw
      */
     @Bean
     @ConditionalOnMissingBean
-    CoalesceCacheManager coalesceCacheManager(RedisConnectionFactory connectionFactory,
+    public CoalesceCacheManager coalesceCacheManager(RedisConnectionFactory connectionFactory,
             RedisMessageListenerContainer redisMessageListener) {
         return new CoalesceCacheManager(
                 rawTemplate(connectionFactory),
@@ -317,7 +318,7 @@ public class CacheConfig implements ImportAware, EnvironmentAware, BeanFactoryAw
      */
     @Bean
     @ConditionalOnMissingBean
-    CoalesceCachingAspect coalesceCachingAspect(CoalesceCacheManager cacheManager) {
+    public CoalesceCachingAspect coalesceCachingAspect(CoalesceCacheManager cacheManager) {
         return new CoalesceCachingAspect(cacheManager, environment, configuredTtlSeconds());
     }
 
@@ -329,7 +330,7 @@ public class CacheConfig implements ImportAware, EnvironmentAware, BeanFactoryAw
      */
     @Bean
     @ConditionalOnMissingBean
-    CoalescePutAspect coalescePutAspect(CoalesceCacheManager cacheManager) {
+    public CoalescePutAspect coalescePutAspect(CoalesceCacheManager cacheManager) {
         return new CoalescePutAspect(cacheManager, environment, configuredTtlSeconds());
     }
 
@@ -341,7 +342,7 @@ public class CacheConfig implements ImportAware, EnvironmentAware, BeanFactoryAw
      */
     @Bean
     @ConditionalOnMissingBean
-    CoalesceEvictAspect coalesceEvictAspect(CoalesceCacheManager cacheManager) {
+    public CoalesceEvictAspect coalesceEvictAspect(CoalesceCacheManager cacheManager) {
         return new CoalesceEvictAspect(cacheManager, environment);
     }
 
@@ -353,7 +354,7 @@ public class CacheConfig implements ImportAware, EnvironmentAware, BeanFactoryAw
      */
     @Bean
     @ConditionalOnMissingBean(RedisMessageListenerContainer.class)
-    RedisMessageListenerContainer redisMessageListenerContainer(
+    public RedisMessageListenerContainer redisMessageListenerContainer(
             RedisConnectionFactory connectionFactory) {
         // Con la degradación activa, que Redis no esté disponible al arrancar no debe impedir
         // que arranque la aplicación: la suscripción se reintenta hasta conseguirla.
@@ -375,7 +376,7 @@ public class CacheConfig implements ImportAware, EnvironmentAware, BeanFactoryAw
      */
     @Bean
     @ConditionalOnMissingBean
-    RedisHealthChecker redisHealthChecker(RedisTemplate<String, Object> redisTemplate) {
+    public RedisHealthChecker redisHealthChecker(RedisTemplate<String, Object> redisTemplate) {
         return new RedisHealthChecker(redisTemplate);
     }
 
@@ -387,7 +388,7 @@ public class CacheConfig implements ImportAware, EnvironmentAware, BeanFactoryAw
      */
     @Bean
     @ConditionalOnMissingBean
-    RedisCacheService redisCacheService(RedisTemplate<String, Object> redisTemplate) {
+    public RedisCacheService redisCacheService(RedisTemplate<String, Object> redisTemplate) {
         return new RedisCacheService(redisTemplate, keyPrefix(), configuredTtls(), circuitBreaker());
     }
 
@@ -399,7 +400,7 @@ public class CacheConfig implements ImportAware, EnvironmentAware, BeanFactoryAw
      */
     @Bean
     @ConditionalOnMissingBean
-    CacheOperationBuilder.Factory cacheOperationBuilderFactory(RedisCacheService redisCacheService) {
+    public CacheOperationBuilder.Factory cacheOperationBuilderFactory(RedisCacheService redisCacheService) {
         return new CacheOperationBuilder.Factory(redisCacheService);
     }
 
@@ -556,7 +557,7 @@ public class CacheConfig implements ImportAware, EnvironmentAware, BeanFactoryAw
      */
     @Bean(name = "redisConnectionFactory")
     @ConditionalOnMissingBean(RedisConnectionFactory.class)
-    RedisConnectionFactory createRedisConnectionFactory() {
+    public RedisConnectionFactory createRedisConnectionFactory() {
         LettuceClientConfiguration clientConfiguration;
         boolean useSsl = attributes().getBoolean("useSsl");
         Long connectionTimeout = attributes().getNumber("connectionTimeout");
@@ -642,7 +643,7 @@ public class CacheConfig implements ImportAware, EnvironmentAware, BeanFactoryAw
     @Bean(name = "redisTemplate")
     @ConditionalOnMissingBean(name = "redisTemplate")
     @SuppressWarnings("unchecked")
-    <T> RedisTemplate<String, T> createRedisTemplate(RedisConnectionFactory connectionFactory) {
+    public <T> RedisTemplate<String, T> createRedisTemplate(RedisConnectionFactory connectionFactory) {
         RedisTemplate<String, T> template = new RedisTemplate<>();
         template.setConnectionFactory(connectionFactory);
 
@@ -699,7 +700,7 @@ public class CacheConfig implements ImportAware, EnvironmentAware, BeanFactoryAw
      */
     @Bean
     @ConditionalOnMissingBean(CacheManager.class)
-    CacheManager cacheManager(RedisConnectionFactory connectionFactory) {
+    public CacheManager cacheManager(RedisConnectionFactory connectionFactory) {
         ObjectMapperConfig mapperConfig = getObjectMapperConfig();
 
         RedisCacheConfiguration redisCacheConfiguration = RedisCacheConfiguration
