@@ -12,20 +12,20 @@ import static org.junit.jupiter.api.Assertions.*;
 import java.time.LocalDateTime;
 
 /**
- * Pruebas unitarias de DefaultObjectMapperConfig.
+ * Unit tests for DefaultObjectMapperConfig.
  *
  * @author Java Universe
  */
 class DefaultObjectMapperConfigTest {
 
-    /** Configuración. */
+    /** Configuration. */
     private final DefaultObjectMapperConfig config = new DefaultObjectMapperConfig();
 
     /**
      * Configure should return configured object mapper.
      */
     @Test
-    public void configure_ShouldReturnConfiguredObjectMapper() {
+     void configure_ShouldReturnConfiguredObjectMapper() {
         ObjectMapper mapper = config.configure();
 
         assertNotNull(mapper);
@@ -33,13 +33,12 @@ class DefaultObjectMapperConfigTest {
     }
 
     /**
-     * Jackson 3 admite java.time sin registrar ningún módulo.
+     * Jackson 3 supports java.time without registering any module.
      */
     @Test
-    public void configure_ShouldSupportJavaTimeWithoutModules() {
+     void configure_ShouldSupportJavaTimeWithoutModules() {
         ObjectMapper mapper = config.configure();
 
-        // Fecha en texto ISO, acompañada de su tipo para poder reconstruirla sin saberlo de antemano.
         assertEquals("[\"java.time.LocalDate\",\"2026-01-02\"]",
                 mapper.writeValueAsString(java.time.LocalDate.of(2026, 1, 2)));
         assertEquals(java.time.LocalDate.of(2026, 1, 2),
@@ -47,30 +46,30 @@ class DefaultObjectMapperConfigTest {
     }
 
     /**
-     * Jackson 3 admite Optional sin registrar ningún módulo.
+     * Jackson 3 supports Optional without registering any module.
      */
     @Test
-    public void configure_ShouldSupportOptionalWithoutModules() {
+     void configure_ShouldSupportOptionalWithoutModules() {
         ObjectMapper mapper = config.configure();
 
         assertEquals("\"x\"", mapper.writeValueAsString(java.util.Optional.of("x")));
     }
 
     /**
-     * La configuración debe deshabilitar escribir fechas como marcas de tiempo.
+     * The configuration must disable writing dates as timestamps.
      */
     @Test
-    public void configure_ShouldDisableWriteDatesAsTimestamps() {
+     void configure_ShouldDisableWriteDatesAsTimestamps() {
         ObjectMapper mapper = config.configure();
 
         assertFalse(mapper.isEnabled(DateTimeFeature.WRITE_DATES_AS_TIMESTAMPS));
     }
 
     /**
-     * La configuración debe configurar la visibilidad.
+     * The configuration must set up the visibility.
      */
     @Test
-    public void configure_ShouldConfigureVisibility() {
+     void configure_ShouldConfigureVisibility() {
         ObjectMapper mapper = config.configure();
 
         assertNotNull(mapper);
@@ -79,92 +78,92 @@ class DefaultObjectMapperConfigTest {
     }
 
     /**
-     * La configuración no debe fallar con propiedades desconocidas.
+     * The configuration must not fail on unknown properties.
      */
     @Test
-    public void configure_ShouldNotFailOnUnknownProperties() {
+     void configure_ShouldNotFailOnUnknownProperties() {
         ObjectMapper mapper = config.configure();
 
         assertFalse(mapper.isEnabled(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES));
     }
 
     /**
-     * La configuración no debe fallar con beans vacíos.
+     * The configuration must not fail on empty beans.
      */
     @Test
-    public void configure_ShouldNotFailOnEmptyBeans() {
+     void configure_ShouldNotFailOnEmptyBeans() {
         ObjectMapper mapper = config.configure();
 
         assertFalse(mapper.isEnabled(SerializationFeature.FAIL_ON_EMPTY_BEANS));
     }
 
     /**
-     * La configuración no debe fallar con nulos en primitivos.
+     * The configuration must not fail on nulls for primitives.
      */
     @Test
-    public void configure_ShouldNotFailOnNullForPrimitives() {
+     void configure_ShouldNotFailOnNullForPrimitives() {
         ObjectMapper mapper = config.configure();
 
         assertFalse(mapper.isEnabled(DeserializationFeature.FAIL_ON_NULL_FOR_PRIMITIVES));
     }
 
     /**
-     * La configuración debe aceptar un valor único como arreglo.
+     * The configuration must accept a single value as an array.
      */
     @Test
-    public void configure_ShouldAcceptSingleValueAsArray() {
+     void configure_ShouldAcceptSingleValueAsArray() {
         ObjectMapper mapper = config.configure();
 
         assertTrue(mapper.isEnabled(DeserializationFeature.ACCEPT_SINGLE_VALUE_AS_ARRAY));
     }
 
     /**
-     * La configuración no debe aceptar una cadena vacía como objeto nulo.
+     * The configuration must not accept an empty string as a null object.
      */
     @Test
-    public void configure_ShouldNotAcceptEmptyStringAsNullObject() {
+     void configure_ShouldNotAcceptEmptyStringAsNullObject() {
         ObjectMapper mapper = config.configure();
 
         assertFalse(mapper.isEnabled(DeserializationFeature.ACCEPT_EMPTY_STRING_AS_NULL_OBJECT));
     }
 
     /**
-     * La configuración no debe aceptar un arreglo vacío como objeto nulo.
+     * The configuration must not accept an empty array as a null object.
      */
     @Test
-    public void configure_ShouldNotAcceptEmptyArrayAsNullObject() {
+     void configure_ShouldNotAcceptEmptyArrayAsNullObject() {
         ObjectMapper mapper = config.configure();
 
         assertFalse(mapper.isEnabled(DeserializationFeature.ACCEPT_EMPTY_ARRAY_AS_NULL_OBJECT));
     }
 
     /**
-     * La configuración no debe leer enumeraciones con toString.
+     * The configuration must not read enums using toString.
      */
     @Test
-    public void configure_ShouldNotReadEnumsUsingToString() {
+     void configure_ShouldNotReadEnumsUsingToString() {
         ObjectMapper mapper = config.configure();
 
         assertFalse(mapper.isEnabled(EnumFeature.READ_ENUMS_USING_TO_STRING));
     }
 
     /**
-     * La configuración no debe escribir enumeraciones con toString.
+     * The configuration must not write enums using toString.
      */
     @Test
-    public void configure_ShouldNotWriteEnumsUsingToString() {
+     void configure_ShouldNotWriteEnumsUsingToString() {
         ObjectMapper mapper = config.configure();
 
         assertFalse(mapper.isEnabled(EnumFeature.WRITE_ENUMS_USING_TO_STRING));
     }
 
     /**
-     * La configuración debe poder usarse para serializar.
+     * The configuration must be usable for serializing.
      *
-     * @throws Exception si ocurre un error
+     * @throws Exception if an error occurs
      */
     @Test
-    public void configure_ShouldBeUsableForSerialization() throws Exception {
+     void configure_ShouldBeUsableForSerialization() throws Exception {
         ObjectMapper mapper = config.configure();
         TestObject testObj = new TestObject("test", 123);
 
@@ -176,12 +175,12 @@ class DefaultObjectMapperConfigTest {
     }
 
     /**
-     * La configuración debe poder usarse para deserializar.
+     * The configuration must be usable for deserializing.
      *
-     * @throws Exception si ocurre un error
+     * @throws Exception if an error occurs
      */
     @Test
-    public void configure_ShouldBeUsableForDeserialization() throws Exception {
+     void configure_ShouldBeUsableForDeserialization() throws Exception {
         ObjectMapper mapper = config.configure();
 
         String json =
@@ -197,12 +196,12 @@ class DefaultObjectMapperConfigTest {
     }
 
     /**
-     * La configuración debe manejar los tipos de java.time.
+     * The configuration must handle the java.time types.
      *
-     * @throws Exception si ocurre un error
+     * @throws Exception if an error occurs
      */
     @Test
-    public void configure_ShouldHandleJavaTimeTypes() throws Exception {
+     void configure_ShouldHandleJavaTimeTypes() throws Exception {
         ObjectMapper mapper = config.configure();
         LocalDateTime now = LocalDateTime.now();
         TimeObject timeObj = new TimeObject(now);
@@ -215,10 +214,10 @@ class DefaultObjectMapperConfigTest {
     }
 
     /**
-     * La configuración debe crear una instancia nueva cada vez.
+     * The configuration must create a new instance each time.
      */
     @Test
-    public void configure_ShouldCreateNewInstanceEachTime() {
+     void configure_ShouldCreateNewInstanceEachTime() {
         
     	ObjectMapper mapper1 = config.configure();
         ObjectMapper mapper2 = config.configure();
@@ -231,17 +230,17 @@ class DefaultObjectMapperConfigTest {
     
     private static class TestObject {
         
-        /** Nombre. */
+        /** Name. */
         private String name;
         
-        /** Valor. */
+        /** Value. */
         private int value;
 
         /** Constructor. */
-        public TestObject () {
+         TestObject () {
         }
 
-        public TestObject(String name, int value) {
+         TestObject(String name, int value) {
             this.name = name;
             this.value = value;
         }
@@ -249,15 +248,15 @@ class DefaultObjectMapperConfigTest {
 
     private static class TimeObject {
         
-        /** Marca de tiempo. */
+        /** Timestamp. */
         private LocalDateTime timestamp;
 
         /** Constructor. */
-       public TimeObject() {
+        TimeObject() {
 
        }
 
-        public TimeObject(LocalDateTime timestamp) {
+         TimeObject(LocalDateTime timestamp) {
             this.timestamp = timestamp;
         }
     }

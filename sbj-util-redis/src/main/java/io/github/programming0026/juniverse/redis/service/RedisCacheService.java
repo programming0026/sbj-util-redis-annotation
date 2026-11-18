@@ -17,50 +17,50 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.serializer.SerializationException;
 
 /**
- * Caché programática sobre Redis: equivalentes de {@code @Cacheable}, {@code @CachePut} y
- * {@code @CacheEvict} con el TTL indicado en cada llamada.
+ * Programmatic cache on top of Redis: equivalents of {@code @Cacheable}, {@code @CachePut} and
+ * {@code @CacheEvict} with the TTL given in each call.
  *
- * <p>Los fallos de Redis no interrumpen la operación: se registran y la caché se comporta como si
- * estuviera vacía. Tras un fallo de conexión, durante la pausa de {@link RedisCircuitBreaker} las
- * operaciones ni siquiera intentan llegar a Redis, para no esperar su tiempo de respuesta.</p>
+ * <p>Redis failures do not interrupt the operation: they are logged and the cache behaves as if
+ * it were empty. After a connection failure, during the {@link RedisCircuitBreaker} pause the
+ * operations do not even try to reach Redis, so as not to wait for its response time.</p>
  *
  * @author Java Universe
  */
 @Slf4j
 public class RedisCacheService {
 
-    /** TTL de las cachés que no tienen uno configurado. */
+    /** TTL of caches that do not have one configured. */
     private static final Duration DEFAULT_TTL = Duration.ofMinutes(10);
 
     /**
-     * Plantilla de Redis.
+     * Redis template.
      */
     private final RedisTemplate<String, Object> redisTemplate;
 
-    /** Deja de usar Redis un tiempo tras un fallo de conexión; compartido con las demás formas de caché. */
+    /** Stops using Redis for a while after a connection failure; shared with the other forms of cache. */
     private final RedisCircuitBreaker breaker;
 
-    /** Prefijo de la aplicación, ya con su separador; vacío si no se usa. */
+    /** Application prefix, already with its separator; empty if not used. */
     private final String namespace;
 
-    /** TTL configurado por nombre de caché, para las operaciones que no indican uno. */
+    /** TTL configured per cache name, for operations that do not specify one. */
     private final Map<String, Duration> configuredTtls;
 
     /**
-     * Crea el servicio sin prefijo de aplicación y con el TTL predeterminado de 10 minutos.
+     * Creates the service without an application prefix and with the default TTL of 10 minutes.
      *
-     * @param redisTemplate plantilla de Redis
+     * @param redisTemplate Redis template
      */
     public RedisCacheService(RedisTemplate<String, Object> redisTemplate) {
         this(redisTemplate, "", Map.of());
     }
 
     /**
-     * Crea el servicio.
+     * Creates the service.
      *
-     * @param redisTemplate plantilla de Redis
-     * @param keyPrefix prefijo de la aplicación para todas las claves; vacío si no se usa
-     * @param configuredTtls TTL por nombre de caché, para las operaciones que no indican uno
+     * @param redisTemplate Redis template
+     * @param keyPrefix application prefix for all keys; empty if not used
+     * @param configuredTtls TTL per cache name, for operations that do not specify one
      */
     public RedisCacheService(
             RedisTemplate<String, Object> redisTemplate,
@@ -70,12 +70,12 @@ public class RedisCacheService {
     }
 
     /**
-     * Crea el servicio con un cortacircuitos, normalmente compartido con las demás formas de caché.
+     * Creates the service with a circuit breaker, normally shared with the other forms of cache.
      *
-     * @param redisTemplate plantilla de Redis
-     * @param keyPrefix prefijo de la aplicación para todas las claves; vacío si no se usa
-     * @param configuredTtls TTL por nombre de caché, para las operaciones que no indican uno
-     * @param breaker cortacircuitos que evita esperar a Redis mientras está caído
+     * @param redisTemplate Redis template
+     * @param keyPrefix application prefix for all keys; empty if not used
+     * @param configuredTtls TTL per cache name, for operations that do not specify one
+     * @param breaker circuit breaker that avoids waiting for Redis while it is down
      */
     public RedisCacheService(
             RedisTemplate<String, Object> redisTemplate,
@@ -89,10 +89,10 @@ public class RedisCacheService {
     }
 
     /**
-     * TTL de las operaciones que no indican uno: el configurado para la caché o 10 minutos.
+     * TTL of operations that do not specify one: the one configured for the cache or 10 minutes.
      *
-     * @param cacheName nombre de caché
-     * @return tiempo de vida
+     * @param cacheName cache name
+     * @return time to live
      */
     private Duration defaultTtl(String cacheName) {
         Duration configured = cacheName == null ? null : configuredTtls.get(cacheName);
@@ -100,18 +100,18 @@ public class RedisCacheService {
     }
 
     /**
-     * Equivale a @Cacheable: busca en la caché y, si no existe,
-     * ejecuta el cargador y guarda el resultado.
+     * Equivalent to @Cacheable: looks in the cache and, if the value is not there,
+     * runs the loader and stores the result.
      *
-     * <p>El cargador se ejecuta como mucho una vez. Si lanza una excepción, esta se propaga
-     * sin cambios. Los fallos de Redis se registran y no interrumpen la operación.</p>
+     * <p>The loader runs at most once. If it throws an exception, it is propagated
+     * unchanged. Redis failures are logged and do not interrupt the operation.</p>
      *
-     * @param <T> tipo genérico
-     * @param cacheName nombre de caché
-     * @param key clave
-     * @param loader función que carga el valor
-     * @param ttl tiempo de vida
-     * @return objeto
+     * @param <T> generic type
+     * @param cacheName cache name
+     * @param key key
+     * @param loader function that loads the value
+     * @param ttl time to live
+     * @return the loaded or cached value
      */
     public <T> T cacheable(String cacheName, String key, Supplier<T> loader, Duration ttl) {
         return cacheableWithResult(cacheName, key, loader, ttl).getValue();
@@ -120,30 +120,30 @@ public class RedisCacheService {
 
     
     /**
-     * Sobrecarga con el TTL configurado para la caché o, si no lo hay, 10 minutos.
+     * Overload using the TTL configured for the cache or, if there is none, 10 minutes.
      *
-     * @param <T> tipo genérico
-     * @param cacheName nombre de caché
-     * @param key clave
-     * @param loader función que carga el valor
-     * @return objeto
+     * @param <T> generic type
+     * @param cacheName cache name
+     * @param key key
+     * @param loader function that loads the value
+     * @return the loaded or cached value
      */
     public <T> T cacheable(String cacheName, String key, Supplier<T> loader) {
         return cacheable(cacheName, key, loader, defaultTtl(cacheName));
     }
 
     /**
-     * Operación de caché que devuelve un resultado detallado con información de acierto o fallo.
+     * Cache operation that returns a detailed result with hit or miss information.
      *
-     * <p>Este método ofrece lo mismo que {@link #cacheable(String, String, Supplier, Duration)}
-     * pero incluye si el valor vino de la caché (acierto) o se cargó de la fuente (fallo).</p>
+     * <p>This method offers the same as {@link #cacheable(String, String, Supplier, Duration)}
+     * but includes whether the value came from the cache (hit) or was loaded from the source (miss).</p>
      *
-     * @param <T> tipo genérico
-     * @param cacheName nombre de caché
-     * @param key clave
-     * @param loader función que se ejecuta ante un fallo de caché
-     * @param ttl tiempo de vida
-     * @return CacheResult con el valor y la información de acierto o fallo
+     * @param <T> generic type
+     * @param cacheName cache name
+     * @param key key
+     * @param loader function that runs on a cache miss
+     * @param ttl time to live
+     * @return CacheResult with the value and the hit or miss information
      */
     @SuppressWarnings("unchecked")
     public <T> CacheResult<T> cacheableWithResult(String cacheName, String key,
@@ -152,7 +152,7 @@ public class RedisCacheService {
 
         String fullKey = buildKey(cacheName, key);
 
-        // Un fallo de Redis al leer se trata como fallo de caché.
+        // A Redis failure while reading is treated as a cache miss.
         if (paused("Read", fullKey)) {
             return CacheResult.miss(loader.get());
         }
@@ -165,8 +165,8 @@ public class RedisCacheService {
                 return CacheResult.hit((T) cached);
             }
         } catch (SerializationException e) {
-            // Una entrada que no se puede leer (otro formato, una clase que ya no existe o que no
-            // es de confianza) no se podrá leer nunca: se borra para no repetir el error.
+            // An entry that cannot be read (another format, a class that no longer exists or that is
+            // not trusted) will never be readable: it is deleted so the error is not repeated.
             log.warn("Discarding unreadable cache entry {}: {}", fullKey, e.toString());
             discard(fullKey);
         } catch (Exception e) {
@@ -174,8 +174,8 @@ public class RedisCacheService {
             log.error("Error reading cache key {}: {}", fullKey, e.toString());
         }
 
-        // El cargador queda fuera de cualquier catch: se ejecuta una sola vez
-        // y sus excepciones llegan intactas a quien llama.
+        // The loader stays outside of any catch: it runs only once
+        // and its exceptions reach the caller intact.
         T result = loader.get();
 
         if (result != null && !paused("Write", fullKey)) {
@@ -193,39 +193,39 @@ public class RedisCacheService {
     }
 
     /**
-     * Operación de caché con resultado y TTL predeterminado de 10 minutos.
+     * Cache operation with result and the default TTL of 10 minutes.
      *
-     * @param <T> tipo genérico
-     * @param cacheName nombre de caché
-     * @param key clave
-     * @param loader función que carga el valor
-     * @return CacheResult con el valor y la información de acierto o fallo
+     * @param <T> generic type
+     * @param cacheName cache name
+     * @param key key
+     * @param loader function that loads the value
+     * @return CacheResult with the value and the hit or miss information
      */
     public <T> CacheResult<T> cacheableWithResult(String cacheName, String key, Supplier<T> loader) {
         return cacheableWithResult(cacheName, key, loader, defaultTtl(cacheName));
     }
 
     /**
-     * Equivale a @CachePut.
+     * Equivalent to @CachePut.
      *
-     * <p>El cargador se ejecuta exactamente una vez. Si lanza una excepción, esta se propaga
-     * sin cambios y la caché no se toca. Los fallos de Redis se registran y no interrumpen
-     * la operación.</p>
+     * <p>The loader runs exactly once. If it throws an exception, it is propagated
+     * unchanged and the cache is left untouched. Redis failures are logged and do not interrupt
+     * the operation.</p>
      *
-     * @param <T> tipo genérico
-     * @param cacheName nombre de caché
-     * @param key clave
-     * @param loader función que carga el valor
-     * @param ttl tiempo de vida
-     * @return objeto
+     * @param <T> generic type
+     * @param cacheName cache name
+     * @param key key
+     * @param loader function that loads the value
+     * @param ttl time to live
+     * @return the loaded or cached value
      */
     public <T> T cachePut(String cacheName, String key, Supplier<T> loader, Duration ttl) {
         Validator.validateCacheable(cacheName, key, loader, ttl);
 
         String fullKey = buildKey(cacheName, key);
 
-        // El cargador queda fuera de cualquier catch: se ejecuta una sola vez
-        // y sus excepciones llegan intactas a quien llama.
+        // The loader stays outside of any catch: it runs only once
+        // and its exceptions reach the caller intact.
         T result = loader.get();
         if (paused("Update", fullKey)) {
             return result;
@@ -249,23 +249,23 @@ public class RedisCacheService {
     }
 
     /**
-     * Sobrecarga con el TTL predeterminado.
+     * Overload using the default TTL.
      *
-     * @param <T> tipo genérico
-     * @param cacheName nombre de caché
-     * @param key clave
-     * @param loader función que carga el valor
-     * @return objeto
+     * @param <T> generic type
+     * @param cacheName cache name
+     * @param key key
+     * @param loader function that loads the value
+     * @return the loaded or cached value
      */
     public <T> T cachePut(String cacheName, String key, Supplier<T> loader) {
         return cachePut(cacheName, key, loader, defaultTtl(cacheName));
     }
 
     /**
-     * Equivale a @CacheEvict.
+     * Equivalent to @CacheEvict.
      *
-     * @param cacheName nombre de caché
-     * @param key clave
+     * @param cacheName cache name
+     * @param key key
      */
     public void cacheEvict(String cacheName, String key) {
         Validator.validateCacheEvict(cacheName, key);
@@ -290,12 +290,12 @@ public class RedisCacheService {
     }
 
     /**
-     * Equivale a @CacheEvict(allEntries = true).
+     * Equivalent to @CacheEvict(allEntries = true).
      *
-     * <p>Recorre las claves con SCAN y las elimina por lotes con UNLINK, sin bloquear Redis
-     * ni cargarlas todas en memoria.</p>
+     * <p>Iterates over the keys with SCAN and removes them in batches with UNLINK, without blocking Redis
+     * or loading them all into memory.</p>
      *
-     * @param cacheName nombre de caché
+     * @param cacheName cache name
      */
     public void cacheEvictAll(String cacheName) {
         Validator.validateCacheEvict(cacheName);
@@ -315,10 +315,10 @@ public class RedisCacheService {
     }
 
     /**
-     * Invalida varias claves concretas.
+     * Evicts several specific keys.
      *
-     * @param cacheName nombre de caché
-     * @param keys claves
+     * @param cacheName cache name
+     * @param keys keys
      */
     public void cacheEvictMultiple(String cacheName, String... keys) {
         Validator.validateCacheEvict(cacheName);
@@ -350,13 +350,13 @@ public class RedisCacheService {
     }
 
     /**
-     * Invalida por un patrón propio. El patrón se aplica dentro del prefijo de la aplicación,
-     * así que no alcanza a las claves de otras aplicaciones que compartan Redis.
+     * Evicts by a custom pattern. The pattern is applied within the application prefix,
+     * so it does not reach the keys of other applications sharing Redis.
      *
-     * <p>Recorre las claves con SCAN y las elimina por lotes con UNLINK, sin bloquear Redis
-     * ni cargarlas todas en memoria.</p>
+     * <p>Iterates over the keys with SCAN and removes them in batches with UNLINK, without blocking Redis
+     * or loading them all into memory.</p>
      *
-     * @param userPattern patrón de claves, sin el prefijo de la aplicación
+     * @param userPattern key pattern, without the application prefix
      */
     public void cacheEvictByPattern(String userPattern) {
         Validator.validatePattern(userPattern);
@@ -376,11 +376,11 @@ public class RedisCacheService {
     }
 
     /**
-     * Comprueba si existe una clave en la caché.
+     * Checks whether a key exists in the cache.
      *
-     * @param cacheName nombre de caché
-     * @param key clave
-     * @return {@code true} si la operación tuvo éxito
+     * @param cacheName cache name
+     * @param key key
+     * @return {@code true} if the key exists
      */
     public boolean exists(String cacheName, String key) {
         Validator.validateCacheEvict(cacheName, key);
@@ -402,11 +402,11 @@ public class RedisCacheService {
     }
 
     /**
-     * Obtiene el TTL restante de una clave.
+     * Gets the remaining TTL of a key.
      *
-     * @param cacheName nombre de caché
-     * @param key clave
-     * @return tiempo de vida
+     * @param cacheName cache name
+     * @param key key
+     * @return time to live
      */
     public Long getTTL(String cacheName, String key) {
         Validator.validateCacheEvict(cacheName, key);
@@ -428,11 +428,11 @@ public class RedisCacheService {
     }
 
     /**
-     * Indica si hay que saltarse Redis porque hubo un fallo de conexión hace poco.
+     * Tells whether Redis must be skipped because there was a connection failure a short while ago.
      *
-     * @param operation operación que se salta, para el log
-     * @param target clave o patrón afectado, para el log
-     * @return {@code true} si la operación no debe llegar a Redis
+     * @param operation operation being skipped, for the log
+     * @param target affected key or pattern, for the log
+     * @return {@code true} if the operation must not reach Redis
      */
     private boolean paused(String operation, String target) {
         if (breaker.isOpen()) {
@@ -452,11 +452,11 @@ public class RedisCacheService {
     }
 
     /**
-     * Construye la clave completa.
+     * Builds the full key.
      *
-     * @param cacheName nombre de caché
-     * @param key clave
-     * @return cadena
+     * @param cacheName cache name
+     * @param key key
+     * @return string
      */
     private String buildKey(String cacheName, String key) {
         return namespace + cacheName + ":" + key;

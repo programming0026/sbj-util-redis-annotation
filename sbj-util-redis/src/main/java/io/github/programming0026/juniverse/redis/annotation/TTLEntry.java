@@ -13,24 +13,24 @@ import java.util.concurrent.TimeUnit;
 public @interface TTLEntry {
 
     /**
-     * Nombre de la caché: el {@code value} de las anotaciones {@code @Coalesce*} y {@code @Cacheable},
-     * o el {@code cacheName} de {@code RedisCacheService}.
+     * Cache name: the {@code value} of the {@code @Coalesce*} and {@code @Cacheable} annotations,
+     * or the {@code cacheName} of {@code RedisCacheService}.
      *
-     * @return nombre de la caché
+     * @return cache name
      */
     String name();
 
     /**
-     * Tiempo de vida de las entradas de esa caché, en la unidad de {@link #unit()}.
+     * Time to live of the entries in that cache, expressed in the unit given by {@link #unit()}.
      *
-     * @return tiempo de vida; debe ser mayor que cero
+     * @return time to live; must be greater than zero
      */
     long ttl();
 
     /**
-     * Unidad de {@link #ttl()}.
+     * Unit of {@link #ttl()}.
      *
-     * @return unidad de tiempo; minutos por defecto
+     * @return time unit; minutes by default
      */
     TimeUnit unit() default TimeUnit.MINUTES;
 }

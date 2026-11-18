@@ -15,9 +15,9 @@ import java.lang.annotation.Target;
 public @interface CoalescePuts {
 
     /**
-     * Valor.
+     * Value.
      *
-     * @return anotaciones de guardado con coalescencia
+     * @return coalescing put annotations
      */
     CoalescePut[] value();
 }

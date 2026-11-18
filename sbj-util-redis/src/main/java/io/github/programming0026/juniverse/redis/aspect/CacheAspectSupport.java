@@ -27,42 +27,42 @@ import org.springframework.expression.spel.standard.SpelExpressionParser;
 import org.springframework.expression.spel.support.StandardEvaluationContext;
 
 /**
- * Lógica común de los aspectos de caché: resolver los placeholders de las anotaciones, evaluar
- * las expresiones SpEL, calcular las claves y aplicar los guardados y las invalidaciones.
+ * Common logic of the cache aspects: resolving the placeholders of the annotations, evaluating
+ * SpEL expressions, computing keys and applying puts and evictions.
  *
- * <p>Lo que no cambia entre llamadas se calcula una sola vez: cada expresión se analiza la
- * primera vez que aparece y cada anotación se resuelve la primera vez que se intercepta su
- * método.</p>
+ * <p>Whatever does not change between calls is computed only once: each expression is parsed the
+ * first time it appears and each annotation is resolved the first time its method is
+ * intercepted.</p>
  *
- * <p>En las expresiones están disponibles los argumentos por su nombre ({@code #id}) y por su
- * posición ({@code #a0}, {@code #p0}), además de {@code #target}, {@code #method} y, después
- * de ejecutar el método, {@code #result}. Los nombres solo existen si la clase se compiló con
- * {@code -parameters}; la posición funciona siempre.</p>
+ * <p>The expressions can use the arguments by name ({@code #id}) and by position
+ * ({@code #a0}, {@code #p0}), as well as {@code #target}, {@code #method} and, after
+ * the method has run, {@code #result}. Names only exist if the class was compiled with
+ * {@code -parameters}; positions always work.</p>
  *
  * @author Java Universe
  */
 @Slf4j
 public final class CacheAspectSupport {
 
-    /** Administrador de caché. */
+    /** Cache manager. */
     private final CoalesceCacheManager cacheManager;
 
-    /** Función que resuelve los placeholders; {@code null} si no hay entorno. */
+    /** Function that resolves placeholders; {@code null} if there is no environment. */
     private final UnaryOperator<String> placeholderResolver;
 
-    /** TTL en segundos configurado por nombre de caché, para las anotaciones que no indican uno. */
+    /** TTL in seconds configured per cache name, for annotations that do not specify one. */
     private final Map<String, Long> configuredTtlSeconds;
 
-    /** Analizador de expresiones. */
+    /** Expression parser. */
     private final SpelExpressionParser parser = new SpelExpressionParser();
 
-    /** Obtiene los nombres de los parámetros de un método. */
+    /** Discovers the parameter names of a method. */
     private final ParameterNameDiscoverer parameterNames = new DefaultParameterNameDiscoverer();
 
-    /** Expresiones ya analizadas, por su texto. */
+    /** Already parsed expressions, keyed by their text. */
     private final Map<String, Expression> expressions = new ConcurrentHashMap<>();
 
-    /** Anotaciones con los placeholders ya resueltos, por método y tipo de anotación. */
+    /** Annotations with placeholders already resolved, keyed by method and annotation type. */
     private final Map<AnnotationKey, Annotation> resolvedAnnotations = new ConcurrentHashMap<>();
 
     public CacheAspectSupport(
@@ -79,13 +79,13 @@ public final class CacheAspectSupport {
     }
 
     /**
-     * Devuelve la anotación con los placeholders {@code ${...}} resueltos.
-     * El resultado se guarda por método, así que solo se calcula en la primera llamada.
+     * Returns the annotation with its {@code ${...}} placeholders resolved.
+     * The result is stored per method, so it is only computed on the first call.
      *
-     * @param <A> tipo de la anotación
-     * @param joinPoint punto de unión del aspecto
-     * @param annotation anotación tal como está escrita en el método
-     * @return anotación resuelta
+     * @param <A> annotation type
+     * @param joinPoint aspect join point
+     * @param annotation annotation as written on the method
+     * @return resolved annotation
      */
     @SuppressWarnings("unchecked")
     public <A extends Annotation> A resolve(JoinPoint joinPoint, A annotation) {
@@ -102,26 +102,26 @@ public final class CacheAspectSupport {
     }
 
     /**
-     * Evalúa una condición.
+     * Evaluates a condition.
      *
-     * @param joinPoint punto de unión del aspecto
-     * @param expression expresión SpEL; vacía significa «siempre»
-     * @param result resultado del método, o {@code null} si todavía no se ejecutó
-     * @return {@code true} si la expresión está vacía o da verdadero; un resultado nulo cuenta como falso
+     * @param joinPoint aspect join point
+     * @param expression SpEL expression; empty means "always"
+     * @param result method result, or {@code null} if it has not run yet
+     * @return {@code true} if the expression is empty or evaluates to true; a null result counts as false
      */
     public boolean condition(JoinPoint joinPoint, String expression, Object result) {
         return expression.isEmpty() || Boolean.TRUE.equals(evaluate(joinPoint, expression, result, Boolean.class));
     }
 
     /**
-     * Evalúa una expresión SpEL en el contexto de la llamada interceptada.
+     * Evaluates a SpEL expression in the context of the intercepted call.
      *
-     * @param <T> tipo del resultado
-     * @param joinPoint punto de unión del aspecto
-     * @param expression expresión SpEL
-     * @param result resultado del método, o {@code null} si todavía no se ejecutó
-     * @param resultType tipo al que se convierte el valor
-     * @return valor de la expresión
+     * @param <T> result type
+     * @param joinPoint aspect join point
+     * @param expression SpEL expression
+     * @param result method result, or {@code null} if it has not run yet
+     * @param resultType type the value is converted to
+     * @return value of the expression
      */
     public <T> T evaluate(JoinPoint joinPoint, String expression, Object result, Class<T> resultType) {
         Expression parsed = expressions.computeIfAbsent(expression, parser::parseExpression);
@@ -136,7 +136,7 @@ public final class CacheAspectSupport {
         if (method == null) {
             context = new StandardEvaluationContext(target);
         } else {
-            // Con un proxy de interfaz, los nombres de los parámetros están en la clase real.
+            // With an interface proxy, the parameter names are in the real class.
             Method specific = target == null ? method : AopUtils.getMostSpecificMethod(method, target.getClass());
             context = new MethodBasedEvaluationContext(target, specific, joinPoint.getArgs(), parameterNames);
             context.setVariable("method", method);
@@ -149,12 +149,12 @@ public final class CacheAspectSupport {
     }
 
     /**
-     * Calcula la clave de caché de una operación.
+     * Computes the cache key of an operation.
      *
-     * @param joinPoint punto de unión del aspecto
-     * @param cacheName nombre de la caché; vacío para usar el del método
-     * @param keyExpression expresión SpEL de la clave; vacía para usar los argumentos
-     * @return clave con la forma {@code nombre:clave}
+     * @param joinPoint aspect join point
+     * @param cacheName cache name; empty to use the method's own
+     * @param keyExpression SpEL key expression; empty to use the arguments
+     * @return key in the form {@code name:key}
      */
     public String cacheKey(JoinPoint joinPoint, String cacheName, String keyExpression) {
         String name = cacheName.isEmpty() ? CacheKeyGenerator.defaultCacheName(joinPoint) : cacheName;
@@ -165,23 +165,23 @@ public final class CacheAspectSupport {
     }
 
     /**
-     * Tiempo de vida efectivo de una operación.
+     * Effective time to live of an operation.
      *
-     * @param declared valor del atributo {@code ttl} de la anotación
-     * @param cacheName nombre de la caché
-     * @return segundos
+     * @param declared value of the annotation's {@code ttl} attribute
+     * @param cacheName cache name
+     * @return seconds
      */
     public long ttl(long declared, String cacheName) {
         return CacheDefaults.resolveTtl(declared, cacheName, configuredTtlSeconds);
     }
 
     /**
-     * Indica si hay que guardar el resultado según {@code condition} y {@code unless}.
+     * Tells whether the result must be stored according to {@code condition} and {@code unless}.
      *
-     * @param joinPoint punto de unión del aspecto
-     * @param put anotación de guardado
-     * @param result resultado del método
-     * @return {@code true} si se cumple la condición y no se cumple la excepción
+     * @param joinPoint aspect join point
+     * @param put put annotation
+     * @param result method result
+     * @return {@code true} if the condition holds and the {@code unless} veto does not
      */
     public boolean shouldPut(JoinPoint joinPoint, CoalescePut put, Object result) {
         return condition(joinPoint, put.condition(), result)
@@ -189,14 +189,14 @@ public final class CacheAspectSupport {
     }
 
     /**
-     * Guarda el resultado de un método anotado con {@link CoalescePut}.
-     * Si el resultado es nulo no hay nada que guardar y la entrada anterior deja de valer,
-     * así que se invalida.
+     * Stores the result of a method annotated with {@link CoalescePut}.
+     * If the result is null there is nothing to store and the previous entry is no longer valid,
+     * so it is evicted.
      *
-     * @param joinPoint punto de unión del aspecto
-     * @param put anotación de guardado
-     * @param result resultado del método
-     * @param returnType tipo de retorno del método
+     * @param joinPoint aspect join point
+     * @param put put annotation
+     * @param result method result
+     * @param returnType method return type
      */
     public void put(JoinPoint joinPoint, CoalescePut put, Object result, Type returnType) {
         String cacheKey = cacheKey(joinPoint, put.value(), put.key());
@@ -211,17 +211,17 @@ public final class CacheAspectSupport {
     }
 
     /**
-     * Aplica una invalidación.
+     * Applies an eviction.
      *
      * <ul>
-     *   <li>Con {@code allEntries}, borra todas las entradas de cada caché de {@code value}.</li>
-     *   <li>Con {@code pattern}, borra las claves que coinciden con el patrón.</li>
-     *   <li>En otro caso, borra la clave de la llamada en cada caché de {@code value}; sin
-     *       {@code value}, en la caché propia del método.</li>
+     *   <li>With {@code allEntries}, deletes all entries of each cache in {@code value}.</li>
+     *   <li>With {@code pattern}, deletes the keys matching the pattern.</li>
+     *   <li>Otherwise, deletes the call's key in each cache in {@code value}; without
+     *       {@code value}, in the method's own cache.</li>
      * </ul>
      *
-     * @param joinPoint punto de unión del aspecto
-     * @param evict anotación de invalidación
+     * @param joinPoint aspect join point
+     * @param evict eviction annotation
      */
     public void evict(JoinPoint joinPoint, CoalesceEvict evict) {
         if (evict.allEntries()) {

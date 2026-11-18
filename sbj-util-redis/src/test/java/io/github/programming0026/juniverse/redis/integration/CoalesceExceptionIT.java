@@ -14,52 +14,52 @@ import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 /**
- * Comprueba qué recibe el llamador cuando el método en caché lanza una excepción.
+ * Checks what the caller receives when the cached method throws an exception.
  *
  * @author Java Universe
  */
 class CoalesceExceptionIT extends AbstractRedisIT {
 
-    /** Servicio interceptado. */
+    /** Intercepted service. */
     private FailingService service;
 
     /**
-     * Servicio cuyos métodos siempre fallan.
+     * Service whose methods always fail.
      */
-    public static class FailingService {
+     private static class FailingService {
 
         @CoalesceCacheable(value = "errors", key = "#id", coalesce = false)
-        public String failWithoutCoalesce(String id) {
+         String failWithoutCoalesce(String id) {
             throw new IllegalStateException("boom " + id);
         }
 
         @CoalesceCacheable(value = "errors", key = "#id")
-        public String fail(String id) {
+         String fail(String id) {
             throw new IllegalStateException("boom " + id);
         }
 
         @CoalesceCacheable(value = "errors", key = "#id")
-        public String failChecked(String id) throws IOException {
+         String failChecked(String id) throws IOException {
             throw new IOException("io " + id);
         }
 
         @CoalesceCacheable(value = "errors", key = "#id", ttl = 20)
-        public String failSlowly(String id) throws InterruptedException {
+         String failSlowly(String id) throws InterruptedException {
             Thread.sleep(600);
             throw new IllegalStateException("boom " + id);
         }
     }
 
     /**
-     * Crea el servicio interceptado.
+     * Creates the intercepted service.
      */
     @BeforeEach
-    public void setUp() {
+     void setUp() {
         service = newInstance().proxy(new FailingService());
     }
 
     @Test
-    public void exception_ShouldKeepItsType_WithoutCoalesce() {
+     void exception_ShouldKeepItsType_WithoutCoalesce() {
         IllegalStateException ex = assertThrows(IllegalStateException.class,
                 () -> service.failWithoutCoalesce("1"));
 
@@ -67,31 +67,31 @@ class CoalesceExceptionIT extends AbstractRedisIT {
     }
 
     /**
-     * Con coalescencia (el valor por defecto) el llamador debe recibir la misma excepción
-     * que lanzó su método.
+     * With coalescing (the default) the caller must receive the same exception
+     * its method threw.
      */
     @Test
-    public void exception_ShouldKeepItsType_WithCoalesce() {
+     void exception_ShouldKeepItsType_WithCoalesce() {
         IllegalStateException ex = assertThrows(IllegalStateException.class, () -> service.fail("2"));
 
         assertEquals("boom 2", ex.getMessage());
     }
 
     @Test
-    public void checkedException_ShouldKeepItsType_WithCoalesce() {
+     void checkedException_ShouldKeepItsType_WithCoalesce() {
         IOException ex = assertThrows(IOException.class, () -> service.failChecked("3"));
 
         assertEquals("io 3", ex.getMessage());
     }
 
     /**
-     * Si el que tiene el bloqueo falla, los que esperan deben enterarse enseguida,
-     * no al agotar la espera (20 s en este método).
+     * If the lock holder fails, the waiters must find out right away,
+     * not when the wait runs out (20 s in this method).
      *
-     * @throws Exception si la prueba se interrumpe
+     * @throws Exception if the test is interrupted
      */
     @Test
-    public void waiter_ShouldFailFast_WhenLoaderFails() throws Exception {
+     void waiter_ShouldFailFast_WhenLoaderFails() throws Exception {
         Future<String> holder = runAsync(() -> service.failSlowly("4"));
         Thread.sleep(200);
         Future<String> waiter = runAsync(() -> service.failSlowly("4"));

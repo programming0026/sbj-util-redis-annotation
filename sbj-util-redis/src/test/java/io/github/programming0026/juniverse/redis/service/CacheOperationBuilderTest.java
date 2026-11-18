@@ -17,14 +17,14 @@ import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
 /**
- * Pruebas unitarias de CacheOperationBuilder.
+ * Unit tests for CacheOperationBuilder.
  *
  * @author Java Universe
  */
 @ExtendWith(MockitoExtension.class)
 class CacheOperationBuilderTest {
 
-        /** Servicio de caché. */
+        /** Cache service. */
         @Mock
         private RedisCacheService cacheService;
 
@@ -32,19 +32,19 @@ class CacheOperationBuilderTest {
         private CacheOperationBuilder<String> builder;
 
         /**
-         * Prepara la prueba.
+         * Sets up the test.
          */
         @BeforeEach
-        public void setUp() {
+         void setUp() {
                 CacheOperationBuilder.Factory factory = new CacheOperationBuilder.Factory(cacheService);
                 builder = factory.create();
         }
 
         /**
-         * Obtener de caché sin nombre de caché debe lanzar IllegalStateException.
+         * Getting from the cache without a cache name must throw IllegalStateException.
          */
         @Test
-        public void cacheable_WithoutCacheName_ShouldThrowIllegalStateException() {
+         void cacheable_WithoutCacheName_ShouldThrowIllegalStateException() {
                 builder.key("testKey")
                                 .loader(() -> "value");
 
@@ -53,10 +53,10 @@ class CacheOperationBuilderTest {
         }
 
         /**
-         * Obtener de caché sin clave debe lanzar IllegalStateException.
+         * Getting from the cache without a key must throw IllegalStateException.
          */
         @Test
-        public void cacheable_WithoutKey_ShouldThrowIllegalStateException() {
+         void cacheable_WithoutKey_ShouldThrowIllegalStateException() {
                 builder.cacheName("testCache")
                                 .loader(() -> "value");
 
@@ -65,10 +65,10 @@ class CacheOperationBuilderTest {
         }
 
         /**
-         * Obtener de caché sin cargador debe lanzar IllegalStateException.
+         * Getting from the cache without a loader must throw IllegalStateException.
          */
         @Test
-        public void cacheable_WithoutLoader_ShouldThrowIllegalStateException() {
+         void cacheable_WithoutLoader_ShouldThrowIllegalStateException() {
                 builder.cacheName("testCache")
                                 .key("testKey");
 
@@ -77,10 +77,10 @@ class CacheOperationBuilderTest {
         }
 
         /**
-         * Obtener de caché con nombre de caché vacío debe lanzar IllegalStateException.
+         * Getting from the cache with an empty cache name must throw IllegalStateException.
          */
         @Test
-        public void cacheable_WithEmptyCacheName_ShouldThrowIllegalStateException() {
+         void cacheable_WithEmptyCacheName_ShouldThrowIllegalStateException() {
                 builder.cacheName("")
                                 .key("testKey")
                                 .loader(() -> "value");
@@ -90,10 +90,10 @@ class CacheOperationBuilderTest {
         }
 
         /**
-         * Obtener de caché con clave vacía debe lanzar IllegalStateException.
+         * Getting from the cache with an empty key must throw IllegalStateException.
          */
         @Test
-        public void cacheable_WithEmptyKey_ShouldThrowIllegalStateException() {
+         void cacheable_WithEmptyKey_ShouldThrowIllegalStateException() {
                 builder.cacheName("testCache")
                                 .key("")
                                 .loader(() -> "value");
@@ -103,11 +103,11 @@ class CacheOperationBuilderTest {
         }
 
         /**
-         * Obtener de caché con todos los campos obligatorios debe ejecutarse.
+         * Getting from the cache with all required fields must run.
          */
         @Test
-        public void cacheable_WithAllRequiredFields_ShouldExecute() {
-                // Dado
+         void cacheable_WithAllRequiredFields_ShouldExecute() {
+                // Given
                 String cacheName = "testCache";
                 String key = "testKey";
                 String expectedValue = "testValue";
@@ -127,10 +127,10 @@ class CacheOperationBuilderTest {
         }
 
         /**
-         * Obtener de caché con TTL propio debe usar ese TTL.
+         * Getting from the cache with its own TTL must use that TTL.
          */
         @Test
-        public void cacheable_WithCustomTtl_ShouldUseCustomTtl() {
+         void cacheable_WithCustomTtl_ShouldUseCustomTtl() {
                 String cacheName = "testCache";
                 String key = "testKey";
                 String expectedValue = "testValue";
@@ -150,10 +150,10 @@ class CacheOperationBuilderTest {
         }
 
         /**
-         * El constructor debe admitir la API fluida.
+         * The builder must support the fluent API.
          */
         @Test
-        public void builder_ShouldSupportFluentAPI() {
+         void builder_ShouldSupportFluentAPI() {
                 String expectedValue = "testValue";
                 when(cacheService.cacheableWithResult(anyString(), anyString(), any(), any(Duration.class)))
                                 .thenReturn(CacheResult.miss(expectedValue));
@@ -171,10 +171,10 @@ class CacheOperationBuilderTest {
 
 
         /**
-         * Obtener de caché con condición falsa debe omitir la caché.
+         * Getting from the cache with a false condition must skip the cache.
          */
         @Test
-        public void cacheable_WithConditionFalse_ShouldBypassCache() {
+         void cacheable_WithConditionFalse_ShouldBypassCache() {
                 String expectedValue = "testValue";
                 Supplier<String> loader = () -> expectedValue;
 
@@ -189,10 +189,10 @@ class CacheOperationBuilderTest {
         }
 
         /**
-         * Obtener de caché con condición verdadera debe usar la caché.
+         * Getting from the cache with a true condition must use the cache.
          */
         @Test
-        public void cacheable_WithConditionTrue_ShouldUseCache() {
+         void cacheable_WithConditionTrue_ShouldUseCache() {
                 String expectedValue = "testValue";
                 when(cacheService.cacheableWithResult(anyString(), anyString(), any(), any(Duration.class)))
                                 .thenReturn(CacheResult.miss(expectedValue));
@@ -210,10 +210,10 @@ class CacheOperationBuilderTest {
 
 
         /**
-         * Obtener de caché ante un acierto debe invocar la retrollamada onHit.
+         * Getting from the cache on a hit must invoke the onHit callback.
          */
         @Test
-        public void cacheable_OnCacheHit_ShouldInvokeOnHitCallback() {
+         void cacheable_OnCacheHit_ShouldInvokeOnHitCallback() {
                 String cacheName = "testCache";
                 String key = "testKey";
                 String cachedValue = "cachedValue";
@@ -237,10 +237,10 @@ class CacheOperationBuilderTest {
         }
 
         /**
-         * Obtener de caché ante un fallo debe invocar la retrollamada onMiss.
+         * Getting from the cache on a miss must invoke the onMiss callback.
          */
         @Test
-        public void cacheable_OnCacheMiss_ShouldInvokeOnMissCallback() {
+         void cacheable_OnCacheMiss_ShouldInvokeOnMissCallback() {
                 String cacheName = "testCache";
                 String key = "testKey";
                 String loadedValue = "loadedValue";
@@ -264,10 +264,10 @@ class CacheOperationBuilderTest {
         }
 
         /**
-         * Obtener de caché con ambas retrollamadas debe invocar solo la que corresponde.
+         * Getting from the cache with both callbacks must invoke only the matching one.
          */
         @Test
-        public void cacheable_WithBothCallbacks_ShouldInvokeOnlyRelevantCallback() {
+         void cacheable_WithBothCallbacks_ShouldInvokeOnlyRelevantCallback() {
                 String cacheName = "testCache";
                 String key = "testKey";
                 String cachedValue = "cachedValue";
@@ -290,10 +290,10 @@ class CacheOperationBuilderTest {
         }
 
         /**
-         * Obtener de caché sin retrollamadas no debe lanzar excepción.
+         * Getting from the cache without callbacks must not throw an exception.
          */
         @Test
-        public void cacheable_WithoutCallbacks_ShouldNotThrowException() {
+         void cacheable_WithoutCallbacks_ShouldNotThrowException() {
                 String expectedValue = "testValue";
                 when(cacheService.cacheableWithResult(anyString(), anyString(), any(), any(Duration.class)))
                                 .thenReturn(CacheResult.miss(expectedValue));
@@ -306,10 +306,10 @@ class CacheOperationBuilderTest {
 
 
         /**
-         * Guardar en caché debe delegar en el servicio.
+         * Storing in the cache must delegate to the service.
          */
         @Test
-        public void cachePut_ShouldDelegateToService() {
+         void cachePut_ShouldDelegateToService() {
                 
                 String cacheName = "testCache";
                 String key = "testKey";
@@ -332,10 +332,10 @@ class CacheOperationBuilderTest {
         }
 
         /**
-         * Guardar en caché con TTL predeterminado debe usar ese valor.
+         * Storing in the cache with the default TTL must use that value.
          */
         @Test
-        public void cachePut_WithDefaultTtl_ShouldUseDefault() {
+         void cachePut_WithDefaultTtl_ShouldUseDefault() {
                 
                 String expectedValue = "testValue";
                 when(cacheService.cachePut(anyString(), anyString(), any(), any(Duration.class)))
@@ -354,10 +354,10 @@ class CacheOperationBuilderTest {
 
 
         /**
-         * Invalidar la caché debe delegar en el servicio.
+         * Evicting from the cache must delegate to the service.
          */
         @Test
-        public void cacheEvict_ShouldDelegateToService() {
+         void cacheEvict_ShouldDelegateToService() {
                 String cacheName = "testCache";
                 String key = "testKey";
 
@@ -369,10 +369,10 @@ class CacheOperationBuilderTest {
         }
 
         /**
-         * Invalidar la caché con un cargador asignado debe seguir funcionando.
+         * Evicting from the cache with an assigned loader must keep working.
          */
         @Test
-        public void cacheEvict_WithLoaderSet_ShouldStillWork() {
+         void cacheEvict_WithLoaderSet_ShouldStillWork() {
                 String cacheName = "testCache";
                 String key = "testKey";
 
@@ -385,10 +385,10 @@ class CacheOperationBuilderTest {
         }
 
         /**
-         * El constructor debe tener un TTL predeterminado de 10 minutos.
+         * The builder must have a default TTL of 10 minutes.
          */
         @Test
-        public void builder_ShouldHaveDefaultTtlOf10Minutes() {
+         void builder_ShouldHaveDefaultTtlOf10Minutes() {
 
                 String expectedValue = "testValue";
                 when(cacheService.cacheableWithResult(anyString(), anyString(), any(), any(Duration.class)))
@@ -404,10 +404,10 @@ class CacheOperationBuilderTest {
         }
 
         /**
-         * El constructor debe tener la condición verdadera por defecto.
+         * The builder must have the condition true by default.
          */
         @Test
-        public void builder_ShouldHaveDefaultConditionTrue() {
+         void builder_ShouldHaveDefaultConditionTrue() {
                 String expectedValue = "testValue";
                 when(cacheService.cacheableWithResult(anyString(), anyString(), any(), any(Duration.class)))
                                 .thenReturn(CacheResult.miss(expectedValue));
@@ -421,10 +421,10 @@ class CacheOperationBuilderTest {
         }
 
         /**
-         * Invalidar sin nombre de caché debe lanzar una excepción.
+         * Evicting without a cache name must throw an exception.
          */
         @Test
-        public void cacheEvict_WithoutCacheName_ShouldThrowException() {
+         void cacheEvict_WithoutCacheName_ShouldThrowException() {
                 IllegalStateException exception = assertThrows(IllegalStateException.class,
                         () -> builder.key("key1").cacheEvict());
 
@@ -433,10 +433,10 @@ class CacheOperationBuilderTest {
         }
 
         /**
-         * Invalidar sin clave debe lanzar una excepción.
+         * Evicting without a key must throw an exception.
          */
         @Test
-        public void cacheEvict_WithoutKey_ShouldThrowException() {
+         void cacheEvict_WithoutKey_ShouldThrowException() {
                 IllegalStateException exception = assertThrows(IllegalStateException.class,
                         () -> builder.cacheName("cache").cacheEvict());
 
@@ -445,20 +445,20 @@ class CacheOperationBuilderTest {
         }
 
         /**
-         * Invalidar con parámetros válidos debe tener éxito.
+         * Evicting with valid parameters must succeed.
          */
         @Test
-        public void cacheEvict_WithValidParams_ShouldSucceed() {
+         void cacheEvict_WithValidParams_ShouldSucceed() {
                 assertDoesNotThrow(() -> builder.cacheName("cache").key("key1").cacheEvict());
 
                 verify(cacheService).cacheEvict("cache", "key1");
         }
 
         /**
-         * Invalidar todo debe delegar en el servicio.
+         * Evicting everything must delegate to the service.
          */
         @Test
-        public void cacheEvictAll_ShouldDelegateToService() {
+         void cacheEvictAll_ShouldDelegateToService() {
                 String cacheName = "testCache";
 
                 builder.cacheName(cacheName)
@@ -468,10 +468,10 @@ class CacheOperationBuilderTest {
         }
 
         /**
-         * Invalidar todo sin nombre de caché debe lanzar una excepción.
+         * Evicting everything without a cache name must throw an exception.
          */
         @Test
-        public void cacheEvictAll_WithoutCacheName_ShouldThrowException() {
+         void cacheEvictAll_WithoutCacheName_ShouldThrowException() {
                 IllegalStateException exception = assertThrows(IllegalStateException.class,
                         () -> builder.cacheEvictAll());
 
@@ -480,20 +480,20 @@ class CacheOperationBuilderTest {
         }
 
         /**
-         * Invalidar todo con parámetros válidos debe tener éxito.
+         * Evicting everything with valid parameters must succeed.
          */
         @Test
-        public void cacheEvictAll_WithValidParams_ShouldSucceed() {
+         void cacheEvictAll_WithValidParams_ShouldSucceed() {
                 assertDoesNotThrow(() -> builder.cacheName("cache").cacheEvictAll());
 
                 verify(cacheService).cacheEvictAll("cache");
         }
 
         /**
-         * Invalidar todo con una clave asignada debe ignorarla.
+         * Evicting everything with an assigned key must ignore it.
          */
         @Test
-        public void cacheEvictAll_WithKeySet_ShouldIgnoreKey() {
+         void cacheEvictAll_WithKeySet_ShouldIgnoreKey() {
                 String cacheName = "testCache";
 
                 builder.cacheName(cacheName)

@@ -22,32 +22,32 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 /**
- * Pruebas de las claves de caché que se generan cuando la anotación no indica
- * {@code value} o {@code key}.
+ * Tests for the cache keys generated when the annotation does not specify
+ * {@code value} or {@code key}.
  *
  * @author Java Universe
  */
 class CacheKeyGeneratorTest {
 
-    /** Estado de ejemplo. */
-    public enum Status { OPEN }
+    /** Sample state. */
+     private enum Status { OPEN }
 
-    /** Filtro de búsqueda de ejemplo. */
-    public record Filter(String name, int page) {
+    /** Sample search filter. */
+    private record Filter(String name, int page) {
     }
 
-    /** Objeto sin campos: no sirve para formar una clave. */
-    public static class Empty {
+    /** Object without fields: it cannot be used to build a key. */
+    private static class Empty {
     }
 
     /**
-     * Servicio genérico de ejemplo.
+     * Sample generic service.
      *
-     * @param <T> tipo de la entidad
+     * @param <T> entity type
      */
-    public abstract static class GenericService<T> {
+     public abstract static class GenericService<T> {
 
-        public T find(Long id) {
+         public T find(Long id) {
             return null;
         }
 
@@ -56,8 +56,8 @@ class CacheKeyGeneratorTest {
         }
     }
 
-    /** Servicio concreto, que fija el tipo genérico. */
-    public static class UserService extends GenericService<String> {
+    /** Concrete service, which fixes the generic type. */
+     public static class UserService extends GenericService<String> {
 
         public String byName(String name) {
             return name;
@@ -67,7 +67,7 @@ class CacheKeyGeneratorTest {
             return name + page;
         }
 
-        public Object anything() {
+        public  Object anything() {
             return null;
         }
     }
@@ -93,10 +93,10 @@ class CacheKeyGeneratorTest {
     }
 
     /**
-     * Dos argumentos distintos con el mismo hashCode deben dar claves distintas.
+     * Two different arguments with the same hashCode must give different keys.
      */
     @Test
-    public void argumentsKey_ShouldDifferForArgumentsWithSameHashCode() {
+     void argumentsKey_ShouldDifferForArgumentsWithSameHashCode() {
         assertEquals("Aa".hashCode(), "BB".hashCode());
 
         assertNotEquals(CacheKeyGenerator.argumentsKey(withArgs("Aa")),
@@ -104,7 +104,7 @@ class CacheKeyGeneratorTest {
     }
 
     @Test
-    public void argumentsKey_WithSingleScalar_ShouldUseItsText() {
+     void argumentsKey_WithSingleScalar_ShouldUseItsText() {
         UUID id = UUID.fromString("00000000-0000-0000-0000-000000000001");
 
         assertEquals("42", CacheKeyGenerator.argumentsKey(withArgs(42L)));
@@ -114,16 +114,16 @@ class CacheKeyGeneratorTest {
     }
 
     /**
-     * Las cadenas van entre comillas para distinguir un nulo de la cadena "null".
+     * Strings are quoted to distinguish a null from the string "null".
      */
     @Test
-    public void argumentsKey_ShouldTellNullFromTheStringNull() {
+     void argumentsKey_ShouldTellNullFromTheStringNull() {
         assertEquals("[\"null\"]", CacheKeyGenerator.argumentsKey(withArgs("null")));
         assertEquals("[null]", CacheKeyGenerator.argumentsKey(withArgs((Object) null)));
     }
 
     @Test
-    public void argumentsKey_WithNoArguments_ShouldBeEmptyList() {
+     void argumentsKey_WithNoArguments_ShouldBeEmptyList() {
         assertEquals("[]", CacheKeyGenerator.argumentsKey(withArgs()));
 
         JoinPoint withoutArgs = withArgs();
@@ -132,10 +132,10 @@ class CacheKeyGeneratorTest {
     }
 
     /**
-     * Los objetos se identifican por su contenido, con las entradas de los mapas ordenadas.
+     * Objects are identified by their content, with map entries sorted.
      */
     @Test
-    public void argumentsKey_WithObjects_ShouldUseTheirContent() {
+     void argumentsKey_WithObjects_ShouldUseTheirContent() {
         assertEquals("[{\"name\":\"ana\",\"page\":2},5]",
                 CacheKeyGenerator.argumentsKey(withArgs(new Filter("ana", 2), 5)));
         assertEquals(CacheKeyGenerator.argumentsKey(withArgs(new Filter("ana", 2))),
@@ -145,10 +145,10 @@ class CacheKeyGeneratorTest {
     }
 
     /**
-     * Unos argumentos muy largos se resumen con SHA-256, que sigue dependiendo del contenido.
+     * Very long arguments are summarized with SHA-256, which still depends on the content.
      */
     @Test
-    public void argumentsKey_WithLongArguments_ShouldUseDigest() {
+     void argumentsKey_WithLongArguments_ShouldUseDigest() {
         String first = CacheKeyGenerator.argumentsKey(withArgs("x".repeat(300)));
         String second = CacheKeyGenerator.argumentsKey(withArgs("x".repeat(299) + "y"));
 
@@ -158,10 +158,10 @@ class CacheKeyGeneratorTest {
     }
 
     /**
-     * Un argumento que no se puede convertir a JSON obliga a indicar la clave en la anotación.
+     * An argument that cannot be converted to JSON forces the key to be specified in the annotation.
      */
     @Test
-    public void argumentsKey_WithUnserializableArgument_ShouldAskForExplicitKey() {
+     void argumentsKey_WithUnserializableArgument_ShouldAskForExplicitKey() {
         IllegalStateException exception = assertThrows(IllegalStateException.class,
                 () -> CacheKeyGenerator.argumentsKey(withArgs(new Empty())));
 
@@ -170,10 +170,10 @@ class CacheKeyGeneratorTest {
     }
 
     /**
-     * Dos sobrecargas del mismo método deben tener nombres de caché distintos.
+     * Two overloads of the same method must have different cache names.
      */
     @Test
-    public void defaultCacheName_ShouldIncludeClassMethodAndParameterTypes() {
+     void defaultCacheName_ShouldIncludeClassMethodAndParameterTypes() {
         UserService service = new UserService();
         String one = CacheKeyGenerator.defaultCacheName(
                 joinPoint(service, "byName", new Class<?>[] {String.class}, "ana"));
@@ -185,7 +185,7 @@ class CacheKeyGeneratorTest {
     }
 
     @Test
-    public void defaultCacheName_WithoutMethodSignature_ShouldUseLongSignature() {
+     void defaultCacheName_WithoutMethodSignature_ShouldUseLongSignature() {
         Signature signature = mock(Signature.class);
         when(signature.toLongString()).thenReturn("long signature");
         JoinPoint joinPoint = mock(JoinPoint.class);
@@ -197,10 +197,10 @@ class CacheKeyGeneratorTest {
     }
 
     /**
-     * El tipo de retorno genérico se resuelve contra la clase real del servicio.
+     * The generic return type is resolved against the real class of the service.
      */
     @Test
-    public void returnTypeOf_ShouldResolveGenericsAgainstTargetClass() {
+     void returnTypeOf_ShouldResolveGenericsAgainstTargetClass() {
         UserService service = new UserService();
 
         Type single = CacheKeyGenerator.returnTypeOf(joinPoint(service, "find", new Class<?>[] {Long.class}, 1L));
@@ -213,7 +213,7 @@ class CacheKeyGeneratorTest {
     }
 
     @Test
-    public void returnTypeOf_WithoutTarget_ShouldUseDeclaredType() {
+     void returnTypeOf_WithoutTarget_ShouldUseDeclaredType() {
         JoinPoint joinPoint = joinPoint(new UserService(), "byName", new Class<?>[] {String.class}, "ana");
         when(joinPoint.getTarget()).thenReturn(null);
 

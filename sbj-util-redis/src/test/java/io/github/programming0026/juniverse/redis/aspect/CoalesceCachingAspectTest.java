@@ -23,7 +23,7 @@ import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
 
 /**
- * Pruebas unitarias de CoalesceCachingAspect.
+ * Unit tests for CoalesceCachingAspect.
  *
  * @author Java Universe
  */
@@ -31,46 +31,46 @@ import org.mockito.quality.Strictness;
 @MockitoSettings(strictness = Strictness.LENIENT)
 class CoalesceCachingAspectTest {
 
-    /** Administrador de caché. */
+    /** Cache manager. */
     @Mock
     private CoalesceCacheManager cacheManager;
 
-    /** Punto de unión simulado. */
+    /** Mocked join point. */
     @Mock
     private ProceedingJoinPoint joinPoint;
 
-    /** Firma del método simulada. */
+    /** Mocked method signature. */
     @Mock
     private MethodSignature methodSignature;
 
-    /** Aspecto bajo prueba. */
+    /** Aspect under test. */
     private CoalesceCachingAspect aspect;
 
     /**
-     * Prepara el entorno antes de cada prueba.
+     * Sets up the environment before each test.
      */
     @BeforeEach
-    public void setUp() {
+     void setUp() {
         aspect = new CoalesceCachingAspect(cacheManager);
-        // Por defecto, ninguna clave está en caché.
+        // By default, no key is cached.
         when(cacheManager.lookup(anyString(), any())).thenReturn(CacheResult.miss(null));
     }
 
     /**
-     * Método de apoyo para las simulaciones.
+     * Helper method for the mocks.
      *
-     * @param id identificador
-     * @return cadena
+     * @param id identifier
+     * @return string
      */
     public String testMethod(String id) {
         return "result";
     }
 
     /**
-     * Procesar con acierto de caché debe devolver el valor en caché.
+     * Processing with a cache hit must return the cached value.
      */
     @Test
-    public void handleCaching_WithCacheHit_ShouldReturnCachedValue() throws Throwable {
+     void handleCaching_WithCacheHit_ShouldReturnCachedValue() throws Throwable {
         CoalesceCacheable cacheable = createMockCacheable("cache", "#id", 300, "", false, true);
         CoalesceCaching caching = createMockCaching(
                 new CoalesceCacheable[]{cacheable},
@@ -92,10 +92,10 @@ class CoalesceCachingAspectTest {
     }
 
     /**
-     * Procesar con fallo de caché debe ejecutar el método y guardar el resultado.
+     * Processing with a cache miss must run the method and store the result.
      */
     @Test
-    public void handleCaching_WithCacheMiss_ShouldExecuteMethodAndCacheResult() throws Throwable {
+     void handleCaching_WithCacheMiss_ShouldExecuteMethodAndCacheResult() throws Throwable {
         CoalesceCacheable cacheable = createMockCacheable("cache", "#id", 300, "", false, true);
         CoalesceCaching caching = createMockCaching(
                 new CoalesceCacheable[]{cacheable},
@@ -118,10 +118,10 @@ class CoalesceCachingAspectTest {
     }
 
     /**
-     * Procesar con resultado nulo y cacheNull falso no debe guardar en caché.
+     * Processing with a null result and cacheNull false must not store in the cache.
      */
     @Test
-    public void handleCaching_WithNullResultAndCacheNullFalse_ShouldNotCache() throws Throwable {
+     void handleCaching_WithNullResultAndCacheNullFalse_ShouldNotCache() throws Throwable {
         CoalesceCacheable cacheable = createMockCacheable("cache", "#id", 300, "", false, true);
         CoalesceCaching caching = createMockCaching(
                 new CoalesceCacheable[]{cacheable},
@@ -143,10 +143,10 @@ class CoalesceCachingAspectTest {
     }
 
     /**
-     * Procesar con resultado nulo y cacheNull verdadero debe guardar en caché.
+     * Processing with a null result and cacheNull true must store in the cache.
      */
     @Test
-    public void handleCaching_WithNullResultAndCacheNullTrue_ShouldCache() throws Throwable {
+     void handleCaching_WithNullResultAndCacheNullTrue_ShouldCache() throws Throwable {
         CoalesceCacheable cacheable = createMockCacheable("cache", "#id", 300, "", true, true);
         CoalesceCaching caching = createMockCaching(
                 new CoalesceCacheable[]{cacheable},
@@ -169,10 +169,10 @@ class CoalesceCachingAspectTest {
 
 
     /**
-     * Procesar con invalidación posterior debe invalidar después de ejecutar.
+     * Processing with an after-invocation eviction must evict after running.
      */
     @Test
-    public void handleCaching_WithAfterEviction_ShouldEvictAfterExecution() throws Throwable {
+     void handleCaching_WithAfterEviction_ShouldEvictAfterExecution() throws Throwable {
         CoalesceEvict evict = createMockEvict(new String[]{"cache"}, "", "", false, false, "");
         CoalesceCaching caching = createMockCaching(
                 new CoalesceCacheable[]{},
@@ -193,10 +193,10 @@ class CoalesceCachingAspectTest {
 
 
     /**
-     * Procesar con guardado y condición «unless» verdadera no debe guardar en caché.
+     * Processing with a put and a true "unless" condition must not store in the cache.
      */
     @Test
-    public void handleCaching_WithPutAndUnlessConditionTrue_ShouldNotCache() throws Throwable {
+     void handleCaching_WithPutAndUnlessConditionTrue_ShouldNotCache() throws Throwable {
         CoalescePut put = createMockPut("cache", "#id", 300, "", "#result == null");
         CoalesceCaching caching = createMockCaching(
                 new CoalesceCacheable[]{},
@@ -217,10 +217,10 @@ class CoalesceCachingAspectTest {
     }
 
     /**
-     * Procesar con guardado sin «unless» debe guardar en caché.
+     * Processing with a put without "unless" must store in the cache.
      */
     @Test
-    public void handleCaching_WithPutAndEmptyUnless_ShouldCache() throws Throwable {
+     void handleCaching_WithPutAndEmptyUnless_ShouldCache() throws Throwable {
         CoalescePut put = createMockPut("cache", "#id", 300, "", "");
         CoalesceCaching caching = createMockCaching(
                 new CoalesceCacheable[]{},
@@ -236,10 +236,10 @@ class CoalesceCachingAspectTest {
     }
 
     /**
-     * Procesar con guardado y «unless» falso debe guardar en caché.
+     * Processing with a put and a false "unless" must store in the cache.
      */
     @Test
-    public void handleCaching_WithPutAndUnlessFalse_ShouldCache() throws Throwable {
+     void handleCaching_WithPutAndUnlessFalse_ShouldCache() throws Throwable {
         CoalescePut put = createMockPut("cache", "#id", 300, "", "#result == null");
         CoalesceCaching caching = createMockCaching(
                 new CoalesceCacheable[]{},
@@ -255,10 +255,10 @@ class CoalesceCachingAspectTest {
     }
 
     /**
-     * Procesar con guardado y condición falsa no debe guardar en caché.
+     * Processing with a put and a false condition must not store in the cache.
      */
     @Test
-    public void handleCaching_WithPutAndConditionFalse_ShouldNotCache() throws Throwable {
+     void handleCaching_WithPutAndConditionFalse_ShouldNotCache() throws Throwable {
         CoalescePut put = createMockPut("cache", "#id", 300, "#id == '999'", "");
         CoalesceCaching caching = createMockCaching(
                 new CoalesceCacheable[]{},
@@ -274,7 +274,7 @@ class CoalesceCachingAspectTest {
     }
 
     /**
-     * Prepara el punto de unión con un argumento {@code id = "123"}.
+     * Prepares the join point with an argument {@code id = "123"}.
      */
     private void setupJoinPoint() {
         when(joinPoint.getSignature()).thenReturn(methodSignature);
@@ -284,10 +284,10 @@ class CoalesceCachingAspectTest {
     }
 
     /**
-     * Procesar con clave vacía debe usar el hash de los argumentos.
+     * Processing with an empty key must use the hash of the arguments.
      */
     @Test
-    public void handleCaching_WithEmptyKey_ShouldUseArgumentsContent() throws Throwable {
+     void handleCaching_WithEmptyKey_ShouldUseArgumentsContent() throws Throwable {
         CoalesceCacheable cacheable = createMockCacheable("cache", "", 300, "", false, true);
         CoalesceCaching caching = createMockCaching(
                 new CoalesceCacheable[]{cacheable},
@@ -313,10 +313,10 @@ class CoalesceCachingAspectTest {
 
 
     /**
-     * Procesar con clave de invalidación debe invalidar esa clave.
+     * Processing with an eviction key must evict that key.
      */
     @Test
-    public void handleCaching_WithEvictKey_ShouldEvictSpecificKey() throws Throwable {
+     void handleCaching_WithEvictKey_ShouldEvictSpecificKey() throws Throwable {
         CoalesceEvict evict = createMockEvict(new String[]{"cache"}, "#id", "", false, false, "");
         CoalesceCaching caching = createMockCaching(
                 new CoalesceCacheable[]{},
@@ -337,15 +337,15 @@ class CoalesceCachingAspectTest {
     }
 
     /**
-     * Crea una anotación de caché simulada.
+     * Creates a mocked cache annotation.
      *
-     * @param value valor
-     * @param key clave
-     * @param ttl tiempo de vida
-     * @param condition expresión de la condición
-     * @param cacheNull nulo de caché
-     * @param coalesce indica si se activa la coalescencia
-     * @return anotación de caché con coalescencia
+     * @param value value
+     * @param key key
+     * @param ttl time to live
+     * @param condition condition expression
+     * @param cacheNull whether nulls are cached
+     * @param coalesce whether coalescing is enabled
+     * @return coalescing cache annotation
      */
     private CoalesceCacheable createMockCacheable(
             String value, String key, long ttl, String condition,
@@ -361,15 +361,15 @@ class CoalesceCachingAspectTest {
     }
 
     /**
-     * Crea una anotación de invalidación simulada.
+     * Creates a mocked eviction annotation.
      *
-     * @param value valor
-     * @param key clave
-     * @param pattern patrón de claves
-     * @param beforeInvocation indica si invalida antes de la invocación
-     * @param allEntries indica si invalida todas las entradas
-     * @param condition expresión de la condición
-     * @return anotación de invalidación con coalescencia
+     * @param value value
+     * @param key key
+     * @param pattern key pattern
+     * @param beforeInvocation whether it evicts before the invocation
+     * @param allEntries whether it evicts all entries
+     * @param condition condition expression
+     * @return coalescing eviction annotation
      */
     private CoalesceEvict createMockEvict(
             String[] value, String key, String pattern,
@@ -385,14 +385,14 @@ class CoalesceCachingAspectTest {
     }
 
     /**
-     * Crea una anotación de guardado simulada.
+     * Creates a mocked put annotation.
      *
-     * @param value valor
-     * @param key clave
-     * @param ttl tiempo de vida
-     * @param condition expresión de la condición
-     * @param unless condición que evita guardar
-     * @return anotación de guardado con coalescencia
+     * @param value value
+     * @param key key
+     * @param ttl time to live
+     * @param condition condition expression
+     * @param unless condition that prevents storing
+     * @return coalescing put annotation
      */
     private CoalescePut createMockPut(
             String value, String key, long ttl, String condition, String unless) {
@@ -406,12 +406,12 @@ class CoalesceCachingAspectTest {
     }
 
     /**
-     * Crea una anotación agrupadora simulada.
+     * Creates a mocked grouping annotation.
      *
-     * @param cacheables anotaciones de caché incluidas
-     * @param evicts anotación que agrupa invalidaciones
-     * @param puts anotación que agrupa guardados
-     * @return anotación agrupadora con coalescencia
+     * @param cacheables included cache annotations
+     * @param evicts annotation that groups evictions
+     * @param puts annotation that groups puts
+     * @return coalescing grouping annotation
      */
     private CoalesceCaching createMockCaching(
             CoalesceCacheable[] cacheables,
@@ -425,13 +425,13 @@ class CoalesceCachingAspectTest {
     }
 
     /**
-     * Obtiene método de prueba.
+     * Gets the test method.
      *
-     * @return método de prueba
+     * @return test method
      */
-    private Method getTestMethod() {
+    public Method getTestMethod() {
         try {
-            return this.getClass().getMethod("testMethod", String.class);
+            return this.getClass().getDeclaredMethod("testMethod", String.class);
         } catch (NoSuchMethodException e) {
             throw new RuntimeException(e);
         }

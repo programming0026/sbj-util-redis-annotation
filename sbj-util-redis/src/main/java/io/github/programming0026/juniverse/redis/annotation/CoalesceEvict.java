@@ -17,44 +17,44 @@ import java.lang.annotation.Target;
 public @interface CoalesceEvict {
 
     /**
-     * Prefijo de las claves a eliminar.
+     * Prefix of the keys to evict.
      *
-     * @return cadena
+     * @return string
      */
     String[] value() default {};
 
     /**
-     * Expresión SpEL para generar la clave dinámica.
+     * SpEL expression used to generate the dynamic key.
      *
-     * @return cadena
+     * @return string
      */
     String key() default "";
 
     /**
-     * Si debe eliminar todas las claves que coincidan con el patrón.
+     * Whether to evict all keys matching the pattern.
      *
-     * @return {@code true} si la operación tuvo éxito
+     * @return {@code true} to evict all matching entries
      */
     boolean allEntries() default false;
 
     /**
-     * Patrón para eliminar múltiples claves.
+     * Pattern used to evict multiple keys.
      *
-     * @return cadena
+     * @return string
      */
     String pattern() default "";
 
     /**
-     * Si la evicción debe ocurrir antes de la ejecución del método.
+     * Whether the eviction must happen before the method is invoked.
      *
-     * @return {@code true} si la operación tuvo éxito
+     * @return {@code true} to evict before the method runs
      */
     boolean beforeInvocation() default false;
 
     /**
-     * Condición SpEL para ejecutar la evicción.
+     * SpEL condition that must hold for the eviction to run.
      *
-     * @return cadena
+     * @return string
      */
     String condition() default "";
 }

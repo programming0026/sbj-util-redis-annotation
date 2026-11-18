@@ -13,34 +13,34 @@ import org.testcontainers.DockerClientFactory;
 import org.testcontainers.containers.GenericContainer;
 
 /**
- * Arranca en Docker las topologías de Redis de varios nodos: Sentinel y clúster con réplicas.
+ * Starts in Docker the multi-node Redis topologies: Sentinel and cluster with replicas.
  *
- * <p>Todos los nodos de una topología corren en un mismo contenedor, cada uno en su puerto, y
- * esos puertos se publican con el mismo número en el host. Así las direcciones que los nodos
- * se anuncian entre sí y a los clientes ({@code 127.0.0.1:puerto}) valen tanto dentro del
- * contenedor como desde las pruebas.</p>
+ * <p>All the nodes of a topology run in the same container, each on its own port, and
+ * those ports are published with the same number on the host. This way the addresses the nodes
+ * announce to each other and to the clients ({@code 127.0.0.1:port}) are valid both inside the
+ * container and from the tests.</p>
  *
  * @author Java Universe
  */
 public final class RedisTopologies {
 
-    /** Contraseña de los nodos de datos en la topología Sentinel. */
+    /** Password of the data nodes in the Sentinel topology. */
     public static final String DATA_PASSWORD = "data-password";
 
-    /** Contraseña de los sentinels. */
+    /** Password of the sentinels. */
     public static final String SENTINEL_PASSWORD = "sentinel-password";
 
-    /** Nombre del maestro vigilado por los sentinels. */
+    /** Name of the master watched by the sentinels. */
     public static final String MASTER_NAME = "mymaster";
 
     private RedisTopologies() {
     }
 
     /**
-     * Arranca la topología Sentinel con autenticación en los datos y en los sentinels.
-     * Los sentinels dan por caído al maestro tras 2 segundos sin respuesta.
+     * Starts the Sentinel topology with authentication on the data nodes and on the sentinels.
+     * The sentinels consider the master down after 2 seconds without a response.
      *
-     * @return topología lista para usar
+     * @return topology ready to use
      */
     public static Sentinel startSentinel() {
         int[] ports = RedisContainers.freePorts(5);
@@ -80,10 +80,10 @@ public final class RedisTopologies {
     }
 
     /**
-     * Arranca un clúster de tres maestros con una réplica cada uno.
-     * Un nodo se da por caído tras 2 segundos sin respuesta.
+     * Starts a cluster of three masters with one replica each.
+     * A node is considered down after 2 seconds without a response.
      *
-     * @return clúster listo para usar
+     * @return cluster ready to use
      */
     public static Cluster startCluster() {
         int[] ports = RedisContainers.freePorts(6);
@@ -114,9 +114,9 @@ public final class RedisTopologies {
     }
 
     /**
-     * Dirección del host de Docker tal como la ven las pruebas.
+     * Address of the Docker host as the tests see it.
      *
-     * @return nombre o dirección del host
+     * @return host name or address
      */
     public static String host() {
         return DockerClientFactory.instance().dockerHostIpAddress();
@@ -138,8 +138,8 @@ public final class RedisTopologies {
     }
 
     /**
-     * Los nodos se anuncian como 127.0.0.1, así que estas topologías solo sirven cuando Docker
-     * publica los puertos en la propia máquina de las pruebas.
+     * The nodes announce themselves as 127.0.0.1, so these topologies only work when Docker
+     * publishes the ports on the tests' own machine.
      */
     private static void requireLoopbackDockerHost() {
         try {

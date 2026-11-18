@@ -20,18 +20,18 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.core.env.MapPropertySource;
 
 /**
- * Aplicación de prueba que arranca un contexto real de Spring con {@code @EnableRedisLibrary}.
- * A diferencia de {@link RedisInstance}, aquí la conexión la crea la propia librería a partir de
- * la anotación, así que se prueba la configuración tal como la usará una aplicación.
+ * Test application that starts a real Spring context with {@code @EnableRedisLibrary}.
+ * Unlike {@link RedisInstance}, here the connection is created by the library itself from
+ * the annotation, so the configuration is tested the way an application will use it.
  *
- * <p>Los datos que cambian en cada ejecución (direcciones y puertos de los contenedores) llegan
- * como propiedades y se usan en la anotación con placeholders.</p>
+ * <p>Data that changes on every run (container addresses and ports) arrives
+ * as properties and is used in the annotation with placeholders.</p>
  *
  * @author Java Universe
  */
 public final class LibraryApplication implements AutoCloseable {
 
-    /** Contexto de Spring. */
+    /** Spring context. */
     private final AnnotationConfigApplicationContext context;
 
     private LibraryApplication(AnnotationConfigApplicationContext context) {
@@ -39,11 +39,11 @@ public final class LibraryApplication implements AutoCloseable {
     }
 
     /**
-     * Arranca la aplicación.
+     * Starts the application.
      *
-     * @param configuration clase anotada con {@code @EnableRedisLibrary}
-     * @param properties propiedades para los placeholders de la anotación
-     * @return aplicación arrancada
+     * @param configuration class annotated with {@code @EnableRedisLibrary}
+     * @param properties properties for the annotation's placeholders
+     * @return started application
      */
     public static LibraryApplication start(Class<?> configuration, Map<String, Object> properties) {
         AnnotationConfigApplicationContext context = new AnnotationConfigApplicationContext();
@@ -75,9 +75,9 @@ public final class LibraryApplication implements AutoCloseable {
     }
 
     /**
-     * Indica si la caché funciona de verdad: lo que se guarda se puede leer.
+     * Tells whether the cache really works: what is stored can be read.
      *
-     * @return {@code true} si una escritura seguida de una lectura devuelve el valor
+     * @return {@code true} if a write followed by a read returns the value
      */
     public boolean cacheWorks() {
         String key = "probe:" + System.nanoTime();
@@ -86,11 +86,11 @@ public final class LibraryApplication implements AutoCloseable {
     }
 
     /**
-     * Espera a que se cumpla una condición.
+     * Waits for a condition to be met.
      *
-     * @param condition condición que se consulta periódicamente
-     * @param timeout espera máxima
-     * @return {@code true} si se cumplió a tiempo
+     * @param condition condition that is queried periodically
+     * @param timeout maximum wait
+     * @return {@code true} if it was met in time
      */
     public static boolean await(BooleanSupplier condition, Duration timeout) {
         long deadline = System.nanoTime() + timeout.toNanos();
@@ -100,7 +100,7 @@ public final class LibraryApplication implements AutoCloseable {
                     return true;
                 }
             } catch (RuntimeException e) {
-                // Se vuelve a intentar hasta agotar la espera.
+                // It is retried until the wait runs out.
             }
             try {
                 Thread.sleep(250);
@@ -118,18 +118,18 @@ public final class LibraryApplication implements AutoCloseable {
     }
 
     /**
-     * Servicio de negocio con las tres formas de caché.
+     * Business service with the three forms of cache.
      */
     public static class CatalogService {
 
-        /** Número de ejecuciones reales. */
+        /** Number of real executions. */
         private final AtomicInteger calls = new AtomicInteger();
 
         /**
-         * Devuelve cuántas veces se ejecutó algún método real. Es un método porque el bean
-         * que entrega Spring es un proxy, cuyos campos están vacíos.
+         * Returns how many times some real method ran. It is a method because the bean
+         * that Spring delivers is a proxy, whose fields are empty.
          *
-         * @return número de ejecuciones
+         * @return number of executions
          */
         public int callCount() {
             return calls.get();
@@ -143,7 +143,7 @@ public final class LibraryApplication implements AutoCloseable {
 
         @CoalesceEvict(value = "items", key = "#id")
         public void forget(Long id) {
-            // Solo se intercepta.
+            // Only intercepted.
         }
 
         @Cacheable("springItems")
@@ -154,12 +154,12 @@ public final class LibraryApplication implements AutoCloseable {
 
         @CacheEvict("springItems")
         public void forgetWithSpringCache(Long id) {
-            // Solo se intercepta.
+            // Only intercepted.
         }
     }
 
     /**
-     * Beans propios de la aplicación de prueba.
+     * Beans of the test application itself.
      */
     @Configuration
     public static class Beans {

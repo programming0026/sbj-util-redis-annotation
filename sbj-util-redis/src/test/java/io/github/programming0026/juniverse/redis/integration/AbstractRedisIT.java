@@ -14,12 +14,12 @@ import org.springframework.data.redis.connection.lettuce.LettuceConnectionFactor
 import org.testcontainers.junit.jupiter.Testcontainers;
 
 /**
- * Base de las pruebas de integración contra un Redis real.
- * Si no hay Docker disponible, las pruebas se omiten en lugar de fallar.
+ * Base of the integration tests against a real Redis.
+ * If Docker is not available, the tests are skipped instead of failing.
  *
- * <p>Las pruebas marcadas con {@code @Disabled} reproducen fallos descritos en
- * {@code PLAN_MEJORAS.md}: afirman el comportamiento correcto y hoy fallan. Se activan
- * al corregir cada hallazgo. Para ejecutarlas y ver el fallo:</p>
+ * <p>Tests marked with {@code @Disabled} reproduce failures described in
+ * {@code PLAN_MEJORAS.md}: they assert the correct behavior and currently fail. They are enabled
+ * when each finding is fixed. To run them and see the failure:</p>
  * <pre>{@code
  * mvn verify -Djunit.jupiter.conditions.deactivate=org.junit.*DisabledCondition
  * }</pre>
@@ -29,46 +29,46 @@ import org.testcontainers.junit.jupiter.Testcontainers;
 @Testcontainers(disabledWithoutDocker = true)
 public abstract class AbstractRedisIT {
 
-    /** Instancias creadas por la prueba en curso. */
+    /** Instances created by the current test. */
     private final List<RedisInstance> instances = new ArrayList<>();
 
-    /** Ejecutores creados por la prueba en curso. */
+    /** Executors created by the current test. */
     private final List<ExecutorService> executors = new ArrayList<>();
 
     /**
-     * Crea la fábrica de conexiones del Redis contra el que corre la prueba.
-     * Por defecto es el contenedor standalone compartido.
+     * Creates the connection factory of the Redis the test runs against.
+     * By default it is the shared standalone container.
      *
-     * @return fábrica de conexiones sin inicializar
+     * @return uninitialized connection factory
      */
     protected LettuceConnectionFactory connectionFactory() {
         return RedisContainers.standaloneFactory();
     }
 
     /**
-     * Crea una instancia de aplicación nueva contra el Redis de la prueba.
+     * Creates a new application instance against the test's Redis.
      *
-     * @return instancia lista para usar
+     * @return instance ready to use
      */
     protected RedisInstance newInstance() {
         return register(new RedisInstance(connectionFactory()));
     }
 
     /**
-     * Crea una instancia de aplicación con ajustes de coalescencia propios.
+     * Creates an application instance with its own coalescing settings.
      *
-     * @param settings ajustes de coalescencia
-     * @return instancia lista para usar
+     * @param settings coalescing settings
+     * @return instance ready to use
      */
     protected RedisInstance newInstance(CoalesceSettings settings) {
         return register(new RedisInstance(connectionFactory(), settings));
     }
 
     /**
-     * Registra una instancia para cerrarla al terminar la prueba.
+     * Registers an instance to be closed when the test ends.
      *
-     * @param instance instancia creada por la prueba
-     * @return la misma instancia
+     * @param instance instance created by the test
+     * @return the same instance
      */
     protected RedisInstance register(RedisInstance instance) {
         instances.add(instance);
@@ -76,11 +76,11 @@ public abstract class AbstractRedisIT {
     }
 
     /**
-     * Lanza todas las tareas a la vez, cada una en su hilo.
+     * Launches all tasks at once, each on its own thread.
      *
-     * @param <T> tipo del resultado
-     * @param tasks tareas que deben empezar al mismo tiempo
-     * @return futuros en el mismo orden que las tareas
+     * @param <T> result type
+     * @param tasks tasks that must start at the same time
+     * @return futures in the same order as the tasks
      */
     protected <T> List<Future<T>> runTogether(List<Callable<T>> tasks) {
         ExecutorService executor = Executors.newFixedThreadPool(tasks.size());
@@ -98,11 +98,11 @@ public abstract class AbstractRedisIT {
     }
 
     /**
-     * Lanza una tarea en segundo plano.
+     * Launches a task in the background.
      *
-     * @param <T> tipo del resultado
-     * @param task tarea
-     * @return futuro con el resultado
+     * @param <T> result type
+     * @param task task
+     * @return future with the result
      */
     protected <T> Future<T> runAsync(Callable<T> task) {
         ExecutorService executor = Executors.newSingleThreadExecutor();
@@ -111,7 +111,7 @@ public abstract class AbstractRedisIT {
     }
 
     /**
-     * Vacía Redis y cierra lo que abrió la prueba.
+     * Flushes Redis and closes whatever the test opened.
      */
     @AfterEach
     public void cleanUp() {
@@ -125,9 +125,9 @@ public abstract class AbstractRedisIT {
     }
 
     /**
-     * Indica si hay que vaciar Redis al terminar cada prueba.
+     * Tells whether Redis must be flushed at the end of each test.
      *
-     * @return {@code true} por defecto
+     * @return {@code true} by default
      */
     protected boolean shouldFlush() {
         return true;

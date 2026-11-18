@@ -63,8 +63,8 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 /**
- * Pruebas unitarias de la coalescencia y del tratamiento de fallos de Redis
- * en {@link CoalesceCacheManager}.
+ * Unit tests of coalescing and of the handling of Redis failures
+ * in {@link CoalesceCacheManager}.
  *
  * @author Java Universe
  */
@@ -72,64 +72,64 @@ import static org.mockito.Mockito.when;
 @MockitoSettings(strictness = Strictness.LENIENT)
 class CoalesceCacheManagerGetOrLoadTest {
 
-    /** Clave de caché completa de la clave de prueba. */
+    /** Full cache key of the test key. */
     private static final String CACHE_KEY = "coalesce:cache:users:1";
 
-    /** Clave del bloqueo de la clave de prueba. */
+    /** Lock key of the test key. */
     private static final String LOCK_KEY = "coalesce:lock:users:1";
 
-    /** Canal de los avisos de coalescencia. */
+    /** Channel of the coalescing notifications. */
     private static final String SIGNAL_CHANNEL = "coalesce:signal";
 
-    /** Margen amplio para que una prueba con hilos no falle por lentitud de la máquina. */
+    /** Wide margin so that a threaded test does not fail because the machine is slow. */
     private static final long MAX_WAIT_SECONDS = 5;
 
-    /** Plantilla de Redis. */
+    /** Redis template. */
     @Mock
     private RedisTemplate<String, byte[]> redisTemplate;
 
-    /** Operaciones de valores simuladas. */
+    /** Mocked value operations. */
     @Mock
     private ValueOperations<String, byte[]> valueOperations;
 
-    /** Contenedor de escuchas simulado. */
+    /** Mocked listener container. */
     @Mock
     private RedisMessageListenerContainer listenerContainer;
 
-    /** Conversor real, para comparar lo que se escribe en Redis. */
+    /** Real converter, to compare what is written to Redis. */
     private final CacheValueCodec codec = new CacheValueCodec(new DefaultObjectMapperConfig().configure());
 
-    /** Administrador de caché con los ajustes predeterminados. */
+    /** Cache manager with the default settings. */
     private CoalesceCacheManager cacheManager;
 
-    /** Hilos de la prueba. */
+    /** Threads of the test. */
     private ExecutorService executor;
 
     /**
-     * Prepara el entorno antes de cada prueba.
+     * Sets up the environment before each test.
      */
     @BeforeEach
-    public void setUp() {
+     void setUp() {
         when(redisTemplate.opsForValue()).thenReturn(valueOperations);
         cacheManager = new CoalesceCacheManager(redisTemplate, listenerContainer, codec);
         executor = Executors.newCachedThreadPool();
     }
 
     /**
-     * Detiene los hilos de la prueba.
+     * Stops the threads of the test.
      */
     @AfterEach
-    public void tearDown() {
+     void tearDown() {
         executor.shutdownNow();
     }
 
     /**
-     * Crea un administrador con ajustes propios.
+     * Creates a manager with its own settings.
      *
-     * @param failOpen si los fallos de Redis se tratan como fallos de caché
-     * @param lockTimeout duración del bloqueo
-     * @param waitTimeout espera máxima
-     * @return administrador de caché
+     * @param failOpen whether Redis failures are treated as cache misses
+     * @param lockTimeout lock duration
+     * @param waitTimeout maximum wait
+     * @return cache manager
      */
     private CoalesceCacheManager managerWith(boolean failOpen, Duration lockTimeout, Duration waitTimeout) {
         return new CoalesceCacheManager(redisTemplate, mock(RedisMessageListenerContainer.class), codec,
@@ -137,9 +137,9 @@ class CoalesceCacheManagerGetOrLoadTest {
     }
 
     /**
-     * Devuelve el escucha que el administrador registró en el canal de avisos.
+     * Returns the listener that the manager registered on the notification channel.
      *
-     * @return escucha de avisos
+     * @return notification listener
      */
     private MessageListener signalListener() {
         ArgumentCaptor<MessageListener> captor = ArgumentCaptor.forClass(MessageListener.class);
@@ -148,10 +148,10 @@ class CoalesceCacheManagerGetOrLoadTest {
     }
 
     /**
-     * Entrega al administrador un aviso de coalescencia, como haría Redis.
+     * Delivers a coalescing notification to the manager, as Redis would.
      *
-     * @param key clave de coalescencia
-     * @param cached si el valor quedó en caché
+     * @param key coalescing key
+     * @param cached whether the value was left in the cache
      */
     private void deliverSignal(String key, boolean cached) {
         Message message = mock(Message.class);
@@ -174,13 +174,13 @@ class CoalesceCacheManagerGetOrLoadTest {
         return (CoalescedResponseDto) codec.decode((byte[]) captor.getValue(), CoalescedResponseDto.class);
     }
 
-    // ------------------------------------------------------------------ carga con el bloqueo
+    // ------------------------------------------------------------------ load with the lock
 
     /**
-     * Con el valor en caché no se ejecuta el cargador ni se toca el bloqueo.
+     * With the value cached, the loader does not run and the lock is not touched.
      */
     @Test
-    public void getOrLoad_WhenCacheHit_ShouldReturnCachedValue() {
+     void getOrLoad_WhenCacheHit_ShouldReturnCachedValue() {
         when(valueOperations.get(CACHE_KEY)).thenReturn(json("in-cache"));
         Supplier<Object> loader = mockLoader();
 
@@ -192,10 +192,10 @@ class CoalesceCacheManagerGetOrLoadTest {
     }
 
     /**
-     * Con el bloqueo libre se carga, se guarda, se suelta el bloqueo y se avisa.
+     * With the lock free, the value is loaded, stored, the lock is released and a notification is sent.
      */
     @Test
-    public void getOrLoad_WhenLockAcquired_ShouldLoadStoreReleaseAndSignal() {
+     void getOrLoad_WhenLockAcquired_ShouldLoadStoreReleaseAndSignal() {
         lockIsFree();
 
         Object result = cacheManager.getOrLoad("users:1", () -> "ana", 300, false);
@@ -209,10 +209,10 @@ class CoalesceCacheManagerGetOrLoadTest {
     }
 
     /**
-     * El bloqueo se suelta con el mismo valor con el que se tomó, para no borrar el de otro.
+     * The lock is released with the same value it was taken with, so as not to delete someone else's.
      */
     @Test
-    public void getOrLoad_ShouldReleaseLockWithTheTokenItAcquired() {
+     void getOrLoad_ShouldReleaseLockWithTheTokenItAcquired() {
         lockIsFree();
 
         cacheManager.getOrLoad("users:1", () -> "ana", 300, false);
@@ -223,10 +223,10 @@ class CoalesceCacheManagerGetOrLoadTest {
     }
 
     /**
-     * Sin TTL positivo el valor se guarda sin caducidad.
+     * Without a positive TTL the value is stored without expiration.
      */
     @Test
-    public void getOrLoad_WithZeroTtl_ShouldStoreWithoutExpiration() {
+     void getOrLoad_WithZeroTtl_ShouldStoreWithoutExpiration() {
         lockIsFree();
 
         cacheManager.getOrLoad("users:1", () -> "ana", 0, false);
@@ -235,10 +235,10 @@ class CoalesceCacheManagerGetOrLoadTest {
     }
 
     /**
-     * Un resultado nulo con cacheNull se guarda como nulo y se avisa de que hay valor.
+     * A null result with cacheNull is stored as null and a notification says there is a value.
      */
     @Test
-    public void getOrLoad_WhenLoaderReturnsNullAndCacheNullTrue_ShouldStoreNullAndSignalCached() {
+     void getOrLoad_WhenLoaderReturnsNullAndCacheNullTrue_ShouldStoreNullAndSignalCached() {
         lockIsFree();
 
         Object result = cacheManager.getOrLoad("users:1", () -> null, 300, true);
@@ -249,10 +249,10 @@ class CoalesceCacheManagerGetOrLoadTest {
     }
 
     /**
-     * Un resultado nulo sin cacheNull no se guarda.
+     * A null result without cacheNull is not stored.
      */
     @Test
-    public void getOrLoad_WhenLoaderReturnsNullAndCacheNullFalse_ShouldNotStore() {
+     void getOrLoad_WhenLoaderReturnsNullAndCacheNullFalse_ShouldNotStore() {
         lockIsFree();
 
         Object result = cacheManager.getOrLoad("users:1", () -> null, 300, false);
@@ -263,10 +263,10 @@ class CoalesceCacheManagerGetOrLoadTest {
     }
 
     /**
-     * Si el cargador falla, su excepción llega intacta, se suelta el bloqueo y se avisa.
+     * If the loader fails, its exception arrives intact, the lock is released and a notification is sent.
      */
     @Test
-    public void getOrLoad_WhenLoaderThrows_ShouldRethrowSameExceptionReleaseAndSignal() {
+     void getOrLoad_WhenLoaderThrows_ShouldRethrowSameExceptionReleaseAndSignal() {
         lockIsFree();
         IllegalStateException failure = new IllegalStateException("business failure");
 
@@ -281,10 +281,10 @@ class CoalesceCacheManagerGetOrLoadTest {
     }
 
     /**
-     * Si falla guardar, soltar el bloqueo o avisar, el resultado del cargador se devuelve igual.
+     * If storing, releasing the lock or notifying fails, the loader's result is still returned.
      */
     @Test
-    public void getOrLoad_WhenRedisFailsAfterLoading_ShouldStillReturnResult() {
+     void getOrLoad_WhenRedisFailsAfterLoading_ShouldStillReturnResult() {
         lockIsFree();
         doThrow(new IllegalStateException("failure while saving"))
                 .when(valueOperations).set(anyString(), any(), any(Duration.class));
@@ -298,14 +298,14 @@ class CoalesceCacheManagerGetOrLoadTest {
         assertEquals("ana", strict.getOrLoad("users:1", () -> "ana", 300, false));
     }
 
-    // ------------------------------------------------------------------ espera a otra instancia
+    // ------------------------------------------------------------------ waiting on another instance
 
     /**
-     * Si otra instancia tiene el bloqueo, se espera y se devuelve el valor cuando aparece en caché,
-     * aunque no llegue ningún aviso.
+     * If another instance holds the lock, it waits and returns the value when it appears in the cache,
+     * even if no notification arrives.
      */
     @Test
-    public void getOrLoad_WhenLockHeldAndValueAppears_ShouldReturnItWithoutLoading() {
+     void getOrLoad_WhenLockHeldAndValueAppears_ShouldReturnItWithoutLoading() {
         lockIsHeldByAnother();
         when(valueOperations.get(CACHE_KEY)).thenReturn(null, null, null, json("de-other-instance"));
         Supplier<Object> loader = mockLoader();
@@ -317,10 +317,10 @@ class CoalesceCacheManagerGetOrLoadTest {
     }
 
     /**
-     * Si el bloqueo ajeno desaparece sin dejar valor, se toma el bloqueo y se carga.
+     * If the other holder's lock disappears without leaving a value, the lock is taken and the value is loaded.
      */
     @Test
-    public void getOrLoad_WhenLockIsReleasedWithoutValue_ShouldTakeLockAndLoad() {
+     void getOrLoad_WhenLockIsReleasedWithoutValue_ShouldTakeLockAndLoad() {
         when(valueOperations.setIfAbsent(eq(LOCK_KEY), any(), any(Duration.class)))
                 .thenReturn(false, false, false, true);
 
@@ -331,12 +331,12 @@ class CoalesceCacheManagerGetOrLoadTest {
     }
 
     /**
-     * Un aviso de que no quedó valor en caché hace que se cargue aquí, sin bloqueo y sin más espera.
+     * A notification that no value was left in the cache makes it load here, without a lock and without further waiting.
      *
-     * @throws Exception si la prueba se interrumpe
+     * @throws Exception if the test is interrupted
      */
     @Test
-    public void getOrLoad_WhenSignalSaysNotCached_ShouldLoadWithoutLock() throws Exception {
+     void getOrLoad_WhenSignalSaysNotCached_ShouldLoadWithoutLock() throws Exception {
         lockIsHeldByAnother();
 
         Future<Object> waiter = executor.submit(() -> cacheManager.getOrLoad("users:1", () -> "ana", 300, false));
@@ -348,12 +348,12 @@ class CoalesceCacheManagerGetOrLoadTest {
     }
 
     /**
-     * Un aviso de valor guardado despierta al que espera, que lo lee de la caché.
+     * A stored-value notification wakes the waiter, which reads it from the cache.
      *
-     * @throws Exception si la prueba se interrumpe
+     * @throws Exception if the test is interrupted
      */
     @Test
-    public void getOrLoad_WhenSignalSaysCached_ShouldReadValueFromCache() throws Exception {
+     void getOrLoad_WhenSignalSaysCached_ShouldReadValueFromCache() throws Exception {
         lockIsHeldByAnother();
         AtomicReference<byte[]> stored = new AtomicReference<>();
         when(valueOperations.get(CACHE_KEY)).thenAnswer(invocation -> stored.get());
@@ -369,10 +369,10 @@ class CoalesceCacheManagerGetOrLoadTest {
     }
 
     /**
-     * Si el bloqueo ajeno sigue vigente al agotarse la espera, la petición falla.
+     * If the other holder's lock is still in force when the wait runs out, the request fails.
      */
     @Test
-    public void getOrLoad_WhenWaitTimesOut_ShouldThrowCoalesceException() {
+     void getOrLoad_WhenWaitTimesOut_ShouldThrowCoalesceException() {
         lockIsHeldByAnother();
         CoalesceCacheManager manager = managerWith(true, Duration.ofSeconds(30), Duration.ofMillis(250));
         Supplier<Object> loader = mockLoader();
@@ -385,10 +385,10 @@ class CoalesceCacheManagerGetOrLoadTest {
     }
 
     /**
-     * Una interrupción durante la espera se convierte en CoalesceException y conserva la marca.
+     * An interruption during the wait becomes a CoalesceException and keeps the interrupt flag.
      */
     @Test
-    public void getOrLoad_WhenInterruptedWhileWaiting_ShouldThrowAndKeepInterruptFlag() {
+     void getOrLoad_WhenInterruptedWhileWaiting_ShouldThrowAndKeepInterruptFlag() {
         lockIsHeldByAnother();
 
         Thread.currentThread().interrupt();
@@ -402,10 +402,10 @@ class CoalesceCacheManagerGetOrLoadTest {
     }
 
     /**
-     * Un aviso ilegible o de una clave que nadie espera no provoca ningún error.
+     * An unreadable notification, or one for a key nobody is waiting on, causes no error.
      */
     @Test
-    public void signalListener_WithUnreadableOrUnexpectedMessage_ShouldNotThrow() {
+     void signalListener_WithUnreadableOrUnexpectedMessage_ShouldNotThrow() {
         MessageListener listener = signalListener();
         Message message = mock(Message.class);
 
@@ -418,15 +418,15 @@ class CoalesceCacheManagerGetOrLoadTest {
         deliverSignal("clave-que-nadie-espera", true);
     }
 
-    // ------------------------------------------------------------------ coalescencia dentro de la JVM
+    // ------------------------------------------------------------------ coalescing within the JVM
 
     /**
-     * Dos peticiones simultáneas de la misma clave en la misma JVM ejecutan una sola carga.
+     * Two simultaneous requests for the same key in the same JVM run a single load.
      *
-     * @throws Exception si la prueba se interrumpe
+     * @throws Exception if the test is interrupted
      */
     @Test
-    public void getOrLoad_WithConcurrentLocalCalls_ShouldLoadOnce() throws Exception {
+     void getOrLoad_WithConcurrentLocalCalls_ShouldLoadOnce() throws Exception {
         lockIsFree();
         AtomicInteger calls = new AtomicInteger();
         CountDownLatch loading = new CountDownLatch(1);
@@ -450,12 +450,12 @@ class CoalesceCacheManagerGetOrLoadTest {
     }
 
     /**
-     * La petición que espera en la misma JVM recibe la misma excepción que lanzó el cargador.
+     * The request waiting in the same JVM receives the same exception the loader threw.
      *
-     * @throws Exception si la prueba se interrumpe
+     * @throws Exception if the test is interrupted
      */
     @Test
-    public void getOrLoad_WhenLocalLoadFails_ShouldGiveWaitersTheSameException() throws Exception {
+     void getOrLoad_WhenLocalLoadFails_ShouldGiveWaitersTheSameException() throws Exception {
         lockIsFree();
         IllegalStateException failure = new IllegalStateException("business failure");
         CountDownLatch loading = new CountDownLatch(1);
@@ -479,13 +479,13 @@ class CoalesceCacheManagerGetOrLoadTest {
     }
 
     /**
-     * Si la carga en curso tarda más que el bloqueo, este se renueva: la petición que espera
-     * sigue esperando y recibe ese resultado, sin una segunda carga.
+     * If the load in progress takes longer than the lock, the lock is renewed: the waiting request
+     * keeps waiting and receives that result, without a second load.
      *
-     * @throws Exception si la prueba se interrumpe
+     * @throws Exception if the test is interrupted
      */
     @Test
-    public void getOrLoad_WhenLocalLoadOutlivesLock_ShouldKeepWaitingAndRenewLock() throws Exception {
+     void getOrLoad_WhenLocalLoadOutlivesLock_ShouldKeepWaitingAndRenewLock() throws Exception {
         lockIsFree();
         CoalesceCacheManager manager = managerWith(true, Duration.ofMillis(200), Duration.ofSeconds(30));
         AtomicInteger calls = new AtomicInteger();
@@ -502,14 +502,14 @@ class CoalesceCacheManagerGetOrLoadTest {
         assertTrue(loading.await(MAX_WAIT_SECONDS, TimeUnit.SECONDS));
         Future<Object> second = executor.submit(
                 () -> manager.getOrLoad("users:1", () -> "propia-" + calls.incrementAndGet(), 300, false));
-        // Tres veces la duración del bloqueo: tiempo de sobra para que hubiera caducado sin renovación.
+        // Three times the lock duration: plenty of time for it to have expired without renewal.
         Thread.sleep(600);
         release.countDown();
 
         assertEquals("lenta", second.get(MAX_WAIT_SECONDS, TimeUnit.SECONDS));
         assertEquals("lenta", first.get(MAX_WAIT_SECONDS, TimeUnit.SECONDS));
         assertEquals(1, calls.get());
-        // Renovación: guion con la clave del bloqueo, su valor y la nueva duración en milisegundos.
+        // Renewal: script with the lock key, its value and the new duration in milliseconds.
         ArgumentCaptor<Object> ttl = ArgumentCaptor.forClass(Object.class);
         verify(redisTemplate, atLeast(2)).execute(
                 any(RedisScript.class), eq(List.of(LOCK_KEY)), any(), ttl.capture());
@@ -518,12 +518,12 @@ class CoalesceCacheManagerGetOrLoadTest {
     }
 
     /**
-     * Terminada la carga, el bloqueo deja de renovarse.
+     * Once the load ends, the lock stops being renewed.
      *
-     * @throws Exception si la prueba se interrumpe
+     * @throws Exception if the test is interrupted
      */
     @Test
-    public void getOrLoad_AfterLoading_ShouldStopRenewingLock() throws Exception {
+     void getOrLoad_AfterLoading_ShouldStopRenewingLock() throws Exception {
         lockIsFree();
         CoalesceCacheManager manager = managerWith(true, Duration.ofMillis(90), Duration.ofSeconds(30));
 
@@ -535,12 +535,12 @@ class CoalesceCacheManagerGetOrLoadTest {
     }
 
     /**
-     * Si la espera máxima es menor que el bloqueo, la petición que espera en la misma JVM falla.
+     * If the maximum wait is shorter than the lock, the request waiting in the same JVM fails.
      *
-     * @throws Exception si la prueba se interrumpe
+     * @throws Exception if the test is interrupted
      */
     @Test
-    public void getOrLoad_WhenLocalWaitTimesOut_ShouldThrowCoalesceException() throws Exception {
+     void getOrLoad_WhenLocalWaitTimesOut_ShouldThrowCoalesceException() throws Exception {
         lockIsFree();
         CoalesceCacheManager manager = managerWith(true, Duration.ofSeconds(30), Duration.ofMillis(200));
         CountDownLatch loading = new CountDownLatch(1);
@@ -562,13 +562,13 @@ class CoalesceCacheManagerGetOrLoadTest {
         assertEquals("lenta", first.get(MAX_WAIT_SECONDS, TimeUnit.SECONDS));
     }
 
-    // ------------------------------------------------------------------ fallos de Redis
+    // ------------------------------------------------------------------ Redis failures
 
     /**
-     * Si Redis no responde al leer, se carga directamente y no se intenta nada más contra Redis.
+     * If Redis does not respond when reading, the value is loaded directly and nothing else is attempted against Redis.
      */
     @Test
-    public void getOrLoad_WhenReadFails_ShouldLoadWithoutTouchingRedisAgain() {
+     void getOrLoad_WhenReadFails_ShouldLoadWithoutTouchingRedisAgain() {
         when(valueOperations.get(CACHE_KEY)).thenThrow(new QueryTimeoutException("no response"));
 
         Object result = cacheManager.getOrLoad("users:1", () -> "ana", 300, false);
@@ -580,10 +580,10 @@ class CoalesceCacheManagerGetOrLoadTest {
     }
 
     /**
-     * Si Redis no responde al tomar el bloqueo, se carga directamente.
+     * If Redis does not respond when taking the lock, the value is loaded directly.
      */
     @Test
-    public void getOrLoad_WhenLockFails_ShouldLoad() {
+     void getOrLoad_WhenLockFails_ShouldLoad() {
         when(valueOperations.setIfAbsent(eq(LOCK_KEY), any(), any(Duration.class)))
                 .thenThrow(new RedisConnectionFailureException("no connection"));
 
@@ -591,10 +591,10 @@ class CoalesceCacheManagerGetOrLoadTest {
     }
 
     /**
-     * Con la degradación desactivada, el fallo de Redis llega a quien llama y no se carga.
+     * With degradation disabled, the Redis failure reaches the caller and nothing is loaded.
      */
     @Test
-    public void getOrLoad_WhenReadFailsAndFailOpenIsOff_ShouldPropagate() {
+     void getOrLoad_WhenReadFailsAndFailOpenIsOff_ShouldPropagate() {
         when(valueOperations.get(CACHE_KEY)).thenThrow(new QueryTimeoutException("no response"));
         CoalesceCacheManager strict = managerWith(false, Duration.ofSeconds(30), Duration.ofSeconds(30));
         Supplier<Object> loader = mockLoader();
@@ -605,11 +605,11 @@ class CoalesceCacheManagerGetOrLoadTest {
     }
 
     /**
-     * Tras un fallo de conexión se deja de usar Redis durante la pausa: las operaciones
-     * siguientes responden como si no hubiera caché, sin esperar otro tiempo de espera.
+     * After a connection failure Redis is not used during the pause: the following operations
+     * respond as if there were no cache, without waiting for another timeout.
      */
     @Test
-    public void connectionFailure_ShouldPauseRedisUsage() {
+     void connectionFailure_ShouldPauseRedisUsage() {
         when(valueOperations.get(CACHE_KEY)).thenThrow(new QueryTimeoutException("no response"));
 
         assertEquals(Optional.empty(), cacheManager.get("users:1"));
@@ -626,12 +626,12 @@ class CoalesceCacheManagerGetOrLoadTest {
     }
 
     /**
-     * Pasada la pausa se vuelve a intentar contra Redis.
+     * Once the pause is over, Redis is tried again.
      *
-     * @throws Exception si la prueba se interrumpe
+     * @throws Exception if the test is interrupted
      */
     @Test
-    public void connectionFailure_ShouldRetryAfterPause() throws Exception {
+     void connectionFailure_ShouldRetryAfterPause() throws Exception {
         when(valueOperations.get(CACHE_KEY))
                 .thenThrow(new QueryTimeoutException("no response"))
                 .thenReturn(json("ana"));
@@ -647,10 +647,10 @@ class CoalesceCacheManagerGetOrLoadTest {
     }
 
     /**
-     * Un error que no es de conexión se trata como fallo de caché pero no pausa el uso de Redis.
+     * An error that is not a connection error is treated as a cache miss but does not pause the use of Redis.
      */
     @Test
-    public void otherFailure_ShouldNotPauseRedisUsage() {
+     void otherFailure_ShouldNotPauseRedisUsage() {
         when(valueOperations.get(CACHE_KEY)).thenThrow(new IllegalStateException("command error"));
 
         assertEquals(Optional.empty(), cacheManager.get("users:1"));
@@ -660,10 +660,10 @@ class CoalesceCacheManagerGetOrLoadTest {
     }
 
     /**
-     * Una entrada que no se puede deserializar se borra y cuenta como ausente.
+     * An entry that cannot be deserialized is deleted and counts as absent.
      */
     @Test
-    public void get_WhenEntryIsUnreadable_ShouldDeleteItAndReturnEmpty() {
+     void get_WhenEntryIsUnreadable_ShouldDeleteItAndReturnEmpty() {
         when(valueOperations.get(CACHE_KEY)).thenReturn("{this is not JSON".getBytes(StandardCharsets.UTF_8));
 
         assertEquals(Optional.empty(), cacheManager.get("users:1"));
@@ -672,10 +672,10 @@ class CoalesceCacheManagerGetOrLoadTest {
     }
 
     /**
-     * Con la degradación desactivada, los fallos de las operaciones directas se propagan.
+     * With degradation disabled, failures of direct operations are propagated.
      */
     @Test
-    public void directOperations_WhenFailOpenIsOff_ShouldPropagateFailures() {
+     void directOperations_WhenFailOpenIsOff_ShouldPropagateFailures() {
         CoalesceCacheManager strict = managerWith(false, Duration.ofSeconds(30), Duration.ofSeconds(30));
         doThrow(new QueryTimeoutException("no response"))
                 .when(valueOperations).set(anyString(), any(), any(Duration.class));
@@ -683,15 +683,15 @@ class CoalesceCacheManagerGetOrLoadTest {
 
         assertThrows(QueryTimeoutException.class, () -> strict.put("users:1", "ana", 300));
         assertThrows(QueryTimeoutException.class, () -> strict.evict("users:1"));
-        // Sin degradación tampoco hay pausa: cada operación llega a Redis.
+        // Without degradation there is no pause either: every operation reaches Redis.
         verify(redisTemplate, atLeast(1)).delete(CACHE_KEY);
     }
 
     /**
-     * Con la degradación activa, los fallos de las operaciones directas no se propagan.
+     * With degradation enabled, failures of direct operations are not propagated.
      */
     @Test
-    public void directOperations_WhenFailOpenIsOn_ShouldSwallowFailures() {
+     void directOperations_WhenFailOpenIsOn_ShouldSwallowFailures() {
         IllegalStateException failure = new IllegalStateException("command error");
         doThrow(failure).when(valueOperations).set(anyString(), any(), any(Duration.class));
         when(redisTemplate.delete(anyString())).thenThrow(failure);
@@ -713,13 +713,13 @@ class CoalesceCacheManagerGetOrLoadTest {
         assertEquals(-2, cacheManager.getTimeToLive("users:1"));
     }
 
-    // ------------------------------------------------------------------ tipos, nulos y prefijo
+    // ------------------------------------------------------------------ types, nulls and prefix
 
     /**
-     * Con el tipo del valor se reconstruye exactamente ese tipo, sin nombres de clase en el JSON.
+     * With the value type, exactly that type is rebuilt, with no class names in the JSON.
      */
     @Test
-    public void lookup_WithType_ShouldRebuildThatType() {
+     void lookup_WithType_ShouldRebuildThatType() {
         when(valueOperations.get(CACHE_KEY)).thenReturn("5".getBytes(StandardCharsets.UTF_8));
 
         CacheResult<Object> result = cacheManager.lookup("users:1", Long.class);
@@ -729,10 +729,10 @@ class CoalesceCacheManagerGetOrLoadTest {
     }
 
     /**
-     * Un nulo guardado es un acierto con valor nulo, distinto de una clave ausente.
+     * A stored null is a hit with a null value, different from an absent key.
      */
     @Test
-    public void lookup_ShouldTellStoredNullFromAbsentKey() {
+     void lookup_ShouldTellStoredNullFromAbsentKey() {
         when(valueOperations.get(CACHE_KEY)).thenReturn(json(null));
         when(valueOperations.get("coalesce:cache:users:2")).thenReturn(null);
 
@@ -745,10 +745,10 @@ class CoalesceCacheManagerGetOrLoadTest {
     }
 
     /**
-     * Con un nulo guardado, getOrLoad lo devuelve sin ejecutar el cargador.
+     * With a stored null, getOrLoad returns it without running the loader.
      */
     @Test
-    public void getOrLoad_WhenNullIsStored_ShouldReturnNullWithoutLoading() {
+     void getOrLoad_WhenNullIsStored_ShouldReturnNullWithoutLoading() {
         when(valueOperations.get(CACHE_KEY)).thenReturn(json(null));
         Supplier<Object> loader = mockLoader();
 
@@ -758,10 +758,10 @@ class CoalesceCacheManagerGetOrLoadTest {
     }
 
     /**
-     * Con prefijo de aplicación, las claves, el bloqueo y el canal lo llevan delante.
+     * With an application prefix, the keys, the lock and the channel carry it in front.
      */
     @Test
-    public void keyPrefix_ShouldBeAppliedToKeysLockAndChannel() {
+     void keyPrefix_ShouldBeAppliedToKeysLockAndChannel() {
         RedisMessageListenerContainer container = mock(RedisMessageListenerContainer.class);
         CoalesceCacheManager manager = new CoalesceCacheManager(
                 redisTemplate, container, codec, CoalesceSettings.defaults(), "shop");
@@ -779,13 +779,13 @@ class CoalesceCacheManagerGetOrLoadTest {
         assertEquals("shop:coalesce:cache:users:*", scan.pattern());
     }
 
-    // ------------------------------------------------------------------ utilidades
+    // ------------------------------------------------------------------ helpers
 
     /**
-     * JSON con el que se guarda un valor sin tipo conocido.
+     * JSON with which a value of unknown type is stored.
      *
-     * @param value valor
-     * @return bytes que se escriben en Redis
+     * @param value value
+     * @return bytes written to Redis
      */
     private byte[] json(Object value) {
         return codec.encode(value, Object.class);
@@ -805,13 +805,13 @@ class CoalesceCacheManagerGetOrLoadTest {
     }
 
     /**
-     * Entrega el aviso repetidamente hasta que la petición que espera termina.
-     * Se repite porque desde fuera no se sabe en qué momento empieza a escuchar.
+     * Delivers the notification repeatedly until the waiting request finishes.
+     * It is repeated because from the outside it is not known when it starts listening.
      *
-     * @param waiter petición que espera
-     * @param cached contenido del aviso
-     * @return resultado de la petición
-     * @throws Exception si la petición falla o no termina a tiempo
+     * @param waiter waiting request
+     * @param cached content of the notification
+     * @return result of the request
+     * @throws Exception if the request fails or does not finish in time
      */
     private Object deliverUntilDone(Future<Object> waiter, boolean cached) throws Exception {
         long deadline = System.nanoTime() + TimeUnit.SECONDS.toNanos(MAX_WAIT_SECONDS);
@@ -820,18 +820,18 @@ class CoalesceCacheManagerGetOrLoadTest {
             try {
                 return waiter.get(20, TimeUnit.MILLISECONDS);
             } catch (TimeoutException e) {
-                // Todavía esperando: se vuelve a entregar.
+                // Still waiting: deliver it again.
             }
         }
         throw new TimeoutException("the request did not finish");
     }
 
     /**
-     * Con el cliente configurado para rechazar órdenes mientras está desconectado, el fallo
-     * también cuenta como de conexión y pausa el uso de Redis; un server error, no.
+     * With the client configured to reject commands while disconnected, the failure
+     * also counts as a connection failure and pauses the use of Redis; a server error does not.
      */
     @Test
-    public void rejectedCommandWhileDisconnected_ShouldPauseRedisUsage() {
+     void rejectedCommandWhileDisconnected_ShouldPauseRedisUsage() {
         when(valueOperations.get(CACHE_KEY)).thenThrow(new RedisSystemException(
                 "desconectado", new RedisException("Currently not connected. Commands are rejected.")));
         when(valueOperations.get("coalesce:cache:users:2")).thenThrow(new RedisSystemException(
@@ -847,7 +847,7 @@ class CoalesceCacheManagerGetOrLoadTest {
         verify(valueOperations, times(1)).get(CACHE_KEY);
     }
 
-    // ------------------------------------------------------------------ métricas
+    // ------------------------------------------------------------------ metrics
 
     private CoalesceCacheManager managerWith(CacheMetrics metrics, Duration waitTimeout) {
         return new CoalesceCacheManager(redisTemplate, mock(RedisMessageListenerContainer.class), codec,
@@ -855,10 +855,10 @@ class CoalesceCacheManagerGetOrLoadTest {
     }
 
     /**
-     * Aciertos, fallos y cargas se cuentan una vez por petición.
+     * Hits, misses and loads are counted once per request.
      */
     @Test
-    public void metrics_ShouldCountHitsMissesAndLoads() {
+     void metrics_ShouldCountHitsMissesAndLoads() {
         CacheMetrics metrics = mock(CacheMetrics.class);
         CoalesceCacheManager manager = managerWith(metrics, Duration.ofSeconds(30));
         lockIsFree();
@@ -876,10 +876,10 @@ class CoalesceCacheManagerGetOrLoadTest {
     }
 
     /**
-     * Quien recibe el valor que cargó otra instancia cuenta como coalescida, no como carga.
+     * Whoever receives the value loaded by another instance counts as coalesced, not as a load.
      */
     @Test
-    public void metrics_ShouldCountRequestsServedByAnotherInstanceAsCoalesced() {
+     void metrics_ShouldCountRequestsServedByAnotherInstanceAsCoalesced() {
         CacheMetrics metrics = mock(CacheMetrics.class);
         CoalesceCacheManager manager = managerWith(metrics, Duration.ofSeconds(30));
         lockIsHeldByAnother();
@@ -894,12 +894,12 @@ class CoalesceCacheManagerGetOrLoadTest {
     }
 
     /**
-     * Quien espera en la misma JVM también cuenta como coalescida.
+     * Whoever waits in the same JVM also counts as coalesced.
      *
-     * @throws Exception si la prueba se interrumpe
+     * @throws Exception if the test is interrupted
      */
     @Test
-    public void metrics_ShouldCountLocalWaitersAsCoalesced() throws Exception {
+     void metrics_ShouldCountLocalWaitersAsCoalesced() throws Exception {
         CacheMetrics metrics = mock(CacheMetrics.class);
         CoalesceCacheManager manager = managerWith(metrics, Duration.ofSeconds(30));
         lockIsFree();
@@ -924,10 +924,10 @@ class CoalesceCacheManagerGetOrLoadTest {
     }
 
     /**
-     * Las esperas agotadas y los errores de Redis tienen su propio contador.
+     * Expired waits and Redis errors have their own counter.
      */
     @Test
-    public void metrics_ShouldCountWaitTimeoutsAndRedisErrors() {
+     void metrics_ShouldCountWaitTimeoutsAndRedisErrors() {
         CacheMetrics metrics = mock(CacheMetrics.class);
         CoalesceCacheManager manager = managerWith(metrics, Duration.ofMillis(200));
         lockIsHeldByAnother();

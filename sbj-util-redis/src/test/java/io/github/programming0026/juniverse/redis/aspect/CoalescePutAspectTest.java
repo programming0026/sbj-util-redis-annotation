@@ -20,7 +20,7 @@ import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
 
 /**
- * Pruebas unitarias de CoalescePutAspect.
+ * Unit tests for CoalescePutAspect.
  *
  * @author Java Universe
  */
@@ -28,44 +28,44 @@ import org.mockito.quality.Strictness;
 @MockitoSettings(strictness = Strictness.LENIENT)
 class CoalescePutAspectTest {
 
-    /** Administrador de caché. */
+    /** Cache manager. */
     @Mock
     private CoalesceCacheManager cacheManager;
 
-    /** Punto de unión simulado. */
+    /** Mocked join point. */
     @Mock
     private ProceedingJoinPoint joinPoint;
 
-    /** Firma del método simulada. */
+    /** Mocked method signature. */
     @Mock
     private MethodSignature methodSignature;
 
-    /** Aspecto bajo prueba. */
+    /** Aspect under test. */
     private CoalescePutAspect aspect;
 
     /**
-     * Prepara el entorno antes de cada prueba.
+     * Sets up the environment before each test.
      */
     @BeforeEach
-    public void setUp() {
+     void setUp() {
         aspect = new CoalescePutAspect(cacheManager);
     }
 
     /**
-     * Método de apoyo para las simulaciones.
+     * Helper method for the mocks.
      *
-     * @param id identificador
-     * @return cadena
+     * @param id identifier
+     * @return string
      */
-    public String testMethod(String id) {
+     public String testMethod(String id) {
         return "result";
     }
 
     /**
-     * Método anotado con un placeholder en el prefijo.
+     * Method annotated with a placeholder in the prefix.
      *
-     * @param id identificador
-     * @return cadena
+     * @param id identifier
+     * @return string
      */
     @CoalescePut(value = "${cache.prefix}", key = "#id", ttl = 120, unless = "#result == null")
     public String placeholderMethod(String id) {
@@ -73,13 +73,13 @@ class CoalescePutAspectTest {
     }
 
     /**
-     * Con entorno, el prefijo con placeholder debe resolverse.
+     * With an environment, the prefix with a placeholder must be resolved.
      */
     @Test
-    public void handleSinglePut_WithEnvironment_ShouldResolvePlaceholders() throws Throwable {
+     void handleSinglePut_WithEnvironment_ShouldResolvePlaceholders() throws Throwable {
         CoalescePutAspect resolvingAspect = new CoalescePutAspect(cacheManager,
                 new MockEnvironment().withProperty("cache.prefix", "users-v2"));
-        CoalescePut put = getClass().getMethod("placeholderMethod", String.class)
+        CoalescePut put = getClass().getDeclaredMethod("placeholderMethod", String.class)
                 .getAnnotation(CoalescePut.class);
         setupJoinPoint();
         when(joinPoint.proceed()).thenReturn("result");
@@ -91,10 +91,10 @@ class CoalescePutAspectTest {
     }
 
     /**
-     * Un guardado sin «unless» debe guardar en caché.
+     * A put without "unless" must store in the cache.
      */
     @Test
-    public void handleSinglePut_WithEmptyUnless_ShouldCache() throws Throwable {
+     void handleSinglePut_WithEmptyUnless_ShouldCache() throws Throwable {
         CoalescePut put = createMockPut("cache", "#id", 300, "", "");
         setupJoinPoint();
         when(joinPoint.proceed()).thenReturn("result");
@@ -105,10 +105,10 @@ class CoalescePutAspectTest {
     }
 
     /**
-     * Un guardado con condición falsa no debe guardar en caché.
+     * A put with a false condition must not store in the cache.
      */
     @Test
-    public void handleSinglePut_WithConditionFalse_ShouldNotCache() throws Throwable {
+     void handleSinglePut_WithConditionFalse_ShouldNotCache() throws Throwable {
         CoalescePut put = createMockPut("cache", "#id", 300, "#id == '999'", "");
         setupJoinPoint();
         when(joinPoint.proceed()).thenReturn("result");
@@ -121,10 +121,10 @@ class CoalescePutAspectTest {
 
 
     /**
-     * Un guardado con «unless» verdadero no debe guardar en caché.
+     * A put with a true "unless" must not store in the cache.
      */
     @Test
-    public void handleSinglePut_WithUnlessTrue_ShouldNotCache() throws Throwable {
+     void handleSinglePut_WithUnlessTrue_ShouldNotCache() throws Throwable {
         CoalescePut put = createMockPut("cache", "#id", 300, "", "#result == 'result'");
         setupJoinPoint();
         when(joinPoint.proceed()).thenReturn("result");
@@ -136,10 +136,10 @@ class CoalescePutAspectTest {
     }
 
     /**
-     * Un guardado con «unless» falso debe guardar en caché.
+     * A put with a false "unless" must store in the cache.
      */
     @Test
-    public void handleSinglePut_WithUnlessFalse_ShouldCache() throws Throwable {
+     void handleSinglePut_WithUnlessFalse_ShouldCache() throws Throwable {
         CoalescePut put = createMockPut("cache", "#id", 300, "", "#result == 'other'");
         setupJoinPoint();
         when(joinPoint.proceed()).thenReturn("result");
@@ -152,10 +152,10 @@ class CoalescePutAspectTest {
 
 
     /**
-     * Un guardado con comprobación de nulo en «unless» no debe guardar nulos.
+     * A put with a null check in "unless" must not store nulls.
      */
     @Test
-    public void handleSinglePut_WithUnlessNullCheck_ShouldNotCacheNull() throws Throwable {
+     void handleSinglePut_WithUnlessNullCheck_ShouldNotCacheNull() throws Throwable {
         CoalescePut put = createMockPut("cache", "#id", 300, "", "#result == null");
         setupJoinPoint();
         when(joinPoint.proceed()).thenReturn(null);
@@ -167,10 +167,10 @@ class CoalescePutAspectTest {
     }
 
     /**
-     * Un guardado con condición y «unless» verdaderos no debe guardar en caché.
+     * A put with a true condition and a true "unless" must not store in the cache.
      */
     @Test
-    public void handleSinglePut_WithConditionAndUnlessBothTrue_ShouldNotCache() throws Throwable {
+     void handleSinglePut_WithConditionAndUnlessBothTrue_ShouldNotCache() throws Throwable {
         CoalescePut put = createMockPut(
                 "cache", "#id", 300,
                 "#id == '123'",
@@ -187,7 +187,7 @@ class CoalescePutAspectTest {
 
 
     /**
-     * Prepara el punto de unión con valores predeterminados.
+     * Prepares the join point with default values.
      */
     private void setupJoinPoint() {
         when(joinPoint.getSignature()).thenReturn(methodSignature);
@@ -197,14 +197,14 @@ class CoalescePutAspectTest {
     }
 
     /**
-     * Crea una anotación de guardado simulada.
+     * Creates a mocked put annotation.
      *
-     * @param value valor
-     * @param key clave
-     * @param ttl tiempo de vida
-     * @param condition expresión de la condición
-     * @param unless condición que evita guardar
-     * @return anotación de guardado con coalescencia
+     * @param value value
+     * @param key key
+     * @param ttl time to live
+     * @param condition condition expression
+     * @param unless condition that prevents storing
+     * @return coalescing put annotation
      */
     private CoalescePut createMockPut(
             String value, String key, long ttl, String condition, String unless) {
@@ -218,13 +218,13 @@ class CoalescePutAspectTest {
     }
 
     /**
-     * Obtiene método de prueba.
+     * Gets the test method.
      *
-     * @return método de prueba
+     * @return test method
      */
-    private Method getTestMethod() {
+   public Method getTestMethod() {
         try {
-            return this.getClass().getMethod("testMethod", String.class);
+            return this.getClass().getDeclaredMethod("testMethod", String.class);
         } catch (NoSuchMethodException e) {
             throw new RuntimeException(e);
         }

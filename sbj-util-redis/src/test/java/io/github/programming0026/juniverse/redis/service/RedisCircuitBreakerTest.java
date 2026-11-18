@@ -28,14 +28,14 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 /**
- * Pruebas del cortacircuitos que deja de usar Redis tras un fallo de conexión.
+ * Tests of the circuit breaker that stops using Redis after a connection failure.
  *
  * @author Java Universe
  */
 class RedisCircuitBreakerTest {
 
     @Test
-    public void connectionFailures_ShouldBeRecognisedAlongTheCauseChain() {
+     void connectionFailures_ShouldBeRecognisedAlongTheCauseChain() {
         assertTrue(RedisCircuitBreaker.isConnectionFailure(new QueryTimeoutException("x")));
         assertTrue(RedisCircuitBreaker.isConnectionFailure(new RedisConnectionFailureException("x")));
         assertTrue(RedisCircuitBreaker.isConnectionFailure(new RedisCommandTimeoutException("x")));
@@ -46,7 +46,7 @@ class RedisCircuitBreakerTest {
     }
 
     @Test
-    public void otherFailures_ShouldNotCountAsConnectionFailures() {
+     void otherFailures_ShouldNotCountAsConnectionFailures() {
         assertFalse(RedisCircuitBreaker.isConnectionFailure(
                 new RedisSystemException("x", new RedisCommandExecutionException("WRONGTYPE"))));
         assertFalse(RedisCircuitBreaker.isConnectionFailure(new IllegalStateException("x")));
@@ -54,7 +54,7 @@ class RedisCircuitBreakerTest {
     }
 
     @Test
-    public void connectionFailure_ShouldOpenTheBreakerForThePause() throws InterruptedException {
+     void connectionFailure_ShouldOpenTheBreakerForThePause() throws InterruptedException {
         RedisCircuitBreaker breaker = new RedisCircuitBreaker(Duration.ofMillis(150));
 
         assertFalse(breaker.isOpen());
@@ -69,7 +69,7 @@ class RedisCircuitBreakerTest {
     }
 
     @Test
-    public void zeroPause_ShouldNeverOpen() {
+     void zeroPause_ShouldNeverOpen() {
         RedisCircuitBreaker breaker = new RedisCircuitBreaker(Duration.ZERO);
 
         assertFalse(breaker.recordFailure(new QueryTimeoutException("no response")));
@@ -79,12 +79,12 @@ class RedisCircuitBreakerTest {
     }
 
     /**
-     * Tras un fallo de conexión, RedisCacheService no vuelve a llegar a Redis durante la pausa:
-     * lecturas, escrituras, invalidaciones y consultas responden como con la caché vacía.
+     * After a connection failure, RedisCacheService does not reach Redis again during the pause:
+     * reads, writes, evictions and queries respond as with an empty cache.
      */
     @Test
     @SuppressWarnings("unchecked")
-    public void redisCacheService_ShouldSkipRedisWhileTheBreakerIsOpen() {
+     void redisCacheService_ShouldSkipRedisWhileTheBreakerIsOpen() {
         RedisTemplate<String, Object> template = mock(RedisTemplate.class);
         ValueOperations<String, Object> values = mock(ValueOperations.class);
         when(template.opsForValue()).thenReturn(values);
@@ -112,13 +112,13 @@ class RedisCircuitBreakerTest {
     }
 
     /**
-     * Al acabar la pausa, de muchas llamadas simultáneas solo una prueba Redis; el resto sigue
-     * sin usarlo hasta que la prueba registra su resultado.
+     * When the pause ends, out of many simultaneous calls only one probes Redis; the rest keep
+     * not using it until the probe records its result.
      *
-     * @throws Exception si la prueba se interrumpe
+     * @throws Exception if the test is interrupted
      */
     @Test
-    public void afterThePause_OnlyOneCallShouldProbeRedis() throws Exception {
+     void afterThePause_OnlyOneCallShouldProbeRedis() throws Exception {
         RedisCircuitBreaker breaker = new RedisCircuitBreaker(Duration.ofMillis(100));
         breaker.recordFailure(new QueryTimeoutException("no response"));
         Thread.sleep(150);
@@ -148,12 +148,12 @@ class RedisCircuitBreakerTest {
     }
 
     /**
-     * Si la prueba sale bien, Redis vuelve a usarse para todos; si falla, empieza otra pausa.
+     * If the probe succeeds, Redis is used again for everyone; if it fails, another pause begins.
      *
-     * @throws Exception si la prueba se interrumpe
+     * @throws Exception if the test is interrupted
      */
     @Test
-    public void probeResult_ShouldCloseOrReopenTheBreaker() throws Exception {
+     void probeResult_ShouldCloseOrReopenTheBreaker() throws Exception {
         RedisCircuitBreaker breaker = new RedisCircuitBreaker(Duration.ofMillis(100));
         breaker.recordFailure(new QueryTimeoutException("no response"));
         Thread.sleep(150);

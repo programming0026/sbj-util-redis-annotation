@@ -12,51 +12,51 @@ import java.util.function.UnaryOperator;
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
- * Pruebas unitarias de AnnotationPlaceholderResolver.
+ * Unit tests for AnnotationPlaceholderResolver.
  *
  * @author Java Universe
  */
 class AnnotationPlaceholderResolverTest {
 
-    /** Entorno con las propiedades de prueba. */
+    /** Environment with the test properties. */
     private final MockEnvironment environment = new MockEnvironment()
             .withProperty("cache.users", "users-v2")
             .withProperty("cache.ttl.name", "products")
             .withProperty("redis.host", "redis.internal");
 
-    /** Resolvedor basado en el entorno. */
+    /** Resolver based on the environment. */
     private final UnaryOperator<String> resolver = environment::resolveRequiredPlaceholders;
 
     /**
-     * Métodos anotados que sirven de fuente de anotaciones.
+     * Annotated methods that serve as the source of annotations.
      */
     @SuppressWarnings("unused")
-    public static class Annotated {
+     public static class Annotated {
 
         @CoalesceCacheable(value = "${cache.users}", key = "#id", ttl = 60, coalesce = false)
-        public void cacheable() {
+         void cacheable() {
         }
 
         @CoalesceCacheable(value = "${cache.missing:fallback}")
-        public void cacheableWithDefault() {
+         void cacheableWithDefault() {
         }
 
         @CoalesceCacheable(value = "${cache.missing}")
-        public void cacheableMissing() {
+         void cacheableMissing() {
         }
 
         @CoalesceEvict(value = {"${cache.users}", "static"}, allEntries = true)
-        public void evict() {
+         void evict() {
         }
 
         @CoalesceCaching(cacheable = @CoalesceCacheable("${cache.users}"),
                 evict = @CoalesceEvict("${cache.ttl.name}"))
-        public void caching() {
+         void caching() {
         }
     }
 
     /**
-     * Obtiene una anotación de un método de {@link Annotated}.
+     * Gets an annotation from a method of {@link Annotated}.
      */
     private static <A extends java.lang.annotation.Annotation> A annotation(String method, Class<A> type)
             throws NoSuchMethodException {
@@ -64,10 +64,10 @@ class AnnotationPlaceholderResolverTest {
     }
 
     /**
-     * Los atributos de texto deben resolverse y el resto conservarse.
+     * Text attributes must be resolved and the rest preserved.
      */
     @Test
-    public void resolve_ShouldReplaceStringAttributesAndKeepOthers() throws Exception {
+     void resolve_ShouldReplaceStringAttributesAndKeepOthers() throws Exception {
         CoalesceCacheable resolved = AnnotationPlaceholderResolver.resolve(
                 annotation("cacheable", CoalesceCacheable.class), resolver);
 
@@ -78,10 +78,10 @@ class AnnotationPlaceholderResolverTest {
     }
 
     /**
-     * Debe aplicarse el valor por defecto del placeholder.
+     * The placeholder's default value must be applied.
      */
     @Test
-    public void resolve_WithDefaultValue_ShouldUseDefault() throws Exception {
+     void resolve_WithDefaultValue_ShouldUseDefault() throws Exception {
         CoalesceCacheable resolved = AnnotationPlaceholderResolver.resolve(
                 annotation("cacheableWithDefault", CoalesceCacheable.class), resolver);
 
@@ -89,10 +89,10 @@ class AnnotationPlaceholderResolverTest {
     }
 
     /**
-     * Un placeholder sin propiedad debe fallar con el resolvedor estricto.
+     * A placeholder without a property must fail with the strict resolver.
      */
     @Test
-    public void resolve_WithMissingProperty_ShouldThrow() throws Exception {
+     void resolve_WithMissingProperty_ShouldThrow() throws Exception {
         CoalesceCacheable annotation = annotation("cacheableMissing", CoalesceCacheable.class);
 
         assertThrows(IllegalArgumentException.class,
@@ -100,10 +100,10 @@ class AnnotationPlaceholderResolverTest {
     }
 
     /**
-     * Los arreglos de texto deben resolverse elemento por elemento.
+     * Text arrays must be resolved element by element.
      */
     @Test
-    public void resolve_ShouldReplaceStringArrays() throws Exception {
+     void resolve_ShouldReplaceStringArrays() throws Exception {
         CoalesceEvict resolved = AnnotationPlaceholderResolver.resolve(
                 annotation("evict", CoalesceEvict.class), resolver);
 
@@ -112,10 +112,10 @@ class AnnotationPlaceholderResolverTest {
     }
 
     /**
-     * Las anotaciones anidadas deben resolverse.
+     * Nested annotations must be resolved.
      */
     @Test
-    public void resolve_ShouldReplaceNestedAnnotations() throws Exception {
+     void resolve_ShouldReplaceNestedAnnotations() throws Exception {
         CoalesceCaching resolved = AnnotationPlaceholderResolver.resolve(
                 annotation("caching", CoalesceCaching.class), resolver);
 
@@ -124,10 +124,10 @@ class AnnotationPlaceholderResolverTest {
     }
 
     /**
-     * Los mapas de atributos deben resolverse, incluidos los anidados.
+     * Attribute maps must be resolved, including nested ones.
      */
     @Test
-    public void resolve_WithAnnotationAttributes_ShouldReplaceNestedValues() {
+     void resolve_WithAnnotationAttributes_ShouldReplaceNestedValues() {
         AnnotationAttributes host = new AnnotationAttributes();
         host.put("host", "${redis.host}");
         host.put("port", 6379);

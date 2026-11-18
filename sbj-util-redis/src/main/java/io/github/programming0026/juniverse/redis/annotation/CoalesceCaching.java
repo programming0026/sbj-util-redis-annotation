@@ -15,23 +15,23 @@ import java.lang.annotation.Target;
 public @interface CoalesceCaching {
 
     /**
-     * Array de anotaciones CoalesceEvict.
+     * Array of CoalesceEvict annotations.
      *
-     * @return anotaciones de invalidación con coalescencia
+     * @return coalescing eviction annotations
      */
     CoalesceEvict[] evict() default {};
 
     /**
-     * Array de anotaciones CoalescePut.
+     * Array of CoalescePut annotations.
      *
-     * @return anotaciones de guardado con coalescencia
+     * @return coalescing put annotations
      */
     CoalescePut[] put() default {};
 
     /**
-     * Array de anotaciones CoalesceCacheable.
+     * Array of CoalesceCacheable annotations.
      *
-     * @return anotaciones de caché con coalescencia
+     * @return coalescing cache annotations
      */
     CoalesceCacheable[] cacheable() default {};
 }

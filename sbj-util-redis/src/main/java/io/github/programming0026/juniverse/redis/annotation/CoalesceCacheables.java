@@ -15,9 +15,9 @@ import java.lang.annotation.Target;
 public @interface CoalesceCacheables {
 
     /**
-     * Valor.
+     * Value.
      *
-     * @return anotaciones de caché con coalescencia
+     * @return coalescing cache annotations
      */
     CoalesceCacheable[] value();
 }

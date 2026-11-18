@@ -11,39 +11,39 @@ import tools.jackson.core.JacksonException;
 import tools.jackson.databind.ObjectMapper;
 
 /**
- * Convierte los valores de la caché a JSON y de vuelta.
+ * Converts cache values to JSON and back.
  *
- * <p>Cuando se conoce el tipo del valor (el tipo de retorno del método en caché), el JSON no
- * lleva nombres de clase: al leer se construye exactamente ese tipo. Así se conservan los
- * records, las listas inmutables, {@code Long}, las fechas y los enums, y lo que haya en Redis
- * no puede elegir qué clases instancia la aplicación.</p>
+ * <p>When the type of the value is known (the return type of the cached method), the JSON does not
+ * carry class names: when reading, exactly that type is built. This preserves
+ * records, immutable lists, {@code Long}, dates and enums, and whatever is in Redis
+ * cannot choose which classes the application instantiates.</p>
  *
- * <p>Cuando el tipo no dice nada ({@code Object}, {@code void} o un genérico sin resolver) se usa
- * el {@code ObjectMapper} configurado tal cual, que por defecto incluye el nombre de la clase
- * en el JSON. Ese formato tiene límites conocidos: no conserva records, colecciones inmutables
- * ni {@code Long} como valor raíz.</p>
+ * <p>When the type says nothing ({@code Object}, {@code void} or an unresolved generic), the
+ * configured {@code ObjectMapper} is used as is, which by default includes the class name
+ * in the JSON. That format has known limits: it does not preserve records, immutable collections
+ * or {@code Long} as a root value.</p>
  *
- * <p>Un valor nulo se guarda como el literal JSON {@code null}; así una clave con un nulo
- * guardado se distingue de una clave que no existe.</p>
+ * <p>A null value is stored as the JSON literal {@code null}; this way a key with a stored
+ * null is distinguished from a key that does not exist.</p>
  *
  * @author Java Universe
  */
 public class CacheValueCodec {
 
-    /** Representación de un valor nulo guardado. */
+    /** Representation of a stored null value. */
     private static final byte[] NULL_BYTES = "null".getBytes(StandardCharsets.UTF_8);
 
-    /** Conversor sin nombres de clase, para los valores de tipo conocido. */
+    /** Mapper without class names, for values of known type. */
     private final ObjectMapper typedMapper;
 
-    /** Conversor configurado, para los valores de tipo desconocido. */
+    /** Configured mapper, for values of unknown type. */
     private final ObjectMapper untypedMapper;
 
     /**
-     * Crea el conversor a partir del {@code ObjectMapper} configurado. Para los valores de tipo
-     * conocido se usa una copia con la misma configuración y sin tipado por defecto.
+     * Creates the codec from the configured {@code ObjectMapper}. For values of known
+     * type, a copy with the same configuration and without default typing is used.
      *
-     * @param configuredMapper conversor de {@code ObjectMapperConfig}
+     * @param configuredMapper mapper from {@code ObjectMapperConfig}
      */
     public CacheValueCodec(ObjectMapper configuredMapper) {
         this.untypedMapper = configuredMapper;
@@ -51,12 +51,12 @@ public class CacheValueCodec {
     }
 
     /**
-     * Serializa un valor.
+     * Serializes a value.
      *
-     * @param value valor; puede ser nulo
-     * @param type tipo declarado del valor
-     * @return JSON en UTF-8
-     * @throws SerializationException si el valor no se puede serializar
+     * @param value value; may be null
+     * @param type declared type of the value
+     * @return UTF-8 JSON
+     * @throws SerializationException if the value cannot be serialized
      */
     public byte[] encode(Object value, Type type) {
         if (value == null) {
@@ -72,12 +72,12 @@ public class CacheValueCodec {
     }
 
     /**
-     * Deserializa un valor.
+     * Deserializes a value.
      *
-     * @param bytes JSON en UTF-8
-     * @param type tipo con el que se construye el valor
-     * @return valor; nulo si lo guardado era un nulo
-     * @throws SerializationException si los bytes no corresponden al tipo
+     * @param bytes UTF-8 JSON
+     * @param type type used to build the value
+     * @return value; null if what was stored was a null
+     * @throws SerializationException if the bytes do not match the type
      */
     public Object decode(byte[] bytes, Type type) {
         if (Arrays.equals(bytes, NULL_BYTES)) {
@@ -93,10 +93,10 @@ public class CacheValueCodec {
     }
 
     /**
-     * Indica si el tipo basta para reconstruir el valor sin nombres de clase en el JSON.
+     * Tells whether the type is enough to rebuild the value without class names in the JSON.
      *
-     * @param type tipo declarado
-     * @return {@code false} para {@code Object}, {@code void} y los genéricos sin resolver
+     * @param type declared type
+     * @return {@code false} for {@code Object}, {@code void} and unresolved generics
      */
     private static boolean isKnown(Type type) {
         return type != null

@@ -25,8 +25,8 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
- * Prueba el modo SENTINEL contra un maestro, una réplica y tres sentinels reales, con
- * contraseñas distintas en los datos y en los sentinels, y con una conmutación por fallo.
+ * Tests SENTINEL mode against one master, one replica and three real sentinels, with
+ * different passwords on the data nodes and on the sentinels, and with a failover.
  *
  * @author Java Universe
  */
@@ -34,14 +34,14 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 class SentinelFailoverIT {
 
-    /** Topología compartida por las pruebas de la clase. */
+    /** Topology shared by the tests of the class. */
     private static Sentinel topology;
 
-    /** Aplicación de la prueba en curso. */
+    /** Application of the current test. */
     private LibraryApplication application;
 
     /**
-     * Aplicación en modo SENTINEL con las dos contraseñas.
+     * Application in SENTINEL mode with both passwords.
      */
     @Configuration
     @EnableRedisLibrary(
@@ -57,32 +57,32 @@ class SentinelFailoverIT {
             keyPrefix = "sentinel",
             connectionTimeout = 2000,
             readTimeout = 2000)
-    public static class Application {
+    private static class Application {
     }
 
     /**
-     * Arranca la topología.
+     * Starts the topology.
      */
     @BeforeAll
-    public static void startTopology() {
+     static void startTopology() {
         topology = RedisTopologies.startSentinel();
     }
 
     /**
-     * Elimina el contenedor.
+     * Removes the container.
      */
     @AfterAll
-    public static void stopTopology() {
+     static void stopTopology() {
         if (topology != null) {
             topology.container().stop();
         }
     }
 
     /**
-     * Cierra la aplicación.
+     * Closes the application.
      */
     @AfterEach
-    public void closeApplication() {
+     void closeApplication() {
         if (application != null) {
             application.close();
         }
@@ -99,12 +99,12 @@ class SentinelFailoverIT {
     }
 
     /**
-     * Con {@code pwd} para los datos y {@code sentinelPwd} para los sentinels, la librería
-     * descubre el maestro y la caché funciona.
+     * With {@code pwd} for the data nodes and {@code sentinelPwd} for the sentinels, the library
+     * discovers the master and the cache works.
      */
     @Test
     @Order(1)
-    public void application_ShouldAuthenticateAgainstSentinelsAndDataNodes() {
+     void application_ShouldAuthenticateAgainstSentinelsAndDataNodes() {
         application = LibraryApplication.start(Application.class,
                 properties(RedisTopologies.DATA_PASSWORD, RedisTopologies.SENTINEL_PASSWORD));
         CatalogService catalog = application.catalog();
@@ -120,12 +120,12 @@ class SentinelFailoverIT {
     }
 
     /**
-     * Con la contraseña de los datos equivocada, la aplicación sigue respondiendo sin caché
-     * y el verificador de salud lo refleja.
+     * With the wrong data password, the application keeps responding without cache
+     * and the health checker reflects it.
      */
     @Test
     @Order(2)
-    public void application_WithWrongDataPassword_ShouldServeWithoutCache() {
+     void application_WithWrongDataPassword_ShouldServeWithoutCache() {
         application = LibraryApplication.start(Application.class,
                 properties("wrong-password", RedisTopologies.SENTINEL_PASSWORD));
         CatalogService catalog = application.catalog();
@@ -138,12 +138,12 @@ class SentinelFailoverIT {
     }
 
     /**
-     * Al caer el maestro, los sentinels promueven la réplica. La aplicación sigue respondiendo
-     * durante la conmutación y vuelve a usar la caché, ya contra el nuevo maestro, sin reiniciarse.
+     * When the master goes down, the sentinels promote the replica. The application keeps responding
+     * during the failover and uses the cache again, now against the new master, without restarting.
      */
     @Test
     @Order(3)
-    public void whenMasterDies_ApplicationShouldKeepServingAndFollowTheNewMaster() {
+     void whenMasterDies_ApplicationShouldKeepServingAndFollowTheNewMaster() {
         application = LibraryApplication.start(Application.class,
                 properties(RedisTopologies.DATA_PASSWORD, RedisTopologies.SENTINEL_PASSWORD));
         CatalogService catalog = application.catalog();
@@ -152,7 +152,7 @@ class SentinelFailoverIT {
 
         topology.data(topology.masterPort(), "shutdown", "nosave");
 
-        // Durante la conmutación ninguna petición falla.
+        // During the failover no request fails.
         for (long id = 20; id < 30; id++) {
             assertEquals("item-" + id, catalog.find(id).name());
             assertEquals("spring-" + id, catalog.findWithSpringCache(id).name());
@@ -173,20 +173,20 @@ class SentinelFailoverIT {
     }
 
     /**
-     * Un modo SENTINEL sin nombre de maestro se rechaza al arrancar.
+     * A SENTINEL mode without a master name is rejected at startup.
      */
     @Test
     @Order(4)
-    public void application_WithoutMasterName_ShouldFailFast() {
+     void application_WithoutMasterName_ShouldFailFast() {
         assertThrows(RuntimeException.class,
                 () -> LibraryApplication.start(MissingMaster.class, properties("x", "y")));
     }
 
     /**
-     * Configuración inválida: modo SENTINEL sin {@code sentinelMaster}.
+     * Invalid configuration: SENTINEL mode without {@code sentinelMaster}.
      */
     @Configuration
     @EnableRedisLibrary(mode = Mode.SENTINEL, hostEntries = @HostEntry(host = "${it.sentinel.0}"))
-    public static class MissingMaster {
+     static class MissingMaster {
     }
 }

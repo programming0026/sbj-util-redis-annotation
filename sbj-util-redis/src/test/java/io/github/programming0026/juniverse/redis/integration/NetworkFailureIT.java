@@ -22,32 +22,32 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
- * Comprueba, con la conexión que crea la propia librería, qué pasa cuando la red falla:
- * Redis deja de contestar (contenedor congelado), se cae y vuelve (contenedor detenido y
- * arrancado), o no está disponible al arrancar la aplicación.
+ * Checks, with the connection created by the library itself, what happens when the network fails:
+ * Redis stops answering (frozen container), goes down and comes back (container stopped and
+ * started), or is unavailable when the application starts.
  *
- * <p>En todos los casos los métodos de negocio deben seguir respondiendo, sin esperar más que
- * {@code readTimeout}, y la caché debe volver a usarse sola cuando Redis se recupera.</p>
+ * <p>In all cases the business methods must keep responding, waiting no longer than
+ * {@code readTimeout}, and the cache must be used again on its own when Redis recovers.</p>
  *
  * @author Java Universe
  */
 @Testcontainers(disabledWithoutDocker = true)
 class NetworkFailureIT {
 
-    /** Tiempo de respuesta máximo de cada orden configurado en la aplicación de prueba. */
+    /** Maximum response time of each command configured in the test application. */
     private static final long READ_TIMEOUT_MILLIS = 1000;
 
-    /** Redis exclusivo de cada prueba, con puerto fijo para que sobreviva a un reinicio. */
+    /** Redis exclusive to each test, with a fixed port so that it survives a restart. */
     private GenericContainer<?> redis;
 
-    /** Puerto de Redis, el mismo dentro y fuera del contenedor. */
+    /** Redis port, the same inside and outside the container. */
     private int port;
 
-    /** Aplicación de prueba. */
+    /** Test application. */
     private LibraryApplication application;
 
     /**
-     * Aplicación con tiempos de espera cortos, para que las pruebas no tarden.
+     * Application with short timeouts, so that the tests do not take long.
      */
     @Configuration
     @EnableRedisLibrary(
@@ -55,14 +55,14 @@ class NetworkFailureIT {
             keyPrefix = "net",
             connectionTimeout = 1000,
             readTimeout = READ_TIMEOUT_MILLIS)
-    public static class Application {
+     static class Application {
     }
 
     /**
-     * Arranca Redis en un puerto fijo.
+     * Starts Redis on a fixed port.
      */
     @BeforeEach
-    public void startRedis() {
+     void startRedis() {
         port = RedisContainers.freePorts(1)[0];
         redis = new GenericContainer<>(RedisContainers.IMAGE)
                 .withCommand("redis-server", "--port", String.valueOf(port), "--save", "", "--appendonly", "no");
@@ -72,17 +72,17 @@ class NetworkFailureIT {
     }
 
     /**
-     * Cierra la aplicación y elimina el contenedor.
+     * Closes the application and removes the container.
      */
     @AfterEach
-    public void stopEverything() {
+     void stopEverything() {
         if (application != null) {
             application.close();
         }
         try {
             DockerClientFactory.instance().client().unpauseContainerCmd(redis.getContainerId()).exec();
         } catch (RuntimeException e) {
-            // No estaba congelado.
+            // It was not frozen.
         }
         redis.stop();
     }
@@ -100,10 +100,10 @@ class NetworkFailureIT {
     }
 
     /**
-     * El puerto llega por propiedad dentro de {@code host}, y las tres formas de caché funcionan.
+     * The port arrives as a property inside {@code host}, and the three forms of cache work.
      */
     @Test
-    public void application_ShouldConnectUsingHostAndPortFromProperties() {
+     void application_ShouldConnectUsingHostAndPortFromProperties() {
         CatalogService catalog = startApplication().catalog();
 
         Item first = catalog.find(1L);
@@ -117,12 +117,12 @@ class NetworkFailureIT {
     }
 
     /**
-     * Redis deja de contestar sin cerrar la conexión (como un cortafuegos que descarta paquetes).
-     * La primera petición espera como mucho {@code readTimeout}; las siguientes no esperan,
-     * porque la librería deja de usar Redis unos segundos. Al volver Redis, la caché se recupera.
+     * Redis stops answering without closing the connection (like a firewall that drops packets).
+     * The first request waits at most {@code readTimeout}; the following ones do not wait,
+     * because the library stops using Redis for a few seconds. When Redis returns, the cache recovers.
      */
     @Test
-    public void whenRedisStopsAnswering_RequestsShouldStillBeServedAndCacheShouldRecover() {
+     void whenRedisStopsAnswering_RequestsShouldStillBeServedAndCacheShouldRecover() {
         CatalogService catalog = startApplication().catalog();
         catalog.find(1L);
         DockerClientFactory.instance().client().pauseContainerCmd(redis.getContainerId()).exec();
@@ -135,7 +135,7 @@ class NetworkFailureIT {
                 application.cacheService().cacheable("items", "5", () -> "desde-el-cargador"));
 
         assertTrue(firstCall < READ_TIMEOUT_MILLIS + 1500, "the first request took " + firstCall + " ms");
-        // La avería detectada por la primera petición evita la espera en las tres formas de caché.
+        // The failure detected by the first request avoids the wait in the three forms of cache.
         assertTrue(secondCall < 300, "the second request must not wait for Redis: " + secondCall + " ms");
         assertTrue(springCall < 300, "@Cacheable must not wait for Redis: " + springCall + " ms");
         assertTrue(serviceCall < 300, "RedisCacheService must not wait for Redis: " + serviceCall + " ms");
@@ -152,10 +152,10 @@ class NetworkFailureIT {
     }
 
     /**
-     * Si la primera avería la detecta {@code @Cacheable}, las demás formas de caché tampoco esperan.
+     * If the first failure is detected by {@code @Cacheable}, the other forms of cache do not wait either.
      */
     @Test
-    public void whenSpringCacheDetectsTheOutage_OtherCacheFormsShouldNotWait() {
+     void whenSpringCacheDetectsTheOutage_OtherCacheFormsShouldNotWait() {
         CatalogService catalog = startApplication().catalog();
         DockerClientFactory.instance().client().pauseContainerCmd(redis.getContainerId()).exec();
 
@@ -169,11 +169,11 @@ class NetworkFailureIT {
     }
 
     /**
-     * Redis se cae (conexión rechazada) y vuelve a arrancar. Mientras está caído las peticiones
-     * se sirven sin esperar; al volver, el cliente se reconecta solo.
+     * Redis goes down (connection refused) and starts again. While it is down the requests
+     * are served without waiting; when it returns, the client reconnects on its own.
      */
     @Test
-    public void whenRedisGoesDownAndComesBack_ClientShouldReconnectByItself() {
+     void whenRedisGoesDownAndComesBack_ClientShouldReconnectByItself() {
         CatalogService catalog = startApplication().catalog();
         catalog.find(1L);
         DockerClientFactory.instance().client().stopContainerCmd(redis.getContainerId()).exec();
@@ -196,11 +196,11 @@ class NetworkFailureIT {
     }
 
     /**
-     * Si Redis no está disponible cuando arranca la aplicación, esta arranca igualmente,
-     * responde sin caché y empieza a usarla cuando Redis aparece.
+     * If Redis is not available when the application starts, it starts anyway,
+     * responds without cache and starts using it when Redis appears.
      */
     @Test
-    public void whenRedisIsDownAtStartup_ApplicationShouldStartAndUseCacheLater() {
+     void whenRedisIsDownAtStartup_ApplicationShouldStartAndUseCacheLater() {
         DockerClientFactory.instance().client().stopContainerCmd(redis.getContainerId()).exec();
 
         CatalogService catalog = startApplication().catalog();
@@ -215,7 +215,7 @@ class NetworkFailureIT {
     }
 
     /**
-     * Aplicación con una pausa corta tras fallo, para probar qué pasa al acabar la pausa.
+     * Application with a short pause after a failure, to test what happens when the pause ends.
      */
     @Configuration
     @EnableRedisLibrary(
@@ -224,17 +224,17 @@ class NetworkFailureIT {
             connectionTimeout = 1000,
             readTimeout = READ_TIMEOUT_MILLIS,
             failurePause = 1500)
-    public static class ShortPauseApplication {
+     static class ShortPauseApplication {
     }
 
     /**
-     * Con Redis sin contestar, al acabar cada pausa solo una petición vuelve a esperar a Redis,
-     * aunque lleguen muchas a la vez.
+     * With Redis not answering, when each pause ends only one request waits for Redis again,
+     * even if many arrive at once.
      *
-     * @throws Exception si alguna petición falla
+     * @throws Exception if any request fails
      */
     @Test
-    public void afterEachPause_OnlyOneConcurrentRequestShouldWaitForRedis() throws Exception {
+     void afterEachPause_OnlyOneConcurrentRequestShouldWaitForRedis() throws Exception {
         application = LibraryApplication.start(ShortPauseApplication.class,
                 Map.of("it.redis.address", redis.getHost() + ":" + port));
         application.cacheService().cacheable("items", "warm", () -> "v");

@@ -16,56 +16,56 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
- * Comprueba contra Redis las claves que se generan sin {@code key} ni {@code value}
- * y el aislamiento entre aplicaciones que usan prefijos distintos.
+ * Checks against Redis the keys generated without {@code key} or {@code value}
+ * and the isolation between applications that use different prefixes.
  *
  * @author Java Universe
  */
 class KeysAndNamespaceIT extends AbstractRedisIT {
 
     /**
-     * Servicio cuyas anotaciones no indican clave, y en algunos casos tampoco nombre de caché.
+     * Service whose annotations do not specify a key, and in some cases not a cache name either.
      */
-    public static class LookupService {
+     static class LookupService {
 
-        /** Número de ejecuciones reales. */
+        /** Number of real executions. */
         private final AtomicInteger calls = new AtomicInteger();
 
         @CoalesceCacheable("names")
-        public String upper(String name) {
+         String upper(String name) {
             calls.incrementAndGet();
             return name.toUpperCase();
         }
 
         @CoalesceCacheable("searches")
-        public String search(Filter filter, int page) {
+         String search(Filter filter, int page) {
             calls.incrementAndGet();
             return filter.name() + "#" + page;
         }
 
         @CoalesceCacheable
-        public Long twice(Long value) {
+         Long twice(Long value) {
             calls.incrementAndGet();
             return value * 2;
         }
 
         @CoalesceCacheable
-        public String twice(String value) {
+         String twice(String value) {
             calls.incrementAndGet();
             return value + value;
         }
 
         @CoalesceEvict("names")
-        public void forget(String name) {
-            // Solo se intercepta.
+         void forget(String name) {
+            // Only intercepted.
         }
     }
 
     /**
-     * "Aa" y "BB" tienen el mismo hashCode: cada uno debe tener su propia entrada.
+     * "Aa" and "BB" have the same hashCode: each must have its own entry.
      */
     @Test
-    public void argumentsWithSameHashCode_ShouldNotShareEntries() {
+     void argumentsWithSameHashCode_ShouldNotShareEntries() {
         LookupService target = new LookupService();
         LookupService service = newInstance().proxy(target);
 
@@ -78,11 +78,11 @@ class KeysAndNamespaceIT extends AbstractRedisIT {
     }
 
     /**
-     * Los objetos se identifican por su contenido: dos filtros iguales comparten entrada
-     * y dos distintos no.
+     * Objects are identified by their content: two equal filters share an entry
+     * and two different ones do not.
      */
     @Test
-    public void objectArguments_ShouldBeKeyedByContent() {
+     void objectArguments_ShouldBeKeyedByContent() {
         LookupService target = new LookupService();
         LookupService service = newInstance().proxy(target);
 
@@ -95,11 +95,11 @@ class KeysAndNamespaceIT extends AbstractRedisIT {
     }
 
     /**
-     * Dos sobrecargas sin nombre de caché no deben compartir entradas, aunque el argumento
-     * se escriba igual.
+     * Two overloads without a cache name must not share entries, even if the argument
+     * is written the same.
      */
     @Test
-    public void overloadsWithoutCacheName_ShouldNotShareEntries() {
+     void overloadsWithoutCacheName_ShouldNotShareEntries() {
         LookupService target = new LookupService();
         LookupService service = newInstance().proxy(target);
 
@@ -112,10 +112,10 @@ class KeysAndNamespaceIT extends AbstractRedisIT {
     }
 
     /**
-     * La invalidación sin clave explícita encuentra la entrada que guardó la lectura sin clave.
+     * Eviction without an explicit key finds the entry stored by the read without a key.
      */
     @Test
-    public void evictWithoutKey_ShouldMatchCacheableWithoutKey() {
+     void evictWithoutKey_ShouldMatchCacheableWithoutKey() {
         LookupService target = new LookupService();
         LookupService service = newInstance().proxy(target);
 
@@ -127,11 +127,11 @@ class KeysAndNamespaceIT extends AbstractRedisIT {
     }
 
     /**
-     * Dos aplicaciones con prefijos distintos en el mismo Redis no comparten entradas,
-     * ni con las anotaciones ni con el servicio programático, y borrar todo en una no toca la otra.
+     * Two applications with different prefixes on the same Redis do not share entries,
+     * neither with annotations nor with the programmatic service, and deleting everything in one does not touch the other.
      */
     @Test
-    public void applicationsWithDifferentPrefixes_ShouldBeIsolated() {
+     void applicationsWithDifferentPrefixes_ShouldBeIsolated() {
         RedisInstance shop = register(new RedisInstance(connectionFactory(), CoalesceSettings.defaults(), "shop"));
         RedisInstance billing = register(
                 new RedisInstance(connectionFactory(), CoalesceSettings.defaults(), "billing"));
@@ -158,10 +158,10 @@ class KeysAndNamespaceIT extends AbstractRedisIT {
     }
 
     /**
-     * Una carga coalescida en una aplicación no despierta ni bloquea a otra con distinto prefijo.
+     * A coalesced load in one application does not wake up or block another with a different prefix.
      */
     @Test
-    public void applicationsWithDifferentPrefixes_ShouldLoadIndependently() {
+     void applicationsWithDifferentPrefixes_ShouldLoadIndependently() {
         RedisInstance shop = register(new RedisInstance(connectionFactory(), CoalesceSettings.defaults(), "shop"));
         RedisInstance billing = register(
                 new RedisInstance(connectionFactory(), CoalesceSettings.defaults(), "billing"));

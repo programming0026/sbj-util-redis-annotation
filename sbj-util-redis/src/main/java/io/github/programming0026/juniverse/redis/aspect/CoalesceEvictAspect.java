@@ -14,7 +14,7 @@ import org.springframework.core.annotation.Order;
 import org.springframework.core.env.Environment;
 
 /**
- * Aspecto de {@code @CoalesceEvict}: invalida entradas antes o después de ejecutar el método.
+ * Aspect for {@code @CoalesceEvict}: evicts entries before or after running the method.
  *
  * @author Java Universe
  */
@@ -22,72 +22,72 @@ import org.springframework.core.env.Environment;
 @Order(3)
 public class CoalesceEvictAspect {
 
-    /** Lógica común de los aspectos de caché. */
+    /** Common logic of the cache aspects. */
     private final CacheAspectSupport support;
 
     /**
-     * Crea el aspecto sin resolución de placeholders.
+     * Creates the aspect without placeholder resolution.
      *
-     * @param cacheManager administrador de caché
+     * @param cacheManager cache manager
      */
     public CoalesceEvictAspect(CoalesceCacheManager cacheManager) {
         this(cacheManager, null);
     }
 
     /**
-     * Crea el aspecto con resolución de placeholders {@code ${...}}.
+     * Creates the aspect with {@code ${...}} placeholder resolution.
      *
-     * @param cacheManager administrador de caché
-     * @param environment entorno con el que se resuelven los placeholders; si es {@code null},
-     *                    los valores se usan tal cual
+     * @param cacheManager cache manager
+     * @param environment environment used to resolve the placeholders; if {@code null},
+     *                    the values are used as they are
      */
     public CoalesceEvictAspect(CoalesceCacheManager cacheManager, Environment environment) {
         this.support = new CacheAspectSupport(cacheManager, environment, Map.of());
     }
 
     /**
-     * Procesa una invalidación.
+     * Handles an eviction.
      *
-     * @param joinPoint punto de unión del aspecto
-     * @param evict anotación de invalidación
-     * @return objeto
-     * @throws Throwable si falla el método interceptado
+     * @param joinPoint aspect join point
+     * @param evict eviction annotation
+     * @return the method result
+     * @throws Throwable if the intercepted method fails
      */
     @Around("@annotation(evict)")
     public Object handleSingleEvict(
             ProceedingJoinPoint joinPoint,
             CoalesceEvict evict) throws Throwable {
 
-        // El nombre del parámetro debe coincidir con el del pointcut @annotation(evict).
+        // The parameter name must match the one in the @annotation(evict) pointcut.
         return processEviction(joinPoint, new CoalesceEvict[] {support.resolve(joinPoint, evict)});
     }
 
     /**
-     * Procesa varias invalidaciones.
+     * Handles several evictions.
      *
-     * @param joinPoint punto de unión del aspecto
-     * @param evicts anotación que agrupa invalidaciones
-     * @return objeto
-     * @throws Throwable si falla el método interceptado
+     * @param joinPoint aspect join point
+     * @param evicts annotation that groups evictions
+     * @return the method result
+     * @throws Throwable if the intercepted method fails
      */
     @Around("@annotation(evicts)")
     public Object handleMultipleEvicts(
             ProceedingJoinPoint joinPoint,
             CoalesceEvicts evicts) throws Throwable {
 
-        // El nombre del parámetro debe coincidir con el del pointcut @annotation(evicts).
+        // The parameter name must match the one in the @annotation(evicts) pointcut.
         return processEviction(joinPoint, support.resolve(joinPoint, evicts).value());
     }
 
     /**
-     * Aplica las invalidaciones cuya condición se cumple: las de {@code beforeInvocation}
-     * antes de ejecutar el método y las demás después, solo si el método termina bien.
-     * Las condiciones se evalúan antes de ejecutar el método.
+     * Applies the evictions whose condition holds: those with {@code beforeInvocation}
+     * before running the method and the rest afterwards, only if the method completes successfully.
+     * The conditions are evaluated before the method runs.
      *
-     * @param joinPoint punto de unión del aspecto
-     * @param evicts invalidaciones, con los placeholders ya resueltos
-     * @return resultado del método
-     * @throws Throwable si falla el método interceptado
+     * @param joinPoint aspect join point
+     * @param evicts evictions, with placeholders already resolved
+     * @return method result
+     * @throws Throwable if the intercepted method fails
      */
     private Object processEviction(
             ProceedingJoinPoint joinPoint,

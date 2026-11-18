@@ -16,9 +16,9 @@ import java.lang.annotation.Target;
 public @interface CoalesceEvicts {
 
     /**
-     * Valor.
+     * Value.
      *
-     * @return anotaciones de invalidación con coalescencia
+     * @return coalescing eviction annotations
      */
     CoalesceEvict[] value();
 }

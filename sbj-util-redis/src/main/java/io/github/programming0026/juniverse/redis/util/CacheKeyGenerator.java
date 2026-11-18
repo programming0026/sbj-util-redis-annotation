@@ -23,27 +23,26 @@ import tools.jackson.databind.cfg.DateTimeFeature;
 import tools.jackson.databind.json.JsonMapper;
 
 /**
- * Genera las claves de caché de los métodos que no indican {@code value} o {@code key}.
+ * Generates the cache keys of methods that do not specify {@code value} or {@code key}.
  *
- * <p>La clave se construye con el contenido de los argumentos, no con su {@code hashCode()}:
- * dos llamadas con argumentos distintos nunca comparten clave, y la misma llamada produce la
- * misma clave en todas las instancias.</p>
+ * <p>The key is built from the content of the arguments, not from their {@code hashCode()}:
+ * two calls with different arguments never share a key, and the same call produces the
+ * same key on all instances.</p>
  *
  * @author Java Universe
  */
 public final class CacheKeyGenerator {
 
-    /** Longitud a partir de la cual los argumentos se resumen con SHA-256. */
+    /** Length above which the arguments are summarized with SHA-256. */
     private static final int MAX_ARGUMENTS_LENGTH = 200;
 
     /**
-     * Conversor que da siempre el mismo JSON para el mismo contenido: propiedades y entradas
-     * de mapas ordenadas. Lee los campos directamente, así no depende de que haya getters.
+     * Mapper that always produces the same JSON for the same content: properties and map
+     * entries are sorted. It reads the fields directly, so it does not depend on getters being present.
      */
     private static final ObjectMapper CANONICAL_MAPPER = JsonMapper.builder()
             .enable(MapperFeature.SORT_PROPERTIES_ALPHABETICALLY)
             .enable(SerializationFeature.ORDER_MAP_ENTRIES_BY_KEYS)
-            // Un objeto sin campos daría "{}" para cualquier instancia: mejor fallar.
             .enable(SerializationFeature.FAIL_ON_EMPTY_BEANS)
             .disable(DateTimeFeature.WRITE_DATES_AS_TIMESTAMPS)
             .changeDefaultVisibility(visibility -> visibility
@@ -55,21 +54,21 @@ public final class CacheKeyGenerator {
     }
 
     /**
-     * Devuelve el método interceptado.
+     * Returns the intercepted method.
      *
-     * @param joinPoint punto de unión del aspecto
-     * @return método, o {@code null} si la firma no es de un método
+     * @param joinPoint aspect join point
+     * @return method, or {@code null} if the signature is not a method's
      */
     public static Method methodOf(JoinPoint joinPoint) {
         return joinPoint.getSignature() instanceof MethodSignature signature ? signature.getMethod() : null;
     }
 
     /**
-     * Devuelve el tipo de retorno del método interceptado, con los genéricos resueltos
-     * contra la clase del objeto real.
+     * Returns the return type of the intercepted method, with generics resolved
+     * against the class of the real object.
      *
-     * @param joinPoint punto de unión del aspecto
-     * @return tipo de retorno; {@code Object} si no se puede determinar
+     * @param joinPoint aspect join point
+     * @return return type; {@code Object} if it cannot be determined
      */
     public static Type returnTypeOf(JoinPoint joinPoint) {
         Method method = methodOf(joinPoint);
@@ -82,11 +81,11 @@ public final class CacheKeyGenerator {
     }
 
     /**
-     * Nombre de caché de un método que no indica {@code value}: la clase, el método y los
-     * tipos de sus parámetros, de modo que dos sobrecargas no compartan entradas.
+     * Cache name of a method that does not specify {@code value}: the class, the method and the
+     * types of its parameters, so that two overloads do not share entries.
      *
-     * @param joinPoint punto de unión del aspecto
-     * @return nombre de caché, por ejemplo {@code com.acme.UserService.find(Long,String)}
+     * @param joinPoint aspect join point
+     * @return cache name, for example {@code com.acme.UserService.find(Long,String)}
      */
     public static String defaultCacheName(JoinPoint joinPoint) {
         Method method = methodOf(joinPoint);
@@ -101,16 +100,16 @@ public final class CacheKeyGenerator {
     }
 
     /**
-     * Clave de un método que no indica {@code key}, construida con el contenido de sus argumentos.
+     * Key of a method that does not specify {@code key}, built from the content of its arguments.
      *
-     * <p>Con un solo argumento numérico, booleano, enum o UUID la clave es su texto. En los demás
-     * casos es la lista de argumentos en JSON; si pasa de {@value #MAX_ARGUMENTS_LENGTH} caracteres
-     * se sustituye por su SHA-256.</p>
+     * <p>With a single numeric, boolean, enum or UUID argument, the key is its text. In the other
+     * cases it is the list of arguments as JSON; if it exceeds {@value #MAX_ARGUMENTS_LENGTH} characters
+     * it is replaced by its SHA-256.</p>
      *
-     * @param joinPoint punto de unión del aspecto
-     * @return clave de los argumentos
-     * @throws IllegalStateException si algún argumento no se puede convertir a JSON; en ese caso
-     *                               el método debe indicar {@code key}
+     * @param joinPoint aspect join point
+     * @return key built from the arguments
+     * @throws IllegalStateException if any argument cannot be converted to JSON; in that case
+     *                               the method must specify {@code key}
      */
     public static String argumentsKey(JoinPoint joinPoint) {
         Object[] args = joinPoint.getArgs();
@@ -134,11 +133,11 @@ public final class CacheKeyGenerator {
     }
 
     /**
-     * Indica si el texto del valor lo identifica sin ambigüedad.
-     * Las cadenas no entran: {@code null} y {@code "null"} darían el mismo texto.
+     * Tells whether the text of the value identifies it unambiguously.
+     * Strings are excluded: {@code null} and {@code "null"} would give the same text.
      *
-     * @param value argumento
-     * @return {@code true} para números, booleanos, enums y UUID
+     * @param value argument
+     * @return {@code true} for numbers, booleans, enums and UUIDs
      */
     private static boolean isPlainScalar(Object value) {
         return value instanceof Number || value instanceof Boolean || value instanceof Enum<?>

@@ -5,12 +5,12 @@ package io.github.programming0026.juniverse.redis.enums;
  */
 public enum Mode {
     
-    /** Modo standalone. */
+    /** Standalone mode. */
     STANDALONE,
-    
-    /** Modo clúster. */
+
+    /** Cluster mode. */
     CLUSTER,
 
-    /** Modo sentinel. */
+    /** Sentinel mode. */
     SENTINEL
 }

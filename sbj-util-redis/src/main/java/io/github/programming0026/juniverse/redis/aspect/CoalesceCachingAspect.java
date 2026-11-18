@@ -22,7 +22,7 @@ import org.springframework.core.annotation.Order;
 import org.springframework.core.env.Environment;
 
 /**
- * Aspecto de {@code @CoalesceCacheable} (una o varias) y de {@code @CoalesceCaching}.
+ * Aspect for {@code @CoalesceCacheable} (single or repeated) and {@code @CoalesceCaching}.
  *
  * @author Java Universe
  */
@@ -31,16 +31,16 @@ import org.springframework.core.env.Environment;
 @Order(1)
 public class CoalesceCachingAspect {
 
-    /** Lógica común de los aspectos de caché. */
+    /** Common logic of the cache aspects. */
     private final CacheAspectSupport support;
 
-    /** Administrador de caché. */
+    /** Cache manager. */
     private final CoalesceCacheManager cacheManager;
 
     /**
-     * Crea el aspecto sin resolución de placeholders.
+     * Creates the aspect without placeholder resolution.
      *
-     * @param cacheManager administrador de caché
+     * @param cacheManager cache manager
      */
     public CoalesceCachingAspect(
             CoalesceCacheManager cacheManager) {
@@ -48,11 +48,11 @@ public class CoalesceCachingAspect {
     }
 
     /**
-     * Crea el aspecto con resolución de placeholders {@code ${...}}.
+     * Creates the aspect with {@code ${...}} placeholder resolution.
      *
-     * @param cacheManager administrador de caché
-     * @param environment entorno con el que se resuelven los placeholders; si es {@code null},
-     *                    los valores se usan tal cual
+     * @param cacheManager cache manager
+     * @param environment environment used to resolve the placeholders; if {@code null},
+     *                    the values are used as they are
      */
     public CoalesceCachingAspect(
             CoalesceCacheManager cacheManager,
@@ -61,13 +61,13 @@ public class CoalesceCachingAspect {
     }
 
     /**
-     * Crea el aspecto con resolución de placeholders y los TTL configurados por caché.
+     * Creates the aspect with placeholder resolution and the per-cache configured TTLs.
      *
-     * @param cacheManager administrador de caché
-     * @param environment entorno con el que se resuelven los placeholders; si es {@code null},
-     *                    los valores se usan tal cual
-     * @param configuredTtlSeconds TTL en segundos por nombre de caché, para las anotaciones
-     *                             que no indican {@code ttl}
+     * @param cacheManager cache manager
+     * @param environment environment used to resolve the placeholders; if {@code null},
+     *                    the values are used as they are
+     * @param configuredTtlSeconds TTL in seconds per cache name, for annotations
+     *                             that do not specify {@code ttl}
      */
     public CoalesceCachingAspect(
             CoalesceCacheManager cacheManager,
@@ -78,19 +78,19 @@ public class CoalesceCachingAspect {
     }
 
     /**
-     * Procesa una anotación de caché.
+     * Handles a cache annotation.
      *
-     * @param joinPoint punto de unión del aspecto
-     * @param cacheable anotación de caché
-     * @return objeto
-     * @throws Throwable si falla el método interceptado
+     * @param joinPoint aspect join point
+     * @param cacheable cache annotation
+     * @return the method result
+     * @throws Throwable if the intercepted method fails
      */
     @Around("@annotation(cacheable)")
     public Object handleCacheable(
             ProceedingJoinPoint joinPoint,
             CoalesceCacheable cacheable) throws Throwable {
 
-        // El nombre del parámetro debe coincidir con el del pointcut @annotation(cacheable).
+        // The parameter name must match the one in the @annotation(cacheable) pointcut.
         cacheable = support.resolve(joinPoint, cacheable);
 
         if (!support.condition(joinPoint, cacheable.condition(), null)) {
@@ -102,7 +102,7 @@ public class CoalesceCachingAspect {
         String cacheKey = support.cacheKey(joinPoint, cacheable.value(), cacheable.key());
 
         if (cacheable.coalesce()) {
-            // getOrLoad ya consulta la caché: no hace falta leerla antes.
+            // getOrLoad already checks the cache: there is no need to read it beforehand.
             return loadCoalesced(joinPoint, cacheable, cacheKey, returnType);
         }
 
@@ -115,25 +115,25 @@ public class CoalesceCachingAspect {
     }
 
     /**
-     * Procesa un método con varias anotaciones {@code @CoalesceCacheable}.
-     * Java agrupa las anotaciones repetidas en {@link CoalesceCacheables}, así que
-     * necesitan su propio punto de corte.
+     * Handles a method with several {@code @CoalesceCacheable} annotations.
+     * Java groups repeated annotations into {@link CoalesceCacheables}, so they
+     * need their own pointcut.
      *
-     * <p>Se consultan en orden las claves de las anotaciones cuya condición se cumple y
-     * se devuelve el primer valor encontrado. Si no hay ninguno, el método se ejecuta una vez
-     * (con coalescencia según la primera anotación) y el resultado se guarda en todas.</p>
+     * <p>The keys of the annotations whose condition holds are looked up in order and
+     * the first value found is returned. If there is none, the method runs once
+     * (with coalescing according to the first annotation) and the result is stored in all of them.</p>
      *
-     * @param joinPoint punto de unión del aspecto
-     * @param cacheables anotación que agrupa las repetidas
-     * @return objeto
-     * @throws Throwable si falla el método interceptado
+     * @param joinPoint aspect join point
+     * @param cacheables annotation that groups the repeated ones
+     * @return the method result
+     * @throws Throwable if the intercepted method fails
      */
     @Around("@annotation(cacheables)")
     public Object handleCacheables(
             ProceedingJoinPoint joinPoint,
             CoalesceCacheables cacheables) throws Throwable {
 
-        // El nombre del parámetro debe coincidir con el del pointcut @annotation(cacheables).
+        // The parameter name must match the one in the @annotation(cacheables) pointcut.
         cacheables = support.resolve(joinPoint, cacheables);
 
         List<CoalesceCacheable> applicable = new ArrayList<>();
@@ -172,19 +172,19 @@ public class CoalesceCachingAspect {
     }
 
     /**
-     * Procesa varias operaciones de caché agrupadas en {@code @CoalesceCaching}.
+     * Handles several cache operations grouped in {@code @CoalesceCaching}.
      *
-     * @param joinPoint punto de unión del aspecto
-     * @param caching anotación que agrupa varias operaciones
-     * @return objeto
-     * @throws Throwable si falla el método interceptado
+     * @param joinPoint aspect join point
+     * @param caching annotation that groups several operations
+     * @return the method result
+     * @throws Throwable if the intercepted method fails
      */
     @Around("@annotation(caching)")
     public Object handleCaching(
             ProceedingJoinPoint joinPoint,
             CoalesceCaching caching) throws Throwable {
 
-        // El nombre del parámetro debe coincidir con el del pointcut @annotation(caching).
+        // The parameter name must match the one in the @annotation(caching) pointcut.
         caching = support.resolve(joinPoint, caching);
         Type returnType = CacheKeyGenerator.returnTypeOf(joinPoint);
 
@@ -234,12 +234,12 @@ public class CoalesceCachingAspect {
     }
 
     /**
-     * Guarda el resultado si no es nulo o si la anotación admite nulos.
+     * Stores the result if it is not null or if the annotation allows nulls.
      *
-     * @param cacheable anotación de caché
-     * @param cacheKey clave ya calculada
-     * @param result resultado del método
-     * @param returnType tipo de retorno del método
+     * @param cacheable cache annotation
+     * @param cacheKey already computed key
+     * @param result method result
+     * @param returnType method return type
      */
     private void store(CoalesceCacheable cacheable, String cacheKey, Object result, Type returnType) {
         if (result != null || cacheable.cacheNull()) {
@@ -248,14 +248,14 @@ public class CoalesceCachingAspect {
     }
 
     /**
-     * Ejecuta el método sin coalescencia y guarda el resultado.
+     * Runs the method without coalescing and stores the result.
      *
-     * @param joinPoint punto de unión del aspecto
-     * @param cacheable anotación de caché
-     * @param cacheKey clave ya calculada
-     * @param returnType tipo de retorno del método
-     * @return resultado del método
-     * @throws Throwable si falla el método interceptado
+     * @param joinPoint aspect join point
+     * @param cacheable cache annotation
+     * @param cacheKey already computed key
+     * @param returnType method return type
+     * @return method result
+     * @throws Throwable if the intercepted method fails
      */
     private Object loadAndStore(
             ProceedingJoinPoint joinPoint,
@@ -269,14 +269,14 @@ public class CoalesceCachingAspect {
     }
 
     /**
-     * Obtiene el valor de la caché o ejecuta el método con coalescencia de peticiones.
+     * Gets the value from the cache or runs the method with request coalescing.
      *
-     * @param joinPoint punto de unión del aspecto
-     * @param cacheable anotación de caché
-     * @param cacheKey clave ya calculada
-     * @param returnType tipo de retorno del método
-     * @return valor de la caché o resultado del método
-     * @throws Throwable si falla el método interceptado
+     * @param joinPoint aspect join point
+     * @param cacheable cache annotation
+     * @param cacheKey already computed key
+     * @param returnType method return type
+     * @return cached value or method result
+     * @throws Throwable if the intercepted method fails
      */
     private Object loadCoalesced(
             ProceedingJoinPoint joinPoint,
@@ -301,14 +301,14 @@ public class CoalesceCachingAspect {
                     returnType
             );
         } catch (CheckedFailure e) {
-            // El llamador recibe la excepción comprobada que lanzó su método, no el envoltorio.
+            // The caller receives the checked exception thrown by its method, not the wrapper.
             throw e.getCause();
         }
     }
 
     /**
-     * Lleva una excepción comprobada del método interceptado a través del cargador,
-     * que solo puede lanzar excepciones no comprobadas. Nunca sale del aspecto.
+     * Carries a checked exception from the intercepted method through the loader,
+     * which can only throw unchecked exceptions. It never leaves the aspect.
      */
     private static final class CheckedFailure extends RuntimeException {
 

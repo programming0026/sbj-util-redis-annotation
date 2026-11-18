@@ -19,44 +19,45 @@ import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
- * Comprueba la coalescencia con varios hilos y varias instancias contra un Redis real.
+ * Checks coalescing with several threads and several instances against a real Redis.
  *
  * @author Java Universe
  */
 class CoalesceConcurrencyIT extends AbstractRedisIT {
 
-    /** Prefijo de la clave del bloqueo; debe coincidir con el de {@code CoalesceCacheManager}. */
+    /** Prefix of the lock key; it must match the one in {@code CoalesceCacheManager}. */
     private static final String LOCK_PREFIX = "coalesce:lock:";
 
-    /** Tiempo máximo razonable para una carga de menos de un segundo. */
+    /** Reasonable maximum time for a load of less than a second. */
     private static final long MAX_WAIT_SECONDS = 5;
 
     /**
-     * Servicio lento. El contador se comparte entre las instancias simuladas.
+     * Slow service. The counter is shared among the simulated instances.
      */
-    public static class SlowService {
+     static class SlowService {
 
-        /** Número de ejecuciones reales, sumando todas las instancias. */
+        /** Number of real executions, summed across all instances. */
         private final AtomicInteger calls;
 
-        public SlowService(AtomicInteger calls) {
+         SlowService(AtomicInteger calls) {
             this.calls = calls;
         }
 
         @CoalesceCacheable(value = "orders", key = "#id", ttl = 60)
-        public String find(String id) throws InterruptedException {
+         String find(String id) throws InterruptedException {
             calls.incrementAndGet();
             Thread.sleep(400);
             return "order-" + id;
         }
 
         @CoalesceCacheable(value = "orders", key = "#id", ttl = 60)
-        public String findMissing(String id) throws InterruptedException {
+         String findMissing(String id) throws InterruptedException {
             calls.incrementAndGet();
             Thread.sleep(400);
             return null;
@@ -64,14 +65,14 @@ class CoalesceConcurrencyIT extends AbstractRedisIT {
     }
 
     /**
-     * Veinte peticiones simultáneas a la misma clave, repartidas en dos instancias:
-     * el método real se ejecuta una sola vez y nadie espera mucho más de lo que tarda.
-     * Se repite porque los fallos de este tipo dependen del orden de los hilos.
+     * Twenty simultaneous requests for the same key, spread over two instances:
+     * the real method runs only once and nobody waits much longer than it takes.
+     * It is repeated because failures of this kind depend on thread ordering.
      *
-     * @throws Exception si alguna petición falla o tarda demasiado
+     * @throws Exception if any request fails or takes too long
      */
     @RepeatedTest(5)
-    public void loader_ShouldRunOnce_AcrossTwoInstances() throws Exception {
+     void loader_ShouldRunOnce_AcrossTwoInstances() throws Exception {
         AtomicInteger calls = new AtomicInteger();
         SlowService first = newInstance().proxy(new SlowService(calls));
         SlowService second = newInstance().proxy(new SlowService(calls));
@@ -89,13 +90,13 @@ class CoalesceConcurrencyIT extends AbstractRedisIT {
     }
 
     /**
-     * Si el resultado es nulo y no se guarda, los que esperan reciben nulo igualmente
-     * y sin esperar de más.
+     * If the result is null and is not stored, the waiters still receive null
+     * without waiting longer than necessary.
      *
-     * @throws Exception si alguna petición falla o tarda demasiado
+     * @throws Exception if any request fails or takes too long
      */
     @Test
-    public void waiters_ShouldGetNull_WhenLoaderReturnsNull() throws Exception {
+     void waiters_ShouldGetNull_WhenLoaderReturnsNull() throws Exception {
         AtomicInteger calls = new AtomicInteger();
         SlowService service = newInstance().proxy(new SlowService(calls));
 
@@ -109,23 +110,23 @@ class CoalesceConcurrencyIT extends AbstractRedisIT {
     }
 
     /**
-     * El aviso por pub/sub puede perderse (no hay garantía de entrega). Si el bloqueo
-     * desaparece sin que llegue el aviso y sin valor en caché, el que espera debe
-     * darse cuenta y cargar el valor él mismo, no bloquear hasta agotar la espera.
+     * The pub/sub notification may be lost (there is no delivery guarantee). If the lock
+     * disappears without the notification arriving and without a cached value, the waiter must
+     * notice and load the value itself, not block until the wait runs out.
      *
-     * @throws Exception si la petición falla o tarda demasiado
+     * @throws Exception if the request fails or takes too long
      */
     @Test
-    public void waiter_ShouldRecover_WhenLockIsReleasedWithoutNotification() throws Exception {
+     void waiter_ShouldRecover_WhenLockIsReleasedWithoutNotification() throws Exception {
         AtomicInteger calls = new AtomicInteger();
         RedisInstance instance = newInstance();
         SlowService service = instance.proxy(new SlowService(calls));
 
-        // Otra instancia tiene el bloqueo...
+        // Another instance holds the lock...
         instance.template().opsForValue().set(LOCK_PREFIX + "orders:3", "other-instance");
         Future<String> waiter = runAsync(() -> service.find("3"));
         Thread.sleep(300);
-        // ...y lo suelta sin publicar el resultado ni dejarlo en caché.
+        // ...and releases it without publishing the result or leaving it in the cache.
         instance.template().delete(LOCK_PREFIX + "orders:3");
 
         assertEquals("order-3", waiter.get(MAX_WAIT_SECONDS, TimeUnit.SECONDS));
@@ -133,19 +134,19 @@ class CoalesceConcurrencyIT extends AbstractRedisIT {
     }
 
     /**
-     * Una carga más larga que el bloqueo no se repite en otra instancia: quien carga renueva
-     * su bloqueo, la otra instancia espera y recibe ese resultado.
+     * A load longer than the lock is not repeated on another instance: the loader renews
+     * its lock, the other instance waits and receives that result.
      *
-     * @throws Exception si alguna petición falla o tarda demasiado
+     * @throws Exception if any request fails or takes too long
      */
     @Test
-    public void loadLongerThanLock_ShouldNotRunTwiceAcrossInstances() throws Exception {
+     void loadLongerThanLock_ShouldNotRunTwiceAcrossInstances() throws Exception {
         CoalesceSettings shortLock = new CoalesceSettings(true, Duration.ofMillis(1500), Duration.ofSeconds(15));
         RedisInstance first = newInstance(shortLock);
         RedisInstance second = newInstance(shortLock);
         AtomicInteger calls = new AtomicInteger();
 
-        // La carga tarda 4 s: más del doble que el bloqueo de 1,5 s.
+        // The load takes 4 s: more than twice the 1.5 s lock.
         Future<Object> slow = runAsync(() -> first.cacheManager().getOrLoad("orders:4", () -> {
             calls.incrementAndGet();
             sleepQuietly(4000);
@@ -157,9 +158,8 @@ class CoalesceConcurrencyIT extends AbstractRedisIT {
             return "from-the-second";
         }, 60, false, String.class));
 
-        // Pasado el doble de la duración del bloqueo, este still exists: porque se renueva.
         Thread.sleep(3000);
-        assertTrue(first.rawValue(LOCK_PREFIX + "orders:4") != null, "the lock expired during the load");
+		assertNotNull(first.rawValue(LOCK_PREFIX + "orders:4"), "the lock expired during the load");
 
         assertEquals("from-the-first", slow.get(MAX_WAIT_SECONDS, TimeUnit.SECONDS));
         assertEquals("from-the-first", waiting.get(MAX_WAIT_SECONDS, TimeUnit.SECONDS));
@@ -168,16 +168,16 @@ class CoalesceConcurrencyIT extends AbstractRedisIT {
     }
 
     /**
-     * Si la instancia que cargaba muere, deja de renovar su bloqueo: este caduca y otra
-     * instancia carga el valor.
+     * If the instance that was loading dies, it stops renewing its lock: the lock expires and another
+     * instance loads the value.
      *
-     * @throws Exception si la petición falla o tarda demasiado
+     * @throws Exception if the request fails or takes too long
      */
     @Test
-    public void lockOfDeadInstance_ShouldExpireAndLetAnotherInstanceLoad() throws Exception {
+     void lockOfDeadInstance_ShouldExpireAndLetAnotherInstanceLoad() throws Exception {
         RedisInstance survivor = newInstance(
                 new CoalesceSettings(true, Duration.ofSeconds(30), Duration.ofSeconds(10)));
-        // Bloqueo de una instancia que murió: tiene caducidad y nadie lo renueva.
+        // Lock of an instance that died: it has an expiration and nobody renews it.
         survivor.template().opsForValue().set(LOCK_PREFIX + "orders:7", "dead-instance", Duration.ofMillis(800));
 
         long start = System.nanoTime();
@@ -190,11 +190,11 @@ class CoalesceConcurrencyIT extends AbstractRedisIT {
     }
 
     /**
-     * Si otra instancia mantiene el bloqueo más tiempo que la espera máxima, la petición falla
-     * con CoalesceException en lugar de quedarse esperando.
+     * If another instance holds the lock longer than the maximum wait, the request fails
+     * with CoalesceException instead of waiting forever.
      */
     @Test
-    public void waiter_ShouldFail_WhenWaitTimeoutExpiresBeforeLock() {
+     void waiter_ShouldFail_WhenWaitTimeoutExpiresBeforeLock() {
         RedisInstance instance = newInstance(
                 new CoalesceSettings(true, Duration.ofSeconds(30), Duration.ofMillis(600)));
         instance.template().opsForValue().set(LOCK_PREFIX + "orders:5", "other-instance");
@@ -210,13 +210,13 @@ class CoalesceConcurrencyIT extends AbstractRedisIT {
     }
 
     /**
-     * Si el que tiene el bloqueo falla, la otra instancia que esperaba carga por su cuenta
-     * enseguida, sin esperar a que caduque el bloqueo.
+     * If the lock holder fails, the other instance that was waiting loads on its own
+     * right away, without waiting for the lock to expire.
      *
-     * @throws Exception si alguna petición falla o tarda demasiado
+     * @throws Exception if any request fails or takes too long
      */
     @Test
-    public void waiterInAnotherInstance_ShouldLoadItself_WhenHolderFails() throws Exception {
+     void waiterInAnotherInstance_ShouldLoadItself_WhenHolderFails() throws Exception {
         RedisInstance first = newInstance();
         RedisInstance second = newInstance();
 
@@ -241,7 +241,7 @@ class CoalesceConcurrencyIT extends AbstractRedisIT {
         }
     }
 
-    private static void awaitQuietly(CountDownLatch latch) {
+    static void awaitQuietly(CountDownLatch latch) {
         try {
             latch.await(MAX_WAIT_SECONDS, TimeUnit.SECONDS);
         } catch (InterruptedException e) {

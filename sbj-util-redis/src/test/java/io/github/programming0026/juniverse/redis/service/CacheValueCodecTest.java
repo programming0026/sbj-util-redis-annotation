@@ -27,34 +27,34 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
- * Pruebas del conversor de valores de la caché y de los ajustes relacionados.
+ * Tests of the cache value converter and the related settings.
  *
  * @author Java Universe
  */
 class CacheValueCodecTest {
 
-    /** Conversor con la configuración predeterminada sin restricción de clases. */
+    /** Converter with the default configuration without class restrictions. */
     private final CacheValueCodec codec = new CacheValueCodec(new DefaultObjectMapperConfig().configure());
 
-    /** Estado de ejemplo. */
-    public enum Status { OPEN, CLOSED }
+    /** Sample state. */
+     enum Status { OPEN, CLOSED }
 
-    /** Valor inmutable de ejemplo. */
-    public record Person(Long id, String name, List<String> tags) {
+    /** Sample immutable value. */
+     record Person(Long id, String name, List<String> tags) {
     }
 
-    /** Objeto de datos no final de ejemplo. */
-    public static class Item {
-        /** Identificador. */
+    /** Sample non-final data object. */
+     static class Item {
+        /** Identifier. */
         private Long id = 7L;
-        /** Etiquetas. */
+        /** Tags. */
         private List<String> tags = Stream.of("a", "b").toList();
 
-        public Long id() {
+         Long id() {
             return id;
         }
 
-        public List<String> tags() {
+         List<String> tags() {
             return tags;
         }
     }
@@ -68,7 +68,7 @@ class CacheValueCodecTest {
     }
 
     @Test
-    public void knownTypes_ShouldRoundTripExactly() {
+     void knownTypes_ShouldRoundTripExactly() {
         Type listOfPersons = new ParameterizedTypeReference<List<Person>>() { }.getType();
         Type mapOfLongs = new ParameterizedTypeReference<Map<String, Long>>() { }.getType();
         Type optional = new ParameterizedTypeReference<Optional<Person>>() { }.getType();
@@ -88,10 +88,10 @@ class CacheValueCodecTest {
     }
 
     /**
-     * Con tipo conocido el JSON no lleva nombres de clase, ni siquiera en los campos.
+     * With a known type the JSON carries no class names, not even in the fields.
      */
     @Test
-    public void knownTypes_ShouldNotWriteClassNames() {
+     void knownTypes_ShouldNotWriteClassNames() {
         String json = text(codec.encode(new Item(), Item.class));
 
         assertFalse(json.contains("@class"), json);
@@ -103,10 +103,10 @@ class CacheValueCodecTest {
     }
 
     /**
-     * Un nombre de clase dentro del JSON no decide qué clase se instancia cuando hay tipo.
+     * A class name inside the JSON does not decide which class is instantiated when there is a type.
      */
     @Test
-    public void knownTypes_ShouldIgnoreClassNamesInStoredJson() {
+     void knownTypes_ShouldIgnoreClassNamesInStoredJson() {
         byte[] stored = "{\"@class\":\"javax.swing.JEditorPane\",\"id\":3,\"name\":\"Ana\"}"
                 .getBytes(StandardCharsets.UTF_8);
 
@@ -116,7 +116,7 @@ class CacheValueCodecTest {
     }
 
     @Test
-    public void nullValue_ShouldBeStoredAsJsonNull() {
+     void nullValue_ShouldBeStoredAsJsonNull() {
         byte[] bytes = codec.encode(null, Person.class);
 
         assertArrayEquals("null".getBytes(StandardCharsets.UTF_8), bytes);
@@ -125,10 +125,10 @@ class CacheValueCodecTest {
     }
 
     /**
-     * Sin tipo conocido se usa el formato con nombres de clase.
+     * Without a known type the format with class names is used.
      */
     @Test
-    public void unknownTypes_ShouldUseClassNames() {
+     void unknownTypes_ShouldUseClassNames() {
         Type typeVariable = List.class.getTypeParameters()[0];
 
         for (Type unknown : new Type[] {Object.class, null, void.class, Void.class, typeVariable}) {
@@ -139,7 +139,7 @@ class CacheValueCodecTest {
     }
 
     @Test
-    public void decode_WithBytesThatDoNotMatchTheType_ShouldThrowSerializationException() {
+     void decode_WithBytesThatDoNotMatchTheType_ShouldThrowSerializationException() {
         byte[] notJson = "{this is not JSON".getBytes(StandardCharsets.UTF_8);
         byte[] wrongShape = "[1,2]".getBytes(StandardCharsets.UTF_8);
 
@@ -149,7 +149,7 @@ class CacheValueCodecTest {
     }
 
     @Test
-    public void encode_WithValueThatCannotBeSerialized_ShouldThrowSerializationException() {
+     void encode_WithValueThatCannotBeSerialized_ShouldThrowSerializationException() {
         Object selfReferencing = new Object() {
             @SuppressWarnings("unused")
             private final Object self = this;
@@ -159,11 +159,11 @@ class CacheValueCodecTest {
     }
 
     /**
-     * Con paquetes de confianza, el formato con nombres de clase solo instancia clases de esos
-     * paquetes y los tipos básicos del JDK.
+     * With trusted packages, the format with class names only instantiates classes from those
+     * packages and the JDK basic types.
      */
     @Test
-    public void trustedPackages_ShouldRestrictClassNamesInUntypedFormat() {
+     void trustedPackages_ShouldRestrictClassNamesInUntypedFormat() {
         byte[] stored = codec.encode(new Item(), Object.class);
         byte[] list = codec.encode(new ArrayList<>(List.of("a", 1L)), Object.class);
 
@@ -184,10 +184,10 @@ class CacheValueCodecTest {
         assertInstanceOf(Item.class, distrusting.decode(distrusting.encode(new Item(), Item.class), Item.class));
     }
 
-    // ------------------------------------------------------------------ ajustes
+    // ------------------------------------------------------------------ settings
 
     @Test
-    public void cacheDefaults_ShouldResolveTtlAndNamespace() {
+     void cacheDefaults_ShouldResolveTtlAndNamespace() {
         Map<String, Long> configured = Map.of("users", 1800L);
 
         assertEquals(60, CacheDefaults.resolveTtl(60, "users", configured));
@@ -202,7 +202,7 @@ class CacheValueCodecTest {
     }
 
     @Test
-    public void coalesceSettings_ShouldRejectInvalidValues() {
+     void coalesceSettings_ShouldRejectInvalidValues() {
         Duration ok = Duration.ofSeconds(1);
 
         assertThrows(IllegalArgumentException.class, () -> new CoalesceSettings(true, Duration.ZERO, ok));
@@ -216,11 +216,11 @@ class CacheValueCodecTest {
     }
 
     /**
-     * Sin tipo conocido (RedisTemplate, RedisCacheService, @Cacheable de Spring) el valor vuelve
-     * con su tipo original, también los que el tipado predeterminado de Jackson no conservaba.
+     * Without a known type (RedisTemplate, RedisCacheService, Spring's @Cacheable) the value comes back
+     * with its original type, including those that Jackson's default typing did not preserve.
      */
     @Test
-    public void unknownTypes_ShouldRoundTripWithTheirOriginalType() {
+     void unknownTypes_ShouldRoundTripWithTheirOriginalType() {
         Person ana = new Person(1L, "Ana", List.of("x"));
         Object[] values = {
             5L, 5, 2.5d, 2.5f, (short) 3, "texto", true, new BigDecimal("10.50"), Status.CLOSED,
@@ -240,7 +240,7 @@ class CacheValueCodecTest {
     }
 
     @Test
-    public void unknownTypes_ShouldRoundTripArrays() {
+     void unknownTypes_ShouldRoundTripArrays() {
         assertArrayEquals(new long[] {1, 2}, (long[]) roundTrip(new long[] {1, 2}, Object.class));
         assertArrayEquals(new byte[] {1, 2}, (byte[]) roundTrip(new byte[] {1, 2}, Object.class));
         assertArrayEquals(new String[] {"a"}, (String[]) roundTrip(new String[] {"a"}, Object.class));
@@ -249,10 +249,10 @@ class CacheValueCodecTest {
     }
 
     /**
-     * Un objeto con campos de todo tipo, incluidas listas inmutables y campos {@code Object}.
+     * An object with fields of every kind, including immutable lists and {@code Object} fields.
      */
     @Test
-    public void unknownTypes_ShouldRoundTripNestedContent() {
+     void unknownTypes_ShouldRoundTripNestedContent() {
         Holder holder = new Holder();
 
         Holder back = (Holder) roundTrip(holder, Object.class);
@@ -266,19 +266,19 @@ class CacheValueCodecTest {
         assertInstanceOf(Person.class, back.anything);
     }
 
-    /** Objeto con campos de varios tipos. */
-    public static class Holder {
-        /** Identificador. */
+    /** Object with fields of several types. */
+     static class Holder {
+        /** Identifier. */
         private Long id = 9L;
-        /** Lista inmutable de records. */
+        /** Immutable list of records. */
         private List<Person> people = Stream.of(new Person(1L, "Ana", List.of("x"))).toList();
-        /** Mapa inmutable. */
+        /** Immutable map. */
         private Map<String, Long> totals = Map.of("a", 1L);
         /** Enum. */
         private Status status = Status.OPEN;
-        /** Fecha. */
+        /** Date. */
         private LocalDateTime createdAt = LocalDateTime.of(2026, 1, 15, 10, 30);
-        /** Campo sin tipo concreto. */
+        /** Field without a concrete type. */
         private Object anything = new Person(2L, "Luis", null);
     }
 }

@@ -14,9 +14,9 @@ import lombok.ToString;
 @EqualsAndHashCode
 public class HostsDto {
 
-    /** Nombre de servidor. */
+    /** Host name. */
     private String hostName;
 
-    /** Puerto. */
+    /** Port. */
     private int port;
 }

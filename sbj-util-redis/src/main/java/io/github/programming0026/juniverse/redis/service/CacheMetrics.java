@@ -1,56 +1,56 @@
 package io.github.programming0026.juniverse.redis.service;
 
 /**
- * Contadores de lo que ocurre en la caché con coalescencia.
+ * Counters for what happens in the coalescing cache.
  *
- * <p>La librería trae una implementación para Micrometer, que se activa sola cuando la aplicación
- * tiene un {@code MeterRegistry}. Para enviar los contadores a otro sistema basta con definir un
- * bean de este tipo.</p>
+ * <p>The library ships a Micrometer implementation, which is activated automatically when the application
+ * has a {@code MeterRegistry}. To send the counters to another system it is enough to define a
+ * bean of this type.</p>
  *
  * @author Java Universe
  */
 public interface CacheMetrics {
 
-    /** Implementación que no hace nada, para cuando no hay sistema de métricas. */
+    /** No-op implementation, for when there is no metrics system. */
     CacheMetrics NOOP = new CacheMetrics() {
     };
 
     /**
-     * Una petición encontró su valor en la caché.
+     * A request found its value in the cache.
      */
     default void hit() {
     }
 
     /**
-     * Una petición no encontró su valor en la caché.
+     * A request did not find its value in the cache.
      */
     default void miss() {
     }
 
     /**
-     * Se ejecutó el método de negocio para cargar un valor.
+     * The business method was executed to load a value.
      */
     default void load() {
     }
 
     /**
-     * Una petición recibió el valor que cargó otra, sin ejecutar el método de negocio.
+     * A request received the value loaded by another one, without running the business method.
      */
     default void coalesced() {
     }
 
     /**
-     * Una petición agotó la espera del resultado que cargaba otra.
+     * A request ran out of time waiting for the result another one was loading.
      */
     default void waitTimeout() {
     }
 
     /**
-     * Falló una operación contra Redis.
+     * An operation against Redis failed.
      *
-     * @param operation operación que falló: {@code read}, {@code write}, {@code lock},
+     * @param operation operation that failed: {@code read}, {@code write}, {@code lock},
      *                  {@code unlock}, {@code publish}, {@code evict}, {@code exists},
-     *                  {@code ttl} o {@code expire}
+     *                  {@code ttl} or {@code expire}
      */
     default void redisError(String operation) {
     }

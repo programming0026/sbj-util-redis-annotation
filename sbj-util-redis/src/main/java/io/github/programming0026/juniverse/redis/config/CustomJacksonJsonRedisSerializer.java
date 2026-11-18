@@ -8,19 +8,19 @@ import tools.jackson.databind.ObjectMapper;
 
 /**
  *
- * <p>Serializa valores a JSON con un {@link ObjectMapper} de Jackson 3. En Jackson 3 las excepciones no son comprobadas
- * ({@link JacksonException}); se envuelven en una {@link SerializationException}.
+ * <p>Serializes values to JSON with a Jackson 3 {@link ObjectMapper}. In Jackson 3 exceptions are unchecked
+ * ({@link JacksonException}); they are wrapped in a {@link SerializationException}.
  *
  * @author Java Universe
- * @param <T> objeto
+ * @param <T> object type
  */
 public class CustomJacksonJsonRedisSerializer<T> implements RedisSerializer<T> {
 
-    /** Conversor de objeto. */
+    /** Object mapper. */
     private final ObjectMapper objectMapper;
 
     /**
-     * Tipo de clase.
+     * Class type.
      */
     private final Class<T> type;
 
@@ -30,11 +30,11 @@ public class CustomJacksonJsonRedisSerializer<T> implements RedisSerializer<T> {
     }
 
     /**
-     * Serializa el objeto.
+     * Serializes the object.
      *
-     * @param value valor
-     * @return bytes serializados
-     * @throws SerializationException si falla la serialización
+     * @param value value
+     * @return serialized bytes
+     * @throws SerializationException if serialization fails
      */
     @Override
     public byte[] serialize(T value) throws SerializationException {
@@ -49,11 +49,11 @@ public class CustomJacksonJsonRedisSerializer<T> implements RedisSerializer<T> {
     }
 
     /**
-     * Deserializa los bytes.
+     * Deserializes the bytes.
      *
      * @param bytes bytes
-     * @return resultado de la evaluación
-     * @throws SerializationException si falla la serialización
+     * @return deserialized object
+     * @throws SerializationException if deserialization fails
      */
     @Override
     public T deserialize(byte[] bytes) throws SerializationException {

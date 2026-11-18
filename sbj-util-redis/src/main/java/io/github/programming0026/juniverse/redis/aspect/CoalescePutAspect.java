@@ -14,7 +14,7 @@ import org.springframework.core.annotation.Order;
 import org.springframework.core.env.Environment;
 
 /**
- * Aspecto de {@code @CoalescePut}: ejecuta siempre el método y guarda su resultado.
+ * Aspect for {@code @CoalescePut}: always runs the method and stores its result.
  *
  * @author Java Universe
  */
@@ -22,37 +22,37 @@ import org.springframework.core.env.Environment;
 @Order(2)
 public class CoalescePutAspect {
 
-    /** Lógica común de los aspectos de caché. */
+    /** Common logic of the cache aspects. */
     private final CacheAspectSupport support;
 
     /**
-     * Crea el aspecto sin resolución de placeholders.
+     * Creates the aspect without placeholder resolution.
      *
-     * @param cacheManager administrador de caché
+     * @param cacheManager cache manager
      */
     public CoalescePutAspect(CoalesceCacheManager cacheManager) {
         this(cacheManager, null);
     }
 
     /**
-     * Crea el aspecto con resolución de placeholders {@code ${...}}.
+     * Creates the aspect with {@code ${...}} placeholder resolution.
      *
-     * @param cacheManager administrador de caché
-     * @param environment entorno con el que se resuelven los placeholders; si es {@code null},
-     *                    los valores se usan tal cual
+     * @param cacheManager cache manager
+     * @param environment environment used to resolve the placeholders; if {@code null},
+     *                    the values are used as they are
      */
     public CoalescePutAspect(CoalesceCacheManager cacheManager, Environment environment) {
         this(cacheManager, environment, Map.of());
     }
 
     /**
-     * Crea el aspecto con resolución de placeholders y los TTL configurados por caché.
+     * Creates the aspect with placeholder resolution and the per-cache configured TTLs.
      *
-     * @param cacheManager administrador de caché
-     * @param environment entorno con el que se resuelven los placeholders; si es {@code null},
-     *                    los valores se usan tal cual
-     * @param configuredTtlSeconds TTL en segundos por nombre de caché, para las anotaciones
-     *                             que no indican {@code ttl}
+     * @param cacheManager cache manager
+     * @param environment environment used to resolve the placeholders; if {@code null},
+     *                    the values are used as they are
+     * @param configuredTtlSeconds TTL in seconds per cache name, for annotations
+     *                             that do not specify {@code ttl}
      */
     public CoalescePutAspect(
             CoalesceCacheManager cacheManager,
@@ -62,46 +62,46 @@ public class CoalescePutAspect {
     }
 
     /**
-     * Procesa un guardado.
+     * Handles a put.
      *
-     * @param joinPoint punto de unión del aspecto
-     * @param put anotación de guardado
-     * @return objeto
-     * @throws Throwable si falla el método interceptado
+     * @param joinPoint aspect join point
+     * @param put put annotation
+     * @return the method result
+     * @throws Throwable if the intercepted method fails
      */
     @Around("@annotation(put)")
     public Object handleSinglePut(
             ProceedingJoinPoint joinPoint,
             CoalescePut put) throws Throwable {
 
-        // El nombre del parámetro debe coincidir con el del pointcut @annotation(put).
+        // The parameter name must match the one in the @annotation(put) pointcut.
         return processPut(joinPoint, new CoalescePut[] {support.resolve(joinPoint, put)});
     }
 
     /**
-     * Procesa varios guardados.
+     * Handles several puts.
      *
-     * @param joinPoint punto de unión del aspecto
-     * @param puts anotación que agrupa guardados
-     * @return objeto
-     * @throws Throwable si falla el método interceptado
+     * @param joinPoint aspect join point
+     * @param puts annotation that groups puts
+     * @return the method result
+     * @throws Throwable if the intercepted method fails
      */
     @Around("@annotation(puts)")
     public Object handleMultiplePuts(
             ProceedingJoinPoint joinPoint,
             CoalescePuts puts) throws Throwable {
 
-        // El nombre del parámetro debe coincidir con el del pointcut @annotation(puts).
+        // The parameter name must match the one in the @annotation(puts) pointcut.
         return processPut(joinPoint, support.resolve(joinPoint, puts).value());
     }
 
     /**
-     * Ejecuta el método y aplica los guardados cuya condición se cumple.
+     * Runs the method and applies the puts whose condition holds.
      *
-     * @param joinPoint punto de unión del aspecto
-     * @param puts guardados, con los placeholders ya resueltos
-     * @return resultado del método
-     * @throws Throwable si falla el método interceptado
+     * @param joinPoint aspect join point
+     * @param puts puts, with placeholders already resolved
+     * @return method result
+     * @throws Throwable if the intercepted method fails
      */
     private Object processPut(
             ProceedingJoinPoint joinPoint,

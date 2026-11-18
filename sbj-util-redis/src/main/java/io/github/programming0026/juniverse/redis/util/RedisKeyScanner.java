@@ -10,32 +10,32 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.ScanOptions;
 
 /**
- * Borra las claves que coinciden con un patrón sin bloquear Redis.
+ * Deletes the keys matching a pattern without blocking Redis.
  *
- * <p>Recorre las claves con {@code SCAN}, que avanza por tramos y deja atender a otros clientes
- * entre tramo y tramo, a diferencia de {@code KEYS}, que recorre todo el espacio de claves de
- * una vez. Las borra por lotes con {@code UNLINK}, que libera la memoria en segundo plano.
- * Nunca tiene en memoria más de un lote de claves.</p>
+ * <p>It iterates over the keys with {@code SCAN}, which advances in chunks and lets other clients
+ * be served between chunks, unlike {@code KEYS}, which walks the whole key space
+ * at once. It deletes them in batches with {@code UNLINK}, which frees memory in the background.
+ * It never holds more than one batch of keys in memory.</p>
  *
- * <p>Como {@code SCAN} no es una instantánea, una clave creada durante el recorrido puede
- * quedar sin borrar.</p>
+ * <p>Since {@code SCAN} is not a snapshot, a key created during the iteration may
+ * be left undeleted.</p>
  *
  * @author Java Universe
  */
 public final class RedisKeyScanner {
 
-    /** Claves que se piden a Redis en cada tramo y que se borran en cada orden. */
+    /** Keys requested from Redis in each chunk and deleted in each command. */
     public static final int BATCH_SIZE = 500;
 
     private RedisKeyScanner() {
     }
 
     /**
-     * Borra todas las claves que coinciden con un patrón.
+     * Deletes all the keys matching a pattern.
      *
-     * @param redisTemplate plantilla de Redis
-     * @param pattern patrón de claves, con la sintaxis de Redis
-     * @return número de claves borradas
+     * @param redisTemplate Redis template
+     * @param pattern key pattern, using Redis syntax
+     * @return number of deleted keys
      */
     public static long deleteMatching(RedisTemplate<?, ?> redisTemplate, String pattern) {
         Long deleted = redisTemplate.execute((RedisCallback<Long>) connection -> {

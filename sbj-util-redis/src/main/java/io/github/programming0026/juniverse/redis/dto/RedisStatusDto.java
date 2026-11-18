@@ -11,24 +11,24 @@ import lombok.Getter;
 @Getter
 public class RedisStatusDto {
 
-    /** Si la conexión con Redis responde. */
+    /** Whether the connection to Redis responds. */
     private boolean connected;
-    
-    /** Tiempo de respuesta. */
+
+    /** Response time. */
     private long responseTime;
-    
-    /** Mensaje de error. */
+
+    /** Error message. */
     private String errorMessage;
 
-    /** Memoria usada. */
+    /** Used memory. */
     private Long usedMemory;
 
-    /** Memoria máxima. */
+    /** Maximum memory. */
     private Long maxMemory;
 
-    /** Clientes conectados. */
+    /** Connected clients. */
     private Integer connectedClients;
 
-    /** Versión de Redis. */
+    /** Redis version. */
     private String redisVersion;
 }

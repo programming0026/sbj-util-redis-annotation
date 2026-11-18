@@ -17,35 +17,35 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
- * Operaciones básicas de {@link RedisCacheService} y {@link CoalesceCacheManager}
- * contra Redis: guardar, leer, caducar y borrar por clave, por caché y por patrón.
- * {@link ClusterCacheOperationsIT} repite estas pruebas en modo clúster.
+ * Basic operations of {@link RedisCacheService} and {@link CoalesceCacheManager}
+ * against Redis: storing, reading, expiring and deleting by key, by cache and by pattern.
+ * {@link ClusterCacheOperationsIT} repeats these tests in cluster mode.
  *
  * @author Java Universe
  */
 class CacheOperationsIT extends AbstractRedisIT {
 
-    /** Número de claves suficiente para que SCAN necesite varias pasadas y varios lotes. */
+    /** Enough keys for SCAN to need several passes and several batches. */
     private static final int MANY_KEYS = 350;
 
-    /** Servicio de caché programático. */
+    /** Programmatic cache service. */
     private RedisCacheService cacheService;
 
-    /** Administrador de caché con coalescencia. */
+    /** Coalescing cache manager. */
     private CoalesceCacheManager cacheManager;
 
     /**
-     * Crea la instancia.
+     * Creates the instance.
      */
     @BeforeEach
-    public void setUp() {
+     void setUp() {
         RedisInstance instance = newInstance();
         cacheService = instance.cacheService();
         cacheManager = instance.cacheManager();
     }
 
     @Test
-    public void cacheable_ShouldMissThenHit() {
+     void cacheable_ShouldMissThenHit() {
         AtomicInteger calls = new AtomicInteger();
 
         CacheResult<String> first = cacheService.cacheableWithResult("users", "1",
@@ -60,7 +60,7 @@ class CacheOperationsIT extends AbstractRedisIT {
     }
 
     @Test
-    public void cacheable_ShouldStoreWithTtl() {
+     void cacheable_ShouldStoreWithTtl() {
         cacheService.cacheable("users", "1", () -> "ana", Duration.ofSeconds(90));
 
         Long ttl = cacheService.getTTL("users", "1");
@@ -70,7 +70,7 @@ class CacheOperationsIT extends AbstractRedisIT {
     }
 
     @Test
-    public void cachePut_ShouldOverwrite() {
+     void cachePut_ShouldOverwrite() {
         cacheService.cacheable("users", "1", () -> "ana");
         cacheService.cachePut("users", "1", () -> "ana-new");
 
@@ -78,7 +78,7 @@ class CacheOperationsIT extends AbstractRedisIT {
     }
 
     @Test
-    public void cacheEvict_ShouldRemoveOnlyThatKey() {
+     void cacheEvict_ShouldRemoveOnlyThatKey() {
         cacheService.cacheable("users", "1", () -> "ana");
         cacheService.cacheable("users", "2", () -> "luis");
 
@@ -89,7 +89,7 @@ class CacheOperationsIT extends AbstractRedisIT {
     }
 
     @Test
-    public void cacheEvictMultiple_ShouldRemoveGivenKeys() {
+     void cacheEvictMultiple_ShouldRemoveGivenKeys() {
         cacheService.cacheable("users", "1", () -> "ana");
         cacheService.cacheable("users", "2", () -> "luis");
         cacheService.cacheable("users", "3", () -> "eva");
@@ -102,7 +102,7 @@ class CacheOperationsIT extends AbstractRedisIT {
     }
 
     @Test
-    public void cacheEvictAll_ShouldRemoveEveryKeyOfThatCacheOnly() {
+     void cacheEvictAll_ShouldRemoveEveryKeyOfThatCacheOnly() {
         for (int i = 0; i < MANY_KEYS; i++) {
             String key = String.valueOf(i);
             cacheService.cacheable("users", key, () -> "u" + key);
@@ -118,7 +118,7 @@ class CacheOperationsIT extends AbstractRedisIT {
     }
 
     @Test
-    public void cacheEvictByPattern_ShouldRemoveMatchingKeysOnly() {
+     void cacheEvictByPattern_ShouldRemoveMatchingKeysOnly() {
         cacheService.cacheable("users", "es-1", () -> "ana");
         cacheService.cacheable("users", "es-2", () -> "luis");
         cacheService.cacheable("users", "mx-1", () -> "eva");
@@ -131,7 +131,7 @@ class CacheOperationsIT extends AbstractRedisIT {
     }
 
     @Test
-    public void manager_ShouldPutGetAndExpire() {
+     void manager_ShouldPutGetAndExpire() {
         cacheManager.put("users:1", "ana", 90);
 
         assertEquals(Optional.of("ana"), cacheManager.get("users:1"));
@@ -140,7 +140,7 @@ class CacheOperationsIT extends AbstractRedisIT {
     }
 
     @Test
-    public void manager_ShouldEvictOneAndMany() {
+     void manager_ShouldEvictOneAndMany() {
         cacheManager.put("users:1", "ana", 60);
         cacheManager.put("users:2", "luis", 60);
         cacheManager.put("users:3", "eva", 60);
@@ -154,7 +154,7 @@ class CacheOperationsIT extends AbstractRedisIT {
     }
 
     @Test
-    public void manager_evictAll_ShouldRemoveEveryKeyOfThatCache() {
+     void manager_evictAll_ShouldRemoveEveryKeyOfThatCache() {
         for (int i = 0; i < MANY_KEYS; i++) {
             cacheManager.put("users:" + i, "u" + i, 60);
         }
@@ -169,10 +169,10 @@ class CacheOperationsIT extends AbstractRedisIT {
     }
 
     /**
-     * Borrar la caché {@code user} no debe tocar otras cachés cuyo nombre empieza igual.
+     * Deleting the {@code user} cache must not touch other caches whose name starts the same way.
      */
     @Test
-    public void manager_evictAll_ShouldNotTouchCachesSharingThePrefix() {
+     void manager_evictAll_ShouldNotTouchCachesSharingThePrefix() {
         cacheManager.put("user:1", "ana", 60);
         cacheManager.put("users:1", "list", 60);
         cacheManager.put("userProfile:1", "profile", 60);
@@ -185,7 +185,7 @@ class CacheOperationsIT extends AbstractRedisIT {
     }
 
     @Test
-    public void manager_evictPattern_ShouldRemoveMatchingKeysOnly() {
+     void manager_evictPattern_ShouldRemoveMatchingKeysOnly() {
         cacheManager.put("users:es-1", "ana", 60);
         cacheManager.put("users:mx-1", "eva", 60);
 
@@ -196,7 +196,7 @@ class CacheOperationsIT extends AbstractRedisIT {
     }
 
     @Test
-    public void manager_getOrLoad_ShouldLoadOnceAndThenHit() {
+     void manager_getOrLoad_ShouldLoadOnceAndThenHit() {
         AtomicInteger calls = new AtomicInteger();
 
         Object first = cacheManager.getOrLoad("users:1", () -> "ana-" + calls.incrementAndGet(), 60, false);

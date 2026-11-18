@@ -38,60 +38,60 @@ import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
- * Arranca un contexto real de Spring con {@code @EnableRedisLibrary} contra Redis.
- * Comprueba que los beans de la librería se registran, que se retiran cuando la aplicación
- * define los suyos y que las anotaciones funcionan de extremo a extremo.
+ * Starts a real Spring context with {@code @EnableRedisLibrary} against Redis.
+ * It checks that the library's beans are registered, that they back off when the application
+ * defines its own, and that the annotations work end to end.
  *
- * <p>La aplicación de prueba define su propia fábrica de conexiones, que apunta al contenedor:
- * el puerto de {@code @HostEntry} es una constante y el del contenedor cambia en cada ejecución.
- * Eso mismo prueba que la librería no crea una segunda fábrica.</p>
+ * <p>The test application defines its own connection factory, which points to the container:
+ * the port in {@code @HostEntry} is a constant and the container's changes on every run.
+ * That itself proves that the library does not create a second factory.</p>
  *
  * @author Java Universe
  */
 @Testcontainers(disabledWithoutDocker = true)
 class SpringContextIT {
 
-    /** Contexto de la prueba en curso. */
+    /** Context of the current test. */
     private AnnotationConfigApplicationContext context;
 
     /**
-     * Servicio de negocio de la aplicación de prueba.
+     * Business service of the test application.
      */
-    public static class UserService {
+     public static class UserService {
 
-        /** Número de ejecuciones reales. */
+        /** Number of real executions. */
         private final AtomicInteger calls = new AtomicInteger();
 
         /**
-         * Devuelve cuántas veces se ejecutó algún método real. Es un método y no un acceso al
-         * campo porque el bean que entrega Spring es un proxy, cuyos campos están vacíos.
+         * Returns how many times some real method ran. It is a method and not a field access
+         * because the bean that Spring delivers is a proxy, whose fields are empty.
          *
-         * @return número de ejecuciones
+         * @return number of executions
          */
-        public int callCount() {
+         int callCount() {
             return calls.get();
         }
 
         @CoalesceCacheable(value = "${app.users.cache}", key = "#id")
-        public User find(Long id) {
+         User find(Long id) {
             calls.incrementAndGet();
             return new User(id, "user-" + id, List.of("admin"));
         }
 
         @CoalesceEvict(value = "${app.users.cache}", key = "#id")
-        public void forget(Long id) {
-            // Solo se intercepta.
+         void forget(Long id) {
+            // Only intercepted.
         }
 
         @Cacheable("springUsers")
-        public String findWithSpringCache(Long id) {
+         String findWithSpringCache(Long id) {
             calls.incrementAndGet();
             return "spring-" + id;
         }
     }
 
     /**
-     * Aplicación que usa la librería con su propia fábrica de conexiones.
+     * Application that uses the library with its own connection factory.
      */
     @Configuration
     @EnableRedisLibrary(
@@ -99,50 +99,50 @@ class SpringContextIT {
             keyPrefix = "context",
             ttlEntries = @TTLEntry(name = "users", ttl = 5))
     @Import(ApplicationBeans.class)
-    public static class Application {
+     static class Application {
     }
 
     /**
-     * Beans propios de la aplicación de prueba.
+     * Beans of the test application itself.
      */
     @Configuration
-    public static class ApplicationBeans {
+     static class ApplicationBeans {
 
         @Bean
-        public RedisConnectionFactory applicationConnectionFactory() {
+         RedisConnectionFactory applicationConnectionFactory() {
             return RedisContainers.standaloneFactory();
         }
 
         @Bean
-        public UserService userService() {
+         UserService userService() {
             return new UserService();
         }
     }
 
     /**
-     * La misma aplicación, que además define su propio administrador de caché de Spring.
+     * The same application, which also defines its own Spring cache manager.
      */
     @Configuration
     @EnableRedisLibrary(hostEntries = @HostEntry(host = "unused.invalid"), keyPrefix = "context")
     @Import(ApplicationBeans.class)
-    public static class ApplicationWithOwnCacheManager {
+     static class ApplicationWithOwnCacheManager {
 
         @Bean
-        public CacheManager applicationCacheManager() {
+         CacheManager applicationCacheManager() {
             return new ConcurrentMapCacheManager();
         }
     }
 
     /**
-     * La misma aplicación con un registro de métricas de Micrometer.
+     * The same application with a Micrometer metrics registry.
      */
     @Configuration
     @EnableRedisLibrary(hostEntries = @HostEntry(host = "unused.invalid"), keyPrefix = "context")
     @Import(ApplicationBeans.class)
-    public static class ApplicationWithMetrics {
+     static class ApplicationWithMetrics {
 
         @Bean
-        public MeterRegistry meterRegistry() {
+         MeterRegistry meterRegistry() {
             return new SimpleMeterRegistry();
         }
     }
@@ -156,10 +156,10 @@ class SpringContextIT {
     }
 
     /**
-     * Vacía Redis y cierra el contexto.
+     * Flushes Redis and closes the context.
      */
     @AfterEach
-    public void closeContext() {
+     void closeContext() {
         if (context != null) {
             try (RedisConnection connection = context.getBean(RedisConnectionFactory.class).getConnection()) {
                 connection.serverCommands().flushAll();
@@ -170,11 +170,11 @@ class SpringContextIT {
     }
 
     /**
-     * La librería registra sus beans y usa la fábrica de conexiones de la aplicación
-     * en lugar de crear otra.
+     * The library registers its beans and uses the application's connection factory
+     * instead of creating another one.
      */
     @Test
-    public void context_ShouldRegisterLibraryBeansAndReuseApplicationConnectionFactory() {
+     void context_ShouldRegisterLibraryBeansAndReuseApplicationConnectionFactory() {
         start(Application.class);
 
         assertEquals(1, context.getBeansOfType(RedisConnectionFactory.class).size());
@@ -190,11 +190,11 @@ class SpringContextIT {
     }
 
     /**
-     * Las anotaciones funcionan a través del proxy que crea Spring: placeholders resueltos,
-     * record reconstruido desde Redis, invalidación y prefijo de la aplicación en las claves.
+     * The annotations work through the proxy Spring creates: placeholders resolved,
+     * record rebuilt from Redis, eviction and application prefix in the keys.
      */
     @Test
-    public void annotations_ShouldWorkThroughSpringProxies() {
+     void annotations_ShouldWorkThroughSpringProxies() {
         start(Application.class);
         UserService service = context.getBean(UserService.class);
 
@@ -205,7 +205,7 @@ class SpringContextIT {
         assertEquals(first, second);
         assertEquals(1, service.callCount());
         assertTrue(context.getBean(CoalesceCacheManager.class).exists("users:1"));
-        // TTL de @TTLEntry (5 minutos), porque la anotación no indica ttl.
+        // TTL from @TTLEntry (5 minutes), because the annotation does not specify ttl.
         long ttl = context.getBean(CoalesceCacheManager.class).getTimeToLive("users:1");
         assertTrue(ttl > 240 && ttl <= 300, "unexpected TTL: " + ttl);
         try (RedisConnection connection = context.getBean(RedisConnectionFactory.class).getConnection()) {
@@ -218,10 +218,10 @@ class SpringContextIT {
     }
 
     /**
-     * El {@code @Cacheable} de Spring usa el administrador de caché de la librería.
+     * Spring's {@code @Cacheable} uses the library's cache manager.
      */
     @Test
-    public void springCacheable_ShouldUseLibraryCacheManager() {
+     void springCacheable_ShouldUseLibraryCacheManager() {
         start(Application.class);
         UserService service = context.getBean(UserService.class);
 
@@ -235,10 +235,10 @@ class SpringContextIT {
     }
 
     /**
-     * Con un registro de Micrometer en el contexto, la librería publica sus contadores.
+     * With a Micrometer registry in the context, the library publishes its counters.
      */
     @Test
-    public void metrics_ShouldBePublishedWhenApplicationHasMeterRegistry() {
+     void metrics_ShouldBePublishedWhenApplicationHasMeterRegistry() {
         start(ApplicationWithMetrics.class);
         UserService service = context.getBean(UserService.class);
         MeterRegistry registry = context.getBean(MeterRegistry.class);
@@ -253,11 +253,11 @@ class SpringContextIT {
     }
 
     /**
-     * Si la aplicación define su administrador de caché de Spring, la librería no registra el suyo,
-     * y sus propias anotaciones siguen funcionando.
+     * If the application defines its Spring cache manager, the library does not register its own,
+     * and its own annotations keep working.
      */
     @Test
-    public void context_ShouldBackOffWhenApplicationDefinesItsOwnCacheManager() {
+     void context_ShouldBackOffWhenApplicationDefinesItsOwnCacheManager() {
         start(ApplicationWithOwnCacheManager.class);
         UserService service = context.getBean(UserService.class);
 

@@ -14,18 +14,18 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 /**
- * Pruebas del borrado de claves por patrón con SCAN y UNLINK.
+ * Tests for deleting keys by pattern with SCAN and UNLINK.
  *
  * @author Java Universe
  */
 class RedisKeyScannerTest {
 
-    /** Plantilla de Redis simulada. */
+    /** Mocked Redis template. */
     @SuppressWarnings("unchecked")
     private final RedisTemplate<String, Object> redisTemplate = mock(RedisTemplate.class);
 
     @Test
-    public void deleteMatching_ShouldScanWithThePatternAndUnlinkEveryKey() {
+     void deleteMatching_ShouldScanWithThePatternAndUnlinkEveryKey() {
         FakeScan scan = new FakeScan(redisTemplate, "users:1", "users:2", "users:3");
 
         long deleted = RedisKeyScanner.deleteMatching(redisTemplate, "users:*");
@@ -37,10 +37,10 @@ class RedisKeyScannerTest {
     }
 
     /**
-     * Con más claves que un lote, se borran en varias órdenes y nunca se acumulan todas.
+     * With more keys than one batch, they are deleted in several commands and never all accumulated.
      */
     @Test
-    public void deleteMatching_WithManyKeys_ShouldUnlinkInBatches() {
+     void deleteMatching_WithManyKeys_ShouldUnlinkInBatches() {
         int total = RedisKeyScanner.BATCH_SIZE * 2 + 200;
         String[] keys = IntStream.range(0, total).mapToObj(i -> "users:" + i).toArray(String[]::new);
         FakeScan scan = new FakeScan(redisTemplate, keys);
@@ -52,7 +52,7 @@ class RedisKeyScannerTest {
     }
 
     @Test
-    public void deleteMatching_WithoutMatchingKeys_ShouldNotUnlink() {
+     void deleteMatching_WithoutMatchingKeys_ShouldNotUnlink() {
         FakeScan scan = new FakeScan(redisTemplate);
 
         assertEquals(0, RedisKeyScanner.deleteMatching(redisTemplate, "users:*"));
@@ -61,11 +61,11 @@ class RedisKeyScannerTest {
     }
 
     /**
-     * Dentro de una transacción o un pipeline la plantilla devuelve nulo: se cuenta como cero.
+     * Inside a transaction or a pipeline the template returns null: it counts as zero.
      */
     @Test
     @SuppressWarnings("unchecked")
-    public void deleteMatching_WhenTemplateReturnsNull_ShouldReturnZero() {
+     void deleteMatching_WhenTemplateReturnsNull_ShouldReturnZero() {
         when(redisTemplate.execute(any(RedisCallback.class))).thenReturn(null);
 
         assertEquals(0, RedisKeyScanner.deleteMatching(redisTemplate, "users:*"));

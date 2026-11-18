@@ -31,30 +31,30 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 /**
- * Pruebas del administrador de caché de Spring que tolera los fallos de Redis.
+ * Tests for the Spring cache manager that tolerates Redis failures.
  *
  * @author Java Universe
  */
 class FailOpenCacheManagerTest {
 
-    /** Fallo de Redis simulado. */
+    /** Simulated Redis failure. */
     private static final RuntimeException REDIS_DOWN = new QueryTimeoutException("no response");
 
-    /** Administrador real simulado. */
+    /** Mocked real manager. */
     private CacheManager delegate;
 
-    /** Caché real simulada, que falla en todo. */
+    /** Mocked real cache, which fails on everything. */
     private Cache broken;
 
-    /** Administrador bajo prueba. */
+    /** Manager under test. */
     private FailOpenCacheManager cacheManager;
 
     /**
-     * Prepara una caché que falla en todas sus operaciones y otra que funciona.
+     * Prepares a cache that fails on all its operations and another that works.
      */
     @BeforeEach
     @SuppressWarnings("unchecked")
-    public void setUp() {
+     void setUp() {
         broken = mock(Cache.class);
         when(broken.getName()).thenReturn("broken");
         when(broken.get(any())).thenThrow(REDIS_DOWN);
@@ -75,7 +75,7 @@ class FailOpenCacheManagerTest {
     }
 
     @Test
-    public void manager_ShouldExposeDelegateAndItsCaches() {
+     void manager_ShouldExposeDelegateAndItsCaches() {
         assertSame(delegate, cacheManager.getDelegate());
         assertEquals(List.of("broken", "healthy"), cacheManager.getCacheNames());
         assertNull(cacheManager.getCache("does-not-exist"));
@@ -84,10 +84,10 @@ class FailOpenCacheManagerTest {
     }
 
     /**
-     * Con Redis caído, leer es «no está», y guardar e invalidar no hacen nada ni fallan.
+     * With Redis down, reading returns "not found", and put and evict do nothing and do not fail.
      */
     @Test
-    public void brokenCache_ShouldBehaveAsEmptyAndNeverThrow() {
+     void brokenCache_ShouldBehaveAsEmptyAndNeverThrow() {
         Cache cache = cacheManager.getCache("broken");
 
         assertNull(cache.get("k"));
@@ -103,10 +103,10 @@ class FailOpenCacheManagerTest {
     }
 
     /**
-     * Con Redis caído antes de cargar, el cargador se ejecuta una vez y su valor se devuelve.
+     * With Redis down before loading, the loader runs once and its value is returned.
      */
     @Test
-    public void brokenCache_GetWithLoader_ShouldRunLoaderOnce() {
+     void brokenCache_GetWithLoader_ShouldRunLoaderOnce() {
         AtomicInteger calls = new AtomicInteger();
 
         String value = cacheManager.getCache("broken").get("k", () -> "loaded-" + calls.incrementAndGet());
@@ -116,11 +116,11 @@ class FailOpenCacheManagerTest {
     }
 
     /**
-     * Si Redis falla después de cargar (al guardar), no se vuelve a ejecutar el cargador.
+     * If Redis fails after loading (when storing), the loader is not run again.
      */
     @Test
     @SuppressWarnings("unchecked")
-    public void getWithLoader_WhenCacheFailsAfterLoading_ShouldNotLoadTwice() {
+     void getWithLoader_WhenCacheFailsAfterLoading_ShouldNotLoadTwice() {
         when(broken.get(any(), any(Callable.class))).thenAnswer(invocation -> {
             invocation.<Callable<Object>>getArgument(1).call();
             throw REDIS_DOWN;
@@ -134,10 +134,10 @@ class FailOpenCacheManagerTest {
     }
 
     /**
-     * La excepción del cargador se propaga como hace Spring, venga de la caché real o del respaldo.
+     * The loader's exception is propagated the way Spring does, whether it comes from the real cache or from the fallback.
      */
     @Test
-    public void getWithLoader_WhenLoaderFails_ShouldPropagateItsException() {
+     void getWithLoader_WhenLoaderFails_ShouldPropagateItsException() {
         IllegalStateException failure = new IllegalStateException("business failure");
         Callable<String> failing = () -> {
             throw failure;
@@ -153,10 +153,10 @@ class FailOpenCacheManagerTest {
     }
 
     /**
-     * Cuando la caché real funciona, el envoltorio no cambia nada.
+     * When the real cache works, the wrapper changes nothing.
      */
     @Test
-    public void healthyCache_ShouldWorkNormally() {
+     void healthyCache_ShouldWorkNormally() {
         Cache cache = cacheManager.getCache("healthy");
 
         cache.put("k", "v");
@@ -177,10 +177,10 @@ class FailOpenCacheManagerTest {
     }
 
     /**
-     * Las operaciones asíncronas se pasan tal cual a la caché real.
+     * Asynchronous operations are passed as they are to the real cache.
      */
     @Test
-    public void retrieve_ShouldDelegate() {
+     void retrieve_ShouldDelegate() {
         CompletableFuture<Object> pending = CompletableFuture.completedFuture(new SimpleValueWrapper("v"));
         when(broken.retrieve("k")).thenAnswer(invocation -> pending);
         when(broken.retrieve(any(), any())).thenReturn(CompletableFuture.completedFuture("loaded"));
@@ -193,12 +193,12 @@ class FailOpenCacheManagerTest {
     }
 
     /**
-     * Tras un fallo de conexión, durante la pausa las operaciones no llegan a la caché real
-     * y el cargador se ejecuta directamente.
+     * After a connection failure, during the pause the operations do not reach the real cache
+     * and the loader runs directly.
      */
     @Test
     @SuppressWarnings("unchecked")
-    public void openBreaker_ShouldSkipTheRealCache() {
+     void openBreaker_ShouldSkipTheRealCache() {
         RedisCircuitBreaker breaker = new RedisCircuitBreaker(Duration.ofSeconds(30));
         FailOpenCacheManager guarded = new FailOpenCacheManager(delegate, breaker);
         Cache cache = guarded.getCache("broken");

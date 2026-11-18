@@ -16,55 +16,55 @@ import org.springframework.cache.Cache;
 import org.springframework.cache.CacheManager;
 
 /**
- * Administrador de caché de Spring que no deja que un fallo de Redis haga fallar el método
- * anotado con {@code @Cacheable}, {@code @CachePut} o {@code @CacheEvict}.
+ * Spring cache manager that does not let a Redis failure make the method annotated with
+ * {@code @Cacheable}, {@code @CachePut} or {@code @CacheEvict} fail.
  *
- * <p>Envuelve a otro administrador. Si una operación de caché falla, registra el fallo y se
- * comporta como si la entrada no existiera: las lecturas devuelven «no está», y los guardados
- * y las invalidaciones no hacen nada. El método de negocio se ejecuta igualmente y sus propias
- * excepciones llegan intactas a quien llama.</p>
+ * <p>It wraps another manager. If a cache operation fails, it logs the failure and behaves
+ * as if the entry did not exist: reads return "not found", and puts and evictions
+ * do nothing. The business method runs anyway and its own exceptions reach the caller
+ * intact.</p>
  *
- * <p>Tras un fallo de conexión, durante la pausa de {@link RedisCircuitBreaker} las operaciones
- * ni siquiera intentan llegar a Redis, para no esperar su tiempo de respuesta.</p>
+ * <p>After a connection failure, during the {@link RedisCircuitBreaker} pause the operations
+ * do not even try to reach Redis, so as not to wait for its response time.</p>
  *
- * <p>Mientras Redis no responde, las invalidaciones no se aplican; al recuperarse puede haber
- * datos antiguos hasta que caduquen.</p>
+ * <p>While Redis is not responding, evictions are not applied; once it recovers there may be
+ * stale data until it expires.</p>
  *
  * @author Java Universe
  */
 @Slf4j
 public class FailOpenCacheManager implements CacheManager {
 
-    /** Intervalo mínimo entre dos avisos de fallo en el log; el resto va a depuración. */
+    /** Minimum interval between two failure warnings in the log; the rest go to debug. */
     private static final long WARN_INTERVAL_NANOS = TimeUnit.SECONDS.toNanos(10);
 
-    /** Administrador real. */
+    /** Real manager. */
     private final CacheManager delegate;
 
-    /** Deja de usar Redis un tiempo tras un fallo de conexión; compartido con las demás formas de caché. */
+    /** Stops using Redis for a while after a connection failure; shared with the other forms of cache. */
     private final RedisCircuitBreaker breaker;
 
-    /** Cachés ya envueltas, por nombre. */
+    /** Caches already wrapped, by name. */
     private final ConcurrentMap<String, Cache> caches = new ConcurrentHashMap<>();
 
-    /** Instante del último aviso de fallo escrito en el log; 0 si no hubo ninguno. */
+    /** Instant of the last failure warning written to the log; 0 if there was none. */
     private final AtomicLong lastWarnNanos = new AtomicLong();
 
     /**
-     * Envuelve un administrador de caché.
+     * Wraps a cache manager.
      *
-     * @param delegate administrador real
+     * @param delegate real manager
      */
     public FailOpenCacheManager(CacheManager delegate) {
         this(delegate, new RedisCircuitBreaker(Duration.ZERO));
     }
 
     /**
-     * Envuelve un administrador de caché con un cortacircuitos, normalmente compartido con las
-     * demás formas de caché: mientras está abierto, las operaciones no llegan a Redis.
+     * Wraps a cache manager with a circuit breaker, normally shared with the
+     * other forms of cache: while it is open, operations do not reach Redis.
      *
-     * @param delegate administrador real
-     * @param breaker cortacircuitos que evita esperar a Redis mientras está caído
+     * @param delegate real manager
+     * @param breaker circuit breaker that avoids waiting for Redis while it is down
      */
     public FailOpenCacheManager(CacheManager delegate, RedisCircuitBreaker breaker) {
         this.delegate = delegate;
@@ -72,19 +72,19 @@ public class FailOpenCacheManager implements CacheManager {
     }
 
     /**
-     * Devuelve el administrador real, por si hace falta su API específica.
+     * Returns the real manager, in case its specific API is needed.
      *
-     * @return administrador envuelto
+     * @return wrapped manager
      */
     public CacheManager getDelegate() {
         return delegate;
     }
 
     /**
-     * Devuelve la caché con ese nombre, protegida frente a fallos.
+     * Returns the cache with that name, protected against failures.
      *
-     * @param name nombre de la caché
-     * @return caché, o {@code null} si el administrador real no la tiene
+     * @param name cache name
+     * @return cache, or {@code null} if the real manager does not have it
      */
     @Override
     public Cache getCache(String name) {
@@ -93,9 +93,9 @@ public class FailOpenCacheManager implements CacheManager {
     }
 
     /**
-     * Devuelve los nombres de las cachés conocidas.
+     * Returns the names of the known caches.
      *
-     * @return nombres de caché
+     * @return cache names
      */
     @Override
     public Collection<String> getCacheNames() {
@@ -115,11 +115,11 @@ public class FailOpenCacheManager implements CacheManager {
     }
 
     /**
-     * Caché que trata los fallos como ausencia de valor.
+     * Cache that treats failures as the absence of a value.
      */
     private final class FailOpenCache implements Cache {
 
-        /** Caché real. */
+        /** Real cache. */
         private final Cache cache;
 
         private FailOpenCache(Cache cache) {
@@ -147,9 +147,9 @@ public class FailOpenCacheManager implements CacheManager {
         }
 
         /**
-         * Obtiene el valor o lo carga. Si la caché falla antes de cargar, el cargador se ejecuta
-         * aquí; si falla después (al guardar), se devuelve lo que ya cargó. El cargador nunca se
-         * ejecuta dos veces y sus excepciones se propagan como hace Spring.
+         * Gets the value or loads it. If the cache fails before loading, the loader runs
+         * here; if it fails afterwards (when storing), what was already loaded is returned. The loader
+         * never runs twice and its exceptions are propagated the way Spring does.
          */
         @Override
         public <T> T get(Object key, Callable<T> valueLoader) {
@@ -169,7 +169,7 @@ public class FailOpenCacheManager implements CacheManager {
                 breaker.recordSuccess();
                 return value;
             } catch (ValueRetrievalException e) {
-                // El cargador falló, no Redis.
+                // The loader failed, not Redis.
                 breaker.recordSuccess();
                 throw e;
             } catch (RuntimeException e) {

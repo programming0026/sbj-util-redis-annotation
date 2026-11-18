@@ -9,10 +9,10 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 /**
- * Registra las métricas de la caché cuando Micrometer está en el classpath.
+ * Registers the cache metrics when Micrometer is on the classpath.
  *
- * <p>Micrometer es una dependencia opcional de la librería, por eso esta configuración va
- * aparte: si la clase {@code MeterRegistry} no existe, Spring ni siquiera la carga.</p>
+ * <p>Micrometer is an optional dependency of the library, which is why this configuration is
+ * separate: if the {@code MeterRegistry} class does not exist, Spring does not even load it.</p>
  *
  * @author Java Universe
  */
@@ -21,10 +21,10 @@ import org.springframework.context.annotation.Configuration;
 public class CacheMetricsConfiguration {
 
     /**
-     * Crea los contadores de la caché.
+     * Creates the cache counters.
      *
-     * @param registry registro de métricas de la aplicación, si lo hay
-     * @return contadores de Micrometer si hay un único registro; si no, una implementación vacía
+     * @param registry application metrics registry, if any
+     * @return Micrometer counters if there is a single registry; otherwise a no-op implementation
      */
     @Bean
     @ConditionalOnMissingBean

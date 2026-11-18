@@ -3,9 +3,9 @@ package io.github.programming0026.juniverse.redis.integration;
 import org.springframework.data.redis.connection.lettuce.LettuceConnectionFactory;
 
 /**
- * Repite las pruebas de {@link CacheOperationsIT} contra Redis en modo clúster.
- * En clúster las claves se reparten por slots, así que los borrados de varias claves
- * y los recorridos con SCAN o KEYS siguen otro camino en el cliente.
+ * Repeats the tests of {@link CacheOperationsIT} against Redis in cluster mode.
+ * In a cluster keys are spread across slots, so multi-key deletions
+ * and iterations with SCAN or KEYS follow a different path in the client.
  *
  * @author Java Universe
  */

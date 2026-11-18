@@ -21,44 +21,44 @@ import tools.jackson.databind.jsontype.impl.DefaultTypeResolverBuilder;
 
 /**
  *
- * <p>Construye un {@link JsonMapper} de Jackson 3. Los mappers de Jackson 3 son inmutables, así que todo se
- * configura en el constructor.
- * El soporte de {@code java.time} y {@code Optional} viene integrado en Jackson 3 (no hay módulo que registrar).
+ * <p>Builds a Jackson 3 {@link JsonMapper}. Jackson 3 mappers are immutable, so everything is
+ * configured in the constructor.
+ * Support for {@code java.time} and {@code Optional} is built into Jackson 3 (there is no module to register).
  *
  * @author Java Universe
  */
 public class DefaultObjectMapperConfig implements ObjectMapperConfig {
 
-    /** Valor de la lista de paquetes que admite cualquier clase. */
+    /** Value in the package list that allows any class. */
     public static final String ANY_PACKAGE = "*";
 
-    /** Paquetes de confianza; {@code null} si se admite cualquier clase. */
+    /** Trusted packages; {@code null} if any class is allowed. */
     private final List<String> trustedPackages;
 
     /**
-     * Crea la configuración sin restricción de clases: cualquier nombre de clase que aparezca
-     * en el JSON se puede instanciar. Es el comportamiento anterior a la versión 3 y solo es
-     * adecuado si nadie más puede escribir en ese Redis.
+     * Creates the configuration without class restrictions: any class name that appears
+     * in the JSON can be instantiated. This is the behavior prior to version 3 and is only
+     * suitable if nobody else can write to that Redis.
      */
     public DefaultObjectMapperConfig() {
         this.trustedPackages = null;
     }
 
     /**
-     * Crea la configuración admitiendo solo clases de los paquetes indicados, además de los
-     * tipos básicos de {@code java.lang}, {@code java.util}, {@code java.time} y {@code java.math}.
+     * Creates the configuration allowing only classes from the given packages, in addition to the
+     * basic types of {@code java.lang}, {@code java.util}, {@code java.time} and {@code java.math}.
      *
-     * @param trustedPackages paquetes de confianza; si contiene {@value #ANY_PACKAGE} se admite
-     *                        cualquier clase
+     * @param trustedPackages trusted packages; if it contains {@value #ANY_PACKAGE}, any
+     *                        class is allowed
      */
     public DefaultObjectMapperConfig(Collection<String> trustedPackages) {
         this.trustedPackages = trustedPackages.contains(ANY_PACKAGE) ? null : List.copyOf(trustedPackages);
     }
 
     /**
-     * Configura.
+     * Configures the mapper.
      *
-     * @return conversor de objeto
+     * @return object mapper
      */
     @Override
     public ObjectMapper configure() {
@@ -85,12 +85,12 @@ public class DefaultObjectMapperConfig implements ObjectMapperConfig {
     }
 
     /**
-     * Guarda el nombre de la clase junto a todos los valores salvo los que JSON ya distingue
-     * por sí mismo (texto, booleanos, enteros y decimales).
+     * Stores the class name alongside all values except those that JSON already distinguishes
+     * on its own (strings, booleans, integers and decimals).
      *
-     * <p>El tipado predeterminado de Jackson ({@code NON_FINAL}) omite las clases finales, y por
-     * eso un {@code Long} volvía como {@code Integer} y los records, los enums, las fechas y las
-     * listas inmutables no se podían leer cuando el tipo esperado era {@code Object}.</p>
+     * <p>Jackson's default typing ({@code NON_FINAL}) skips final classes, which is why a
+     * {@code Long} came back as {@code Integer} and records, enums, dates and
+     * immutable lists could not be read when the expected type was {@code Object}.</p>
      */
     private static final class AllTypesResolverBuilder extends DefaultTypeResolverBuilder {
 
@@ -121,9 +121,9 @@ public class DefaultObjectMapperConfig implements ObjectMapperConfig {
     }
 
     /**
-     * Decide qué clases se pueden instanciar a partir del nombre guardado en el JSON.
+     * Decides which classes may be instantiated from the name stored in the JSON.
      *
-     * @return validador de tipos
+     * @return type validator
      */
     private PolymorphicTypeValidator typeValidator() {
         BasicPolymorphicTypeValidator.Builder builder = BasicPolymorphicTypeValidator.builder()

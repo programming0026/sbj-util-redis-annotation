@@ -16,9 +16,9 @@ public final class Validator {
 
     }
     /**
-     * Valida los servidores.
+     * Validates the servers.
      *
-     * @param hosts servidores
+     * @param hosts servers
      */
     public static void validateHosts(List<HostsDto> hosts) {
         if (hosts == null || hosts.isEmpty()) {
@@ -37,10 +37,10 @@ public final class Validator {
     }
 
     /**
-     * Valida tiempo de espera.
+     * Validates the timeouts.
      *
-     * @param connectionTimeout tiempo de espera de conexión
-     * @param readTimeout       tiempo de espera de lectura
+     * @param connectionTimeout connection timeout
+     * @param readTimeout       read timeout
      */
     public static void validateTimeout(Long connectionTimeout, Long readTimeout) {
 
@@ -60,10 +60,10 @@ public final class Validator {
     }
 
     /**
-     * Valida el prefijo de la aplicación. No puede contener espacios ni caracteres que Redis
-     * interpreta en los patrones, porque el prefijo forma parte de los patrones de borrado.
+     * Validates the application prefix. It cannot contain spaces or characters that Redis
+     * interprets in patterns, because the prefix is part of the deletion patterns.
      *
-     * @param keyPrefix prefijo; puede ser nulo o vacío
+     * @param keyPrefix prefix; may be null or empty
      */
     public static void validateKeyPrefix(String keyPrefix) {
         if (keyPrefix == null) {
@@ -79,10 +79,10 @@ public final class Validator {
     }
 
     /**
-     * Valida los tiempos de la coalescencia.
+     * Validates the coalescing timeouts.
      *
-     * @param lockTimeout duración del bloqueo en milisegundos
-     * @param waitTimeout espera máxima en milisegundos
+     * @param lockTimeout lock duration in milliseconds
+     * @param waitTimeout maximum wait in milliseconds
      */
     public static void validateCoalesceTimeouts(Long lockTimeout, Long waitTimeout) {
 
@@ -102,9 +102,9 @@ public final class Validator {
     }
 
     /**
-     * Valida los servidores del modo standalone.
+     * Validates the servers for standalone mode.
      *
-     * @param hosts servidores
+     * @param hosts servers
      */
     public static void validateStandaloneHosts(List<HostsDto> hosts) {
         validateHosts(hosts);
@@ -116,12 +116,12 @@ public final class Validator {
     }
 
     /**
-     * Valida los servidores del modo clúster.
-     * Basta un nodo para descubrir el clúster completo (es lo que ofrecen los servicios
-     * gestionados con un único punto de entrada), así que un solo servidor es válido;
-     * solo se avisa de que la conexión inicial no tiene nodo alternativo.
+     * Validates the servers for cluster mode.
+     * A single node is enough to discover the whole cluster (which is what managed services
+     * with a single entry point offer), so a single server is valid;
+     * a warning is only logged that the initial connection has no alternative node.
      *
-     * @param hosts servidores
+     * @param hosts servers
      */
     public static void validateClusterHosts(List<HostsDto> hosts) {
         validateHosts(hosts);
@@ -133,12 +133,12 @@ public final class Validator {
     }
 
     /**
-     * Valida los servidores del modo sentinel.
-     * Un solo sentinel es válido; solo se avisa de que la conexión inicial
-     * no tiene alternativa.
+     * Validates the servers for sentinel mode.
+     * A single sentinel is valid; a warning is only logged that the initial connection
+     * has no alternative.
      *
-     * @param hosts servidores
-     * @param sentinelMaster nombre del maestro de sentinel
+     * @param hosts servers
+     * @param sentinelMaster sentinel master name
      */
     public static void validateSentinelHosts(List<HostsDto> hosts, String sentinelMaster) {
         validateHosts(hosts);
@@ -154,11 +154,11 @@ public final class Validator {
         }
     }
     /**
-     * Valida los campos obligatorios.
-     * @param cacheName nombre de la caché
-     * @param key clave
-     * @param loader objeto
-     * @param <T> tipo genérico
+     * Validates the required fields.
+     * @param cacheName cache name
+     * @param key key
+     * @param loader loader
+     * @param <T> generic type
      */
     public static <T> void validateRequiredFields(String cacheName, String key, Supplier<T> loader) {
         if (!StringUtils.hasText(cacheName)) {
@@ -173,10 +173,10 @@ public final class Validator {
     }
 
     /**
-     * Valida tiempo de vida.
+     * Validates the time to live.
      *
-     * @param cacheName nombre de caché
-     * @param ttl       tiempo de vida
+     * @param cacheName cache name
+     * @param ttl       time to live
      */
     public static void validateTTL(String cacheName, Long ttl) {
         if (!StringUtils.hasText(cacheName)) {
@@ -188,13 +188,13 @@ public final class Validator {
         }
     }
     /**
-     * Valida los parámetros de la operación de caché.
+     * Validates the parameters of the cache operation.
      *
-     * @param <T> tipo genérico
-     * @param cacheName nombre de caché
-     * @param key clave
-     * @param loader función que carga el valor
-     * @param ttl tiempo de vida
+     * @param <T> generic type
+     * @param cacheName cache name
+     * @param key key
+     * @param loader function that loads the value
+     * @param ttl time to live
      */
     public static <T> void validateCacheable(String cacheName, String key, Supplier<T> loader, Duration ttl) {
         if (ttl == null) {
@@ -211,10 +211,10 @@ public final class Validator {
     }
 
     /**
-     * Valida los parámetros de invalidación.
+     * Validates the eviction parameters.
      *
-     * @param cacheName nombre de caché
-     * @param key clave
+     * @param cacheName cache name
+     * @param key key
      */
     public static void validateCacheEvict(String cacheName, String key) {
         if (!StringUtils.hasText(cacheName)) {
@@ -227,9 +227,9 @@ public final class Validator {
     }
 
     /**
-     * Valida el nombre de la caché para invalidar todo.
+     * Validates the cache name for evicting everything.
      *
-     * @param cacheName nombre de caché
+     * @param cacheName cache name
      */
     public static void validateCacheEvict(String cacheName) {
         if (!StringUtils.hasText(cacheName)) {
@@ -243,9 +243,9 @@ public final class Validator {
     }
 
     /**
-     * Valida el patrón para invalidar por patrón.
+     * Validates the pattern for evicting by pattern.
      *
-     * @param pattern patrón de claves
+     * @param pattern key pattern
      */
     public static void validatePattern(String pattern) {
         if (!StringUtils.hasText(pattern)) {
@@ -254,10 +254,10 @@ public final class Validator {
     }
 
     /**
-     * Valida formato de clave.
+     * Validates the key format.
      *
-     * @param cacheName nombre de caché
-     * @param key clave
+     * @param cacheName cache name
+     * @param key key
      */
     private static void validateKeyFormat(String cacheName, String key) {
         if (cacheName.contains(":") || cacheName.contains("*")) {

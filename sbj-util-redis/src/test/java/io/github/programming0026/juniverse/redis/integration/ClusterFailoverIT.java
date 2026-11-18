@@ -26,8 +26,8 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
- * Prueba el modo CLUSTER contra un clúster real de tres maestros y tres réplicas, con las
- * claves repartidas entre los maestros y con la caída de uno de ellos.
+ * Tests CLUSTER mode against a real cluster of three masters and three replicas, with
+ * keys spread across the masters and with one of them going down.
  *
  * @author Java Universe
  */
@@ -35,17 +35,17 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 class ClusterFailoverIT {
 
-    /** Claves suficientes para ocupar los tres maestros y necesitar varios lotes de borrado. */
+    /** Enough keys to occupy the three masters and need several deletion batches. */
     private static final int MANY_KEYS = 600;
 
-    /** Clúster compartido por las pruebas de la clase. */
+    /** Cluster shared by the tests of the class. */
     private static Cluster topology;
 
-    /** Aplicación de la prueba en curso. */
+    /** Application of the current test. */
     private LibraryApplication application;
 
     /**
-     * Aplicación en modo CLUSTER con un solo nodo semilla, como con un punto de entrada único.
+     * Application in CLUSTER mode with a single seed node, as with a single entry point.
      */
     @Configuration
     @EnableRedisLibrary(
@@ -54,41 +54,41 @@ class ClusterFailoverIT {
             keyPrefix = "cluster",
             connectionTimeout = 2000,
             readTimeout = 2000)
-    public static class Application {
+     static class Application {
     }
 
     /**
-     * Arranca el clúster.
+     * Starts the cluster.
      */
     @BeforeAll
-    public static void startTopology() {
+     static void startTopology() {
         topology = RedisTopologies.startCluster();
     }
 
     /**
-     * Elimina el contenedor.
+     * Removes the container.
      */
     @AfterAll
-    public static void stopTopology() {
+     static void stopTopology() {
         if (topology != null) {
             topology.container().stop();
         }
     }
 
     /**
-     * Arranca la aplicación contra el primer nodo.
+     * Starts the application against the first node.
      */
     @BeforeEach
-    public void startApplication() {
+     void startApplication() {
         application = LibraryApplication.start(Application.class,
                 Map.of("it.cluster.seed", RedisTopologies.host() + ":" + topology.ports()[0]));
     }
 
     /**
-     * Cierra la aplicación.
+     * Closes the application.
      */
     @AfterEach
-    public void closeApplication() {
+     void closeApplication() {
         application.close();
     }
 
@@ -98,12 +98,12 @@ class ClusterFailoverIT {
     }
 
     /**
-     * Con un solo nodo semilla la librería descubre el clúster entero, y las tres formas de
-     * caché funcionan con las claves repartidas entre los maestros.
+     * With a single seed node the library discovers the whole cluster, and the three forms of
+     * cache work with keys spread across the masters.
      */
     @Test
     @Order(1)
-    public void application_ShouldDiscoverClusterAndSpreadKeysAcrossMasters() {
+     void application_ShouldDiscoverClusterAndSpreadKeysAcrossMasters() {
         CatalogService catalog = application.catalog();
         RedisCacheService cacheService = application.cacheService();
 
@@ -128,12 +128,12 @@ class ClusterFailoverIT {
     }
 
     /**
-     * Borrar todas las entradas de una caché recorre todos los nodos del clúster, no solo uno,
-     * y no toca las demás cachés.
+     * Deleting all entries of a cache walks all the nodes of the cluster, not just one,
+     * and does not touch the other caches.
      */
     @Test
     @Order(2)
-    public void evictAll_ShouldRemoveKeysFromEveryNode() {
+     void evictAll_ShouldRemoveKeysFromEveryNode() {
         CoalesceCacheManager cache = application.coalesceCache();
         RedisCacheService cacheService = application.cacheService();
         for (int i = 0; i < MANY_KEYS; i++) {
@@ -154,11 +154,11 @@ class ClusterFailoverIT {
     }
 
     /**
-     * La coalescencia funciona en clúster: bloqueo, guion de liberación y aviso por pub/sub.
+     * Coalescing works in a cluster: lock, release script and pub/sub notification.
      */
     @Test
     @Order(3)
-    public void coalescedLoad_ShouldWorkAcrossSlots() {
+     void coalescedLoad_ShouldWorkAcrossSlots() {
         CoalesceCacheManager cache = application.coalesceCache();
 
         for (int i = 0; i < 50; i++) {
@@ -169,13 +169,13 @@ class ClusterFailoverIT {
     }
 
     /**
-     * Al caer un maestro, su réplica lo sustituye. La aplicación sigue respondiendo durante la
-     * conmutación y vuelve a usar la caché en todos los slots sin reiniciarse, lo que exige que
-     * el cliente refresque la topología.
+     * When a master goes down, its replica replaces it. The application keeps responding during the
+     * failover and uses the cache again on all slots without restarting, which requires that
+     * the client refreshes the topology.
      */
     @Test
     @Order(4)
-    public void whenAMasterDies_ApplicationShouldKeepServingAndRefreshTopology() {
+     void whenAMasterDies_ApplicationShouldKeepServingAndRefreshTopology() {
         CatalogService catalog = application.catalog();
         CoalesceCacheManager cache = application.coalesceCache();
         for (long id = 100; id < 160; id++) {
@@ -186,7 +186,7 @@ class ClusterFailoverIT {
         assertTrue(topology.node(victim, "role").startsWith("master"), "the first node must be a master");
         topology.node(victim, "shutdown", "nosave");
 
-        // Durante la conmutación ninguna petición falla, toque el slot que toque.
+        // During the failover no request fails, whichever slot it touches.
         for (long id = 200; id < 260; id++) {
             assertEquals("item-" + id, catalog.find(id).name());
             assertEquals("spring-" + id, catalog.findWithSpringCache(id).name());
@@ -196,7 +196,7 @@ class ClusterFailoverIT {
                 () -> topology.node(topology.ports()[1], "cluster", "info").contains("cluster_state:ok"),
                 Duration.ofSeconds(40)), "the cluster did not recover from the master failure");
 
-        // La caché vuelve a funcionar en todos los slots, también en los del maestro caído.
+        // The cache works again on all slots, including those of the fallen master.
         assertTrue(LibraryApplication.await(() -> {
             for (int i = 0; i < 200; i++) {
                 String key = "after:" + i;

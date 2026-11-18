@@ -16,30 +16,29 @@ import org.springframework.data.redis.core.ScanOptions;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
 
 /**
- * Simula en una plantilla de Redis simulada el recorrido con SCAN y el borrado con UNLINK,
- * y recuerda qué patrón se pidió y qué claves se borraron.
+ * Simulates, on a mocked Redis template, the SCAN iteration and the UNLINK deletion,
+ * and remembers which pattern was requested and which keys were deleted.
  *
  * @author Java Universe
  */
 public final class FakeScan {
 
-    /** Claves borradas, en el orden en que se pidieron. */
+    /** Deleted keys, in the order they were requested. */
     private final List<String> unlinked = new ArrayList<>();
 
-    /** Tamaño de cada orden de borrado. */
+    /** Size of each delete command. */
     private final List<Integer> batchSizes = new ArrayList<>();
 
-    /** Patrón del último recorrido. */
+    /** Pattern of the last iteration. */
     private String pattern;
 
     /**
-     * Prepara la plantilla para que sus recorridos devuelvan las claves indicadas.
+     * Prepares the template so that its iterations return the given keys.
      *
-     * @param redisTemplate plantilla simulada con Mockito
-     * @param keys claves que devuelve SCAN
+     * @param redisTemplate template mocked with Mockito
+     * @param keys keys returned by SCAN
      */
     @SuppressWarnings("unchecked")
     public FakeScan(RedisTemplate<?, ?> redisTemplate, String... keys) {
@@ -77,27 +76,27 @@ public final class FakeScan {
     }
 
     /**
-     * Patrón con el que se hizo el último recorrido.
+     * Pattern used in the last iteration.
      *
-     * @return patrón, o {@code null} si no hubo recorrido
+     * @return pattern, or {@code null} if there was no iteration
      */
     public String pattern() {
         return pattern;
     }
 
     /**
-     * Claves borradas.
+     * Deleted keys.
      *
-     * @return claves en el orden en que se borraron
+     * @return keys in the order they were deleted
      */
     public List<String> unlinked() {
         return unlinked;
     }
 
     /**
-     * Tamaño de cada orden de borrado.
+     * Size of each delete command.
      *
-     * @return número de claves de cada lote
+     * @return number of keys in each batch
      */
     public List<Integer> batchSizes() {
         return batchSizes;

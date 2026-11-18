@@ -18,41 +18,41 @@ import java.lang.annotation.Target;
 public @interface CoalescePut {
 
     /**
-     * Prefijo para la clave de caché.
+     * Prefix for the cache key.
      *
-     * @return cadena
+     * @return string
      */
     String value() default "";
 
     /**
-     * Expresión SpEL para generar la clave dinámica.
+     * SpEL expression used to generate the dynamic key.
      *
-     * @return cadena
+     * @return string
      */
     String key() default "";
 
     /**
-     * Tiempo de vida en segundos. Cero o un valor negativo significan que la entrada no caduca.
+     * Time to live in seconds. Zero or a negative value means the entry does not expire.
      *
-     * <p>Si no se indica, se usa el TTL configurado para esta caché en
-     * {@code @EnableRedisLibrary(ttlEntries = ...)}; si la caché no tiene uno,
-     * {@value io.github.programming0026.juniverse.redis.util.CacheDefaults#FALLBACK_TTL_SECONDS} segundos.</p>
+     * <p>If not set, the TTL configured for this cache in
+     * {@code @EnableRedisLibrary(ttlEntries = ...)} is used; if the cache has none,
+     * {@value io.github.programming0026.juniverse.redis.util.CacheDefaults#FALLBACK_TTL_SECONDS} seconds.</p>
      *
-     * @return segundos
+     * @return seconds
      */
     long ttl() default CacheDefaults.CONFIGURED_TTL;
 
     /**
-     * Condición SpEL para ejecutar el cacheo.
+     * SpEL condition that must hold for the value to be cached.
      *
-     * @return cadena
+     * @return string
      */
     String condition() default "";
 
     /**
-     * Condición SpEL para decidir si cachear el resultado.
+     * SpEL condition that vetoes caching the result.
      *
-     * @return cadena
+     * @return string
      */
     String unless() default "";
 }

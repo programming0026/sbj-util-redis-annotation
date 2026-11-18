@@ -12,37 +12,37 @@ import java.util.function.Supplier;
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
- * Pruebas unitarias de Validator.
+ * Unit tests for Validator.
  *
  * @author Java Universe
  */
-public class ValidatorTest {
+ class ValidatorTest {
 
     /**
-     * Validar servidores con lista nula debe lanzar una excepción.
+     * Validating servers with a null list must throw an exception.
      */
     @Test
-    public void validateHosts_WithNullList_ShouldThrowException() {
+     void validateHosts_WithNullList_ShouldThrowException() {
         IllegalArgumentException exception = assertThrows(IllegalArgumentException.class,
                 () -> Validator.validateHosts(null));
         assertEquals("At least one host must be configured", exception.getMessage());
     }
 
     /**
-     * Validar servidores con lista vacía debe lanzar una excepción.
+     * Validating servers with an empty list must throw an exception.
      */
     @Test
-    public void validateHosts_WithEmptyList_ShouldThrowException() {
+     void validateHosts_WithEmptyList_ShouldThrowException() {
         IllegalArgumentException exception = assertThrows(IllegalArgumentException.class,
                 () -> Validator.validateHosts(Collections.emptyList()));
         assertEquals("At least one host must be configured", exception.getMessage());
     }
 
     /**
-     * Validar servidores con nombre de host nulo debe lanzar una excepción.
+     * Validating servers with a null host name must throw an exception.
      */
     @Test
-    public void validateHosts_WithNullHostname_ShouldThrowException() {
+     void validateHosts_WithNullHostname_ShouldThrowException() {
         List<HostsDto> hosts = Arrays.asList(
                 HostsDto.builder().hostName(null).port(6379).build()
         );
@@ -53,10 +53,10 @@ public class ValidatorTest {
     }
 
     /**
-     * Validar servidores con nombre de host vacío debe lanzar una excepción.
+     * Validating servers with an empty host name must throw an exception.
      */
     @Test
-    public void validateHosts_WithEmptyHostname_ShouldThrowException() {
+     void validateHosts_WithEmptyHostname_ShouldThrowException() {
         List<HostsDto> hosts = Arrays.asList(
                 HostsDto.builder().hostName("").port(6379).build()
         );
@@ -67,10 +67,10 @@ public class ValidatorTest {
     }
 
     /**
-     * Validar servidores con nombre de host en blanco debe lanzar una excepción.
+     * Validating servers with a blank host name must throw an exception.
      */
     @Test
-    public void validateHosts_WithWhitespaceHostname_ShouldThrowException() {
+     void validateHosts_WithWhitespaceHostname_ShouldThrowException() {
         List<HostsDto> hosts = Arrays.asList(
                 HostsDto.builder().hostName("   ").port(6379).build()
         );
@@ -81,10 +81,10 @@ public class ValidatorTest {
     }
 
     /**
-     * Validar servidores con puerto por debajo del rango debe lanzar una excepción.
+     * Validating servers with a port below the range must throw an exception.
      */
     @Test
-    public void validateHosts_WithPortBelowRange_ShouldThrowException() {
+     void validateHosts_WithPortBelowRange_ShouldThrowException() {
         List<HostsDto> hosts = Arrays.asList(
                 HostsDto.builder().hostName("localhost").port(0).build()
         );
@@ -95,10 +95,10 @@ public class ValidatorTest {
     }
 
     /**
-     * Validar servidores con puerto por encima del rango debe lanzar una excepción.
+     * Validating servers with a port above the range must throw an exception.
      */
     @Test
-    public void validateHosts_WithPortAboveRange_ShouldThrowException() {
+     void validateHosts_WithPortAboveRange_ShouldThrowException() {
         List<HostsDto> hosts = Arrays.asList(
                 HostsDto.builder().hostName("localhost").port(65536).build()
         );
@@ -109,10 +109,10 @@ public class ValidatorTest {
     }
 
     /**
-     * Validar servidores con un host válido no debe lanzar excepción.
+     * Validating servers with a valid host must not throw an exception.
      */
     @Test
-    public void validateHosts_WithValidHost_ShouldNotThrowException() {
+     void validateHosts_WithValidHost_ShouldNotThrowException() {
         List<HostsDto> hosts = Arrays.asList(
                 HostsDto.builder().hostName("localhost").port(6379).build()
         );
@@ -121,78 +121,78 @@ public class ValidatorTest {
     }
 
     /**
-     * Validar tiempos con espera de conexión nula debe lanzar una excepción.
+     * Validating timeouts with a null connection timeout must throw an exception.
      */
     @Test
-    public void validateTimeout_WithNullConnectionTimeout_ShouldThrowException() {
+     void validateTimeout_WithNullConnectionTimeout_ShouldThrowException() {
         NullPointerException exception = assertThrows(NullPointerException.class,
                 () -> Validator.validateTimeout(null, 5000L));
         assertEquals("Connection timeout cannot be null", exception.getMessage());
     }
 
     /**
-     * Validar tiempos con espera de lectura nula debe lanzar una excepción.
+     * Validating timeouts with a null read timeout must throw an exception.
      */
     @Test
-    public void validateTimeout_WithNullReadTimeout_ShouldThrowException() {
+     void validateTimeout_WithNullReadTimeout_ShouldThrowException() {
         NullPointerException exception = assertThrows(NullPointerException.class,
                 () -> Validator.validateTimeout(5000L, null));
         assertEquals("Read timeout cannot be null", exception.getMessage());
     }
 
     /**
-     * Validar tiempos con espera de conexión negativa debe lanzar una excepción.
+     * Validating timeouts with a negative connection timeout must throw an exception.
      */
     @Test
-    public void validateTimeout_WithNegativeConnectionTimeout_ShouldThrowException() {
+     void validateTimeout_WithNegativeConnectionTimeout_ShouldThrowException() {
         IllegalArgumentException exception = assertThrows(IllegalArgumentException.class,
                 () -> Validator.validateTimeout(-1L, 5000L));
         assertEquals("Invalid connectionTimeout -1.", exception.getMessage());
     }
 
     /**
-     * Validar tiempos con espera de conexión cero debe lanzar una excepción.
+     * Validating timeouts with a zero connection timeout must throw an exception.
      */
     @Test
-    public void validateTimeout_WithZeroConnectionTimeout_ShouldThrowException() {
+     void validateTimeout_WithZeroConnectionTimeout_ShouldThrowException() {
         IllegalArgumentException exception = assertThrows(IllegalArgumentException.class,
                 () -> Validator.validateTimeout(0L, 5000L));
         assertEquals("Invalid connectionTimeout 0.", exception.getMessage());
     }
 
     /**
-     * Validar tiempos con espera de lectura negativa debe lanzar una excepción.
+     * Validating timeouts with a negative read timeout must throw an exception.
      */
     @Test
-    public void validateTimeout_WithNegativeReadTimeout_ShouldThrowException() {
+     void validateTimeout_WithNegativeReadTimeout_ShouldThrowException() {
         IllegalArgumentException exception = assertThrows(IllegalArgumentException.class,
                 () -> Validator.validateTimeout(5000L, -1L));
         assertEquals("Invalid readTimeout -1.", exception.getMessage());
     }
 
     /**
-     * Validar tiempos con espera de lectura cero debe lanzar una excepción.
+     * Validating timeouts with a zero read timeout must throw an exception.
      */
     @Test
-    public void validateTimeout_WithZeroReadTimeout_ShouldThrowException() {
+     void validateTimeout_WithZeroReadTimeout_ShouldThrowException() {
         IllegalArgumentException exception = assertThrows(IllegalArgumentException.class,
                 () -> Validator.validateTimeout(5000L, 0L));
         assertEquals("Invalid readTimeout 0.", exception.getMessage());
     }
 
     /**
-     * Validar tiempos válidos no debe lanzar excepción.
+     * Validating valid timeouts must not throw an exception.
      */
     @Test
-    public void validateTimeout_WithValidTimeouts_ShouldNotThrowException() {
+     void validateTimeout_WithValidTimeouts_ShouldNotThrowException() {
         assertDoesNotThrow(() -> Validator.validateTimeout(5000L, 3000L));
     }
 
     /**
-     * Validar el modo standalone con varios servidores debe lanzar una excepción.
+     * Validating standalone mode with several servers must throw an exception.
      */
     @Test
-    public void validateStandaloneHosts_WithMultipleHosts_ShouldThrowException() {
+     void validateStandaloneHosts_WithMultipleHosts_ShouldThrowException() {
         List<HostsDto> hosts = Arrays.asList(
                 HostsDto.builder().hostName("localhost").port(6379).build(),
                 HostsDto.builder().hostName("localhost").port(6380).build()
@@ -204,10 +204,10 @@ public class ValidatorTest {
     }
 
     /**
-     * Validar el modo standalone con un servidor no debe lanzar excepción.
+     * Validating standalone mode with one server must not throw an exception.
      */
     @Test
-    public void validateStandaloneHosts_WithSingleHost_ShouldNotThrowException() {
+     void validateStandaloneHosts_WithSingleHost_ShouldNotThrowException() {
         List<HostsDto> hosts = Arrays.asList(
                 HostsDto.builder().hostName("localhost").port(6379).build()
         );
@@ -216,10 +216,10 @@ public class ValidatorTest {
     }
 
     /**
-     * Validar el modo clúster con un solo servidor es válido: basta un nodo para descubrir el resto.
+     * Validating cluster mode with a single server is valid: one node is enough to discover the rest.
      */
     @Test
-    public void validateClusterHosts_WithSingleHost_ShouldNotThrowException() {
+     void validateClusterHosts_WithSingleHost_ShouldNotThrowException() {
         List<HostsDto> hosts = Arrays.asList(
                 HostsDto.builder().hostName("localhost").port(6379).build()
         );
@@ -228,10 +228,10 @@ public class ValidatorTest {
     }
 
     /**
-     * Validar el modo clúster con varios servidores no debe lanzar excepción.
+     * Validating cluster mode with several servers must not throw an exception.
      */
     @Test
-    public void validateClusterHosts_WithMultipleHosts_ShouldNotThrowException() {
+     void validateClusterHosts_WithMultipleHosts_ShouldNotThrowException() {
         List<HostsDto> hosts = Arrays.asList(
                 HostsDto.builder().hostName("localhost").port(6379).build(),
                 HostsDto.builder().hostName("localhost").port(6380).build()
@@ -241,10 +241,10 @@ public class ValidatorTest {
     }
 
     /**
-     * Validar sentinel con maestro nulo debe lanzar una excepción.
+     * Validating sentinel with a null master must throw an exception.
      */
     @Test
-    public void validateSentinelHosts_WithNullSentinelMaster_ShouldThrowException() {
+     void validateSentinelHosts_WithNullSentinelMaster_ShouldThrowException() {
         List<HostsDto> hosts = Arrays.asList(
                 HostsDto.builder().hostName("localhost").port(26379).build(),
                 HostsDto.builder().hostName("localhost").port(26380).build()
@@ -257,10 +257,10 @@ public class ValidatorTest {
     }
 
     /**
-     * Validar sentinel con maestro vacío debe lanzar una excepción.
+     * Validating sentinel with an empty master must throw an exception.
      */
     @Test
-    public void validateSentinelHosts_WithEmptySentinelMaster_ShouldThrowException() {
+     void validateSentinelHosts_WithEmptySentinelMaster_ShouldThrowException() {
         List<HostsDto> hosts = Arrays.asList(
                 HostsDto.builder().hostName("localhost").port(26379).build(),
                 HostsDto.builder().hostName("localhost").port(26380).build()
@@ -273,10 +273,10 @@ public class ValidatorTest {
     }
 
     /**
-     * Validar sentinel con un solo servidor es válido.
+     * Validating sentinel with a single server is valid.
      */
     @Test
-    public void validateSentinelHosts_WithSingleHost_ShouldNotThrowException() {
+     void validateSentinelHosts_WithSingleHost_ShouldNotThrowException() {
         List<HostsDto> hosts = Arrays.asList(
                 HostsDto.builder().hostName("localhost").port(26379).build()
         );
@@ -285,10 +285,10 @@ public class ValidatorTest {
     }
 
     /**
-     * Validar sentinel con una configuración válida no debe lanzar excepción.
+     * Validating sentinel with a valid configuration must not throw an exception.
      */
     @Test
-    public void validateSentinelHosts_WithValidConfig_ShouldNotThrowException() {
+     void validateSentinelHosts_WithValidConfig_ShouldNotThrowException() {
         List<HostsDto> hosts = Arrays.asList(
                 HostsDto.builder().hostName("localhost").port(26379).build(),
                 HostsDto.builder().hostName("localhost").port(26380).build()
@@ -298,10 +298,10 @@ public class ValidatorTest {
     }
 
     /**
-     * Validar campos obligatorios con nombre de caché nulo debe lanzar una excepción.
+     * Validating required fields with a null cache name must throw an exception.
      */
     @Test
-    public void validateRequiredFields_WithNullCacheName_ShouldThrowException() {
+     void validateRequiredFields_WithNullCacheName_ShouldThrowException() {
         Supplier<String> loader = () -> "value";
 
         IllegalStateException exception = assertThrows(IllegalStateException.class,
@@ -310,10 +310,10 @@ public class ValidatorTest {
     }
 
     /**
-     * Validar campos obligatorios con nombre de caché vacío debe lanzar una excepción.
+     * Validating required fields with an empty cache name must throw an exception.
      */
     @Test
-    public void validateRequiredFields_WithEmptyCacheName_ShouldThrowException() {
+     void validateRequiredFields_WithEmptyCacheName_ShouldThrowException() {
         Supplier<String> loader = () -> "value";
 
         IllegalStateException exception = assertThrows(IllegalStateException.class,
@@ -322,10 +322,10 @@ public class ValidatorTest {
     }
 
     /**
-     * Validar campos obligatorios con clave nula debe lanzar una excepción.
+     * Validating required fields with a null key must throw an exception.
      */
     @Test
-    public void validateRequiredFields_WithNullKey_ShouldThrowException() {
+     void validateRequiredFields_WithNullKey_ShouldThrowException() {
         Supplier<String> loader = () -> "value";
 
         IllegalStateException exception = assertThrows(IllegalStateException.class,
@@ -334,10 +334,10 @@ public class ValidatorTest {
     }
 
     /**
-     * Validar campos obligatorios con clave vacía debe lanzar una excepción.
+     * Validating required fields with an empty key must throw an exception.
      */
     @Test
-    public void validateRequiredFields_WithEmptyKey_ShouldThrowException() {
+     void validateRequiredFields_WithEmptyKey_ShouldThrowException() {
         Supplier<String> loader = () -> "value";
 
         IllegalStateException exception = assertThrows(IllegalStateException.class,
@@ -346,88 +346,88 @@ public class ValidatorTest {
     }
 
     /**
-     * Validar campos obligatorios con cargador nulo debe lanzar una excepción.
+     * Validating required fields with a null loader must throw an exception.
      */
     @Test
-    public void validateRequiredFields_WithNullLoader_ShouldThrowException() {
+     void validateRequiredFields_WithNullLoader_ShouldThrowException() {
         IllegalStateException exception = assertThrows(IllegalStateException.class,
                 () -> Validator.validateRequiredFields("cache", "key", null));
         assertEquals("loader is required", exception.getMessage());
     }
 
     /**
-     * Validar campos obligatorios con parámetros válidos no debe lanzar excepción.
+     * Validating required fields with valid parameters must not throw an exception.
      */
     @Test
-    public void validateRequiredFields_WithValidParams_ShouldNotThrowException() {
+     void validateRequiredFields_WithValidParams_ShouldNotThrowException() {
         Supplier<String> loader = () -> "value";
 
         assertDoesNotThrow(() -> Validator.validateRequiredFields("cache", "key", loader));
     }
 
     /**
-     * Validar TTL con nombre de caché nulo debe lanzar una excepción.
+     * Validating TTL with a null cache name must throw an exception.
      */
     @Test
-    public void validateTTL_WithNullCacheName_ShouldThrowException() {
+     void validateTTL_WithNullCacheName_ShouldThrowException() {
         IllegalStateException exception = assertThrows(IllegalStateException.class,
                 () -> Validator.validateTTL(null, 60L));
         assertEquals("cacheName is required", exception.getMessage());
     }
 
     /**
-     * Validar TTL con nombre de caché vacío debe lanzar una excepción.
+     * Validating TTL with an empty cache name must throw an exception.
      */
     @Test
-    public void validateTTL_WithEmptyCacheName_ShouldThrowException() {
+     void validateTTL_WithEmptyCacheName_ShouldThrowException() {
         IllegalStateException exception = assertThrows(IllegalStateException.class,
                 () -> Validator.validateTTL("", 60L));
         assertEquals("cacheName is required", exception.getMessage());
     }
 
     /**
-     * Validar TTL con TTL nulo debe lanzar una excepción.
+     * Validating TTL with a null TTL must throw an exception.
      */
     @Test
-    public void validateTTL_WithNullTtl_ShouldThrowException() {
+     void validateTTL_WithNullTtl_ShouldThrowException() {
         IllegalArgumentException exception = assertThrows(IllegalArgumentException.class,
                 () -> Validator.validateTTL("cache", null));
         assertEquals("ttl must be positive", exception.getMessage());
     }
 
     /**
-     * Validar TTL con TTL cero debe lanzar una excepción.
+     * Validating TTL with a zero TTL must throw an exception.
      */
     @Test
-    public void validateTTL_WithZeroTtl_ShouldThrowException() {
+     void validateTTL_WithZeroTtl_ShouldThrowException() {
         IllegalArgumentException exception = assertThrows(IllegalArgumentException.class,
                 () -> Validator.validateTTL("cache", 0L));
         assertEquals("ttl must be positive", exception.getMessage());
     }
 
     /**
-     * Validar TTL con TTL negativo debe lanzar una excepción.
+     * Validating TTL with a negative TTL must throw an exception.
      */
     @Test
-    public void validateTTL_WithNegativeTtl_ShouldThrowException() {
+     void validateTTL_WithNegativeTtl_ShouldThrowException() {
         IllegalArgumentException exception = assertThrows(IllegalArgumentException.class,
                 () -> Validator.validateTTL("cache", -1L));
         assertEquals("ttl must be positive", exception.getMessage());
     }
 
     /**
-     * Validar TTL con parámetros válidos no debe lanzar excepción.
+     * Validating TTL with valid parameters must not throw an exception.
      */
     @Test
-    public void validateTTL_WithValidParams_ShouldNotThrowException() {
+     void validateTTL_WithValidParams_ShouldNotThrowException() {
         assertDoesNotThrow(() -> Validator.validateTTL("cache", 60L));
     }
 
     /**
-     * Validar la operación de caché con TTL nulo debe lanzar una excepción.
+     * Validating the cache operation with a null TTL must throw an exception.
      */
     @Test
-    public void validateCacheable_WithNullTtl_ShouldThrowException() {
+     void validateCacheable_WithNullTtl_ShouldThrowException() {
         Supplier<String> loader = () -> "value";
 
         IllegalStateException exception = assertThrows(IllegalStateException.class,
@@ -436,10 +436,10 @@ public class ValidatorTest {
     }
 
     /**
-     * Validar la operación de caché con TTL negativo debe lanzar una excepción.
+     * Validating the cache operation with a negative TTL must throw an exception.
      */
     @Test
-    public void validateCacheable_WithNegativeTtl_ShouldThrowException() {
+     void validateCacheable_WithNegativeTtl_ShouldThrowException() {
         Supplier<String> loader = () -> "value";
 
         IllegalArgumentException exception = assertThrows(IllegalArgumentException.class,
@@ -448,10 +448,10 @@ public class ValidatorTest {
     }
 
     /**
-     * Validar la operación de caché con TTL cero debe lanzar una excepción.
+     * Validating the cache operation with a zero TTL must throw an exception.
      */
     @Test
-    public void validateCacheable_WithZeroTtl_ShouldThrowException() {
+     void validateCacheable_WithZeroTtl_ShouldThrowException() {
         Supplier<String> loader = () -> "value";
 
         IllegalArgumentException exception = assertThrows(IllegalArgumentException.class,
@@ -460,10 +460,10 @@ public class ValidatorTest {
     }
 
     /**
-     * Validar la operación de caché con nombre que contiene dos puntos debe lanzar una excepción.
+     * Validating the cache operation with a name containing a colon must throw an exception.
      */
     @Test
-    public void validateCacheable_WithCacheNameContainingColon_ShouldThrowException() {
+     void validateCacheable_WithCacheNameContainingColon_ShouldThrowException() {
         Supplier<String> loader = () -> "value";
 
         IllegalArgumentException exception = assertThrows(IllegalArgumentException.class,
@@ -472,10 +472,10 @@ public class ValidatorTest {
     }
 
     /**
-     * Validar la operación de caché con nombre que contiene asterisco debe lanzar una excepción.
+     * Validating the cache operation with a name containing an asterisk must throw an exception.
      */
     @Test
-    public void validateCacheable_WithCacheNameContainingAsterisk_ShouldThrowException() {
+     void validateCacheable_WithCacheNameContainingAsterisk_ShouldThrowException() {
         Supplier<String> loader = () -> "value";
 
         IllegalArgumentException exception = assertThrows(IllegalArgumentException.class,
@@ -484,10 +484,10 @@ public class ValidatorTest {
     }
 
     /**
-     * Validar la operación de caché con clave que contiene asterisco debe lanzar una excepción.
+     * Validating the cache operation with a key containing an asterisk must throw an exception.
      */
     @Test
-    public void validateCacheable_WithKeyContainingAsterisk_ShouldThrowException() {
+     void validateCacheable_WithKeyContainingAsterisk_ShouldThrowException() {
         Supplier<String> loader = () -> "value";
 
         IllegalArgumentException exception = assertThrows(IllegalArgumentException.class,
@@ -496,10 +496,10 @@ public class ValidatorTest {
     }
 
     /**
-     * Validar la operación de caché con parámetros válidos no debe lanzar excepción.
+     * Validating the cache operation with valid parameters must not throw an exception.
      */
     @Test
-    public void validateCacheable_WithValidParams_ShouldNotThrowException() {
+     void validateCacheable_WithValidParams_ShouldNotThrowException() {
         Supplier<String> loader = () -> "value";
 
         assertDoesNotThrow(() -> Validator.validateCacheable("cache", "key", loader,
@@ -507,192 +507,192 @@ public class ValidatorTest {
     }
 
     /**
-     * Validar invalidación con nombre de caché nulo debe lanzar una excepción.
+     * Validating eviction with a null cache name must throw an exception.
      */
     @Test
-    public void validateCacheEvict_WithNullCacheName_ShouldThrowException() {
+     void validateCacheEvict_WithNullCacheName_ShouldThrowException() {
         IllegalStateException exception = assertThrows(IllegalStateException.class,
                 () -> Validator.validateCacheEvict(null, "key"));
         assertEquals("cacheName is required", exception.getMessage());
     }
 
     /**
-     * Validar invalidación con nombre de caché vacío debe lanzar una excepción.
+     * Validating eviction with an empty cache name must throw an exception.
      */
     @Test
-    public void validateCacheEvict_WithEmptyCacheName_ShouldThrowException() {
+     void validateCacheEvict_WithEmptyCacheName_ShouldThrowException() {
         IllegalStateException exception = assertThrows(IllegalStateException.class,
                 () -> Validator.validateCacheEvict("", "key"));
         assertEquals("cacheName is required", exception.getMessage());
     }
 
     /**
-     * Validar invalidación con clave nula debe lanzar una excepción.
+     * Validating eviction with a null key must throw an exception.
      */
     @Test
-    public void validateCacheEvict_WithNullKey_ShouldThrowException() {
+     void validateCacheEvict_WithNullKey_ShouldThrowException() {
         IllegalStateException exception = assertThrows(IllegalStateException.class,
                 () -> Validator.validateCacheEvict("cache", null));
         assertEquals("key is required", exception.getMessage());
     }
 
     /**
-     * Validar invalidación con clave vacía debe lanzar una excepción.
+     * Validating eviction with an empty key must throw an exception.
      */
     @Test
-    public void validateCacheEvict_WithEmptyKey_ShouldThrowException() {
+     void validateCacheEvict_WithEmptyKey_ShouldThrowException() {
         IllegalStateException exception = assertThrows(IllegalStateException.class,
                 () -> Validator.validateCacheEvict("cache", ""));
         assertEquals("key is required", exception.getMessage());
     }
 
     /**
-     * Validar invalidación con nombre que contiene dos puntos debe lanzar una excepción.
+     * Validating eviction with a name containing a colon must throw an exception.
      */
     @Test
-    public void validateCacheEvict_WithCacheNameContainingColon_ShouldThrowException() {
+     void validateCacheEvict_WithCacheNameContainingColon_ShouldThrowException() {
         IllegalArgumentException exception = assertThrows(IllegalArgumentException.class,
                 () -> Validator.validateCacheEvict("cache:name", "key"));
         assertEquals("cacheName cannot contain ':' or '*' characters", exception.getMessage());
     }
 
     /**
-     * Validar invalidación con nombre que contiene asterisco debe lanzar una excepción.
+     * Validating eviction with a name containing an asterisk must throw an exception.
      */
     @Test
-    public void validateCacheEvict_WithCacheNameContainingAsterisk_ShouldThrowException() {
+     void validateCacheEvict_WithCacheNameContainingAsterisk_ShouldThrowException() {
         IllegalArgumentException exception = assertThrows(IllegalArgumentException.class,
                 () -> Validator.validateCacheEvict("cache*name", "key"));
         assertEquals("cacheName cannot contain ':' or '*' characters", exception.getMessage());
     }
 
     /**
-     * Validar invalidación con clave que contiene asterisco debe lanzar una excepción.
+     * Validating eviction with a key containing an asterisk must throw an exception.
      */
     @Test
-    public void validateCacheEvict_WithKeyContainingAsterisk_ShouldThrowException() {
+     void validateCacheEvict_WithKeyContainingAsterisk_ShouldThrowException() {
         IllegalArgumentException exception = assertThrows(IllegalArgumentException.class,
                 () -> Validator.validateCacheEvict("cache", "key*value"));
         assertEquals("key cannot contain '*' character", exception.getMessage());
     }
 
     /**
-     * Validar invalidación con parámetros válidos no debe lanzar excepción.
+     * Validating eviction with valid parameters must not throw an exception.
      */
     @Test
-    public void validateCacheEvict_WithValidParams_ShouldNotThrowException() {
+     void validateCacheEvict_WithValidParams_ShouldNotThrowException() {
         assertDoesNotThrow(() -> Validator.validateCacheEvict("cache", "key"));
     }
 
     /**
-     * Validar invalidar todo con nombre de caché nulo debe lanzar una excepción.
+     * Validating evict-all with a null cache name must throw an exception.
      */
     @Test
-    public void validateCacheEvictAll_WithNullCacheName_ShouldThrowException() {
+     void validateCacheEvictAll_WithNullCacheName_ShouldThrowException() {
         IllegalStateException exception = assertThrows(IllegalStateException.class,
                 () -> Validator.validateCacheEvict(null));
         assertEquals("cacheName is required", exception.getMessage());
     }
 
     /**
-     * Validar invalidar todo con nombre de caché vacío debe lanzar una excepción.
+     * Validating evict-all with an empty cache name must throw an exception.
      */
     @Test
-    public void validateCacheEvictAll_WithEmptyCacheName_ShouldThrowException() {
+     void validateCacheEvictAll_WithEmptyCacheName_ShouldThrowException() {
         IllegalStateException exception = assertThrows(IllegalStateException.class,
                 () -> Validator.validateCacheEvict(""));
         assertEquals("cacheName is required", exception.getMessage());
     }
 
     /**
-     * Validar invalidar todo con nombre de caché en blanco debe lanzar una excepción.
+     * Validating evict-all with a blank cache name must throw an exception.
      */
     @Test
-    public void validateCacheEvictAll_WithWhitespaceCacheName_ShouldThrowException() {
+     void validateCacheEvictAll_WithWhitespaceCacheName_ShouldThrowException() {
         IllegalStateException exception = assertThrows(IllegalStateException.class,
                 () -> Validator.validateCacheEvict("   "));
         assertEquals("cacheName is required", exception.getMessage());
     }
 
     /**
-     * Validar invalidar todo con nombre que contiene dos puntos debe lanzar una excepción.
+     * Validating evict-all with a name containing a colon must throw an exception.
      */
     @Test
-    public void validateCacheEvictAll_WithCacheNameContainingColon_ShouldThrowException() {
+     void validateCacheEvictAll_WithCacheNameContainingColon_ShouldThrowException() {
         IllegalArgumentException exception = assertThrows(IllegalArgumentException.class,
                 () -> Validator.validateCacheEvict("cache:name"));
         assertEquals("cacheName cannot contain ':' or '*' characters", exception.getMessage());
     }
 
     /**
-     * Validar invalidar todo con nombre que contiene asterisco debe lanzar una excepción.
+     * Validating evict-all with a name containing an asterisk must throw an exception.
      */
     @Test
-    public void validateCacheEvictAll_WithCacheNameContainingAsterisk_ShouldThrowException() {
+     void validateCacheEvictAll_WithCacheNameContainingAsterisk_ShouldThrowException() {
         IllegalArgumentException exception = assertThrows(IllegalArgumentException.class,
                 () -> Validator.validateCacheEvict("cache*name"));
         assertEquals("cacheName cannot contain ':' or '*' characters", exception.getMessage());
     }
 
     /**
-     * Validar invalidar todo con un nombre válido no debe lanzar excepción.
+     * Validating evict-all with a valid name must not throw an exception.
      */
     @Test
-    public void validateCacheEvictAll_WithValidCacheName_ShouldNotThrowException() {
+     void validateCacheEvictAll_WithValidCacheName_ShouldNotThrowException() {
         assertDoesNotThrow(() -> Validator.validateCacheEvict("cache"));
     }
 
     /**
-     * Validar patrón nulo debe lanzar una excepción.
+     * Validating a null pattern must throw an exception.
      */
     @Test
-    public void validatePattern_WithNullPattern_ShouldThrowException() {
+     void validatePattern_WithNullPattern_ShouldThrowException() {
         IllegalArgumentException exception = assertThrows(IllegalArgumentException.class,
                 () -> Validator.validatePattern(null));
         assertEquals("pattern is required", exception.getMessage());
     }
 
     /**
-     * Validar patrón vacío debe lanzar una excepción.
+     * Validating an empty pattern must throw an exception.
      */
     @Test
-    public void validatePattern_WithEmptyPattern_ShouldThrowException() {
+     void validatePattern_WithEmptyPattern_ShouldThrowException() {
         IllegalArgumentException exception = assertThrows(IllegalArgumentException.class,
                 () -> Validator.validatePattern(""));
         assertEquals("pattern is required", exception.getMessage());
     }
 
     /**
-     * Validar patrón en blanco debe lanzar una excepción.
+     * Validating a blank pattern must throw an exception.
      */
     @Test
-    public void validatePattern_WithWhitespacePattern_ShouldThrowException() {
+     void validatePattern_WithWhitespacePattern_ShouldThrowException() {
         IllegalArgumentException exception = assertThrows(IllegalArgumentException.class,
                 () -> Validator.validatePattern("   "));
         assertEquals("pattern is required", exception.getMessage());
     }
 
     /**
-     * Validar un patrón válido no debe lanzar excepción.
+     * Validating a valid pattern must not throw an exception.
      */
     @Test
-    public void validatePattern_WithValidPattern_ShouldNotThrowException() {
+     void validatePattern_WithValidPattern_ShouldNotThrowException() {
         assertDoesNotThrow(() -> Validator.validatePattern("cache:*"));
     }
 
     /**
-     * Los tiempos de coalescencia válidos no deben lanzar excepción.
+     * Valid coalescing timeouts must not throw an exception.
      */
     @Test
-    public void validateCoalesceTimeouts_WithValidValues_ShouldNotThrowException() {
+     void validateCoalesceTimeouts_WithValidValues_ShouldNotThrowException() {
         assertDoesNotThrow(() -> Validator.validateCoalesceTimeouts(30000L, 1L));
     }
 
     /**
-     * Los tiempos de coalescencia nulos deben rechazarse.
+     * Null coalescing timeouts must be rejected.
      */
     @Test
-    public void validateCoalesceTimeouts_WithNullValues_ShouldThrowException() {
+     void validateCoalesceTimeouts_WithNullValues_ShouldThrowException() {
         assertEquals("Coalesce lock timeout cannot be null",
                 assertThrows(NullPointerException.class,
                         () -> Validator.validateCoalesceTimeouts(null, 30000L)).getMessage());
@@ -702,10 +702,10 @@ public class ValidatorTest {
     }
 
     /**
-     * Los tiempos de coalescencia que no son positivos deben rechazarse.
+     * Non-positive coalescing timeouts must be rejected.
      */
     @Test
-    public void validateCoalesceTimeouts_WithNonPositiveValues_ShouldThrowException() {
+     void validateCoalesceTimeouts_WithNonPositiveValues_ShouldThrowException() {
         assertEquals("Invalid coalesceLockTimeout 0.",
                 assertThrows(IllegalArgumentException.class,
                         () -> Validator.validateCoalesceTimeouts(0L, 30000L)).getMessage());
@@ -715,10 +715,10 @@ public class ValidatorTest {
     }
 
     /**
-     * El prefijo de la aplicación admite texto corriente y rechaza espacios y caracteres de patrón.
+     * The application prefix accepts plain text and rejects spaces and pattern characters.
      */
     @Test
-    public void validateKeyPrefix_ShouldRejectWhitespaceAndGlobCharacters() {
+     void validateKeyPrefix_ShouldRejectWhitespaceAndGlobCharacters() {
         assertDoesNotThrow(() -> Validator.validateKeyPrefix(null));
         assertDoesNotThrow(() -> Validator.validateKeyPrefix(""));
         assertDoesNotThrow(() -> Validator.validateKeyPrefix("shop-pedidos:v2"));

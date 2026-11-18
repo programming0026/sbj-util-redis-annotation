@@ -3,8 +3,8 @@ package io.github.programming0026.juniverse.redis.integration;
 import org.springframework.data.redis.connection.lettuce.LettuceConnectionFactory;
 
 /**
- * Repite las pruebas de {@link CoalesceConcurrencyIT} contra Redis en modo clúster,
- * donde el bloqueo y los avisos por pub/sub pasan por el cliente de clúster.
+ * Repeats the tests of {@link CoalesceConcurrencyIT} against Redis in cluster mode,
+ * where the lock and the pub/sub notifications go through the cluster client.
  *
  * @author Java Universe
  */

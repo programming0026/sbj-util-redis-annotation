@@ -14,54 +14,54 @@ import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
- * Comprueba que una caída de Redis no tumba los métodos de negocio: la caché es un
- * acelerador, no un requisito.
- * Usa un contenedor propio para poder detenerlo sin afectar a las demás pruebas.
+ * Checks that a Redis outage does not bring down the business methods: the cache is an
+ * accelerator, not a requirement.
+ * It uses its own container so it can be stopped without affecting the other tests.
  *
  * @author Java Universe
  */
 class RedisUnavailableIT extends AbstractRedisIT {
 
-    /** Contenedor exclusivo de esta clase. */
+    /** Container exclusive to this class. */
     private GenericContainer<?> container;
 
-    /** Instancia conectada al contenedor exclusivo. */
+    /** Instance connected to the exclusive container. */
     private RedisInstance instance;
 
-    /** Servicio interceptado. */
+    /** Intercepted service. */
     private UserService service;
 
     /**
-     * Servicio con las tres anotaciones.
+     * Service with the three annotations.
      */
-    public static class UserService {
+     static class UserService {
 
         @CoalesceCacheable(value = "users", key = "#id")
-        public String find(String id) {
+         String find(String id) {
             return "user-" + id;
         }
 
         @CoalesceCacheable(value = "users", key = "#id", coalesce = false)
-        public String findWithoutCoalesce(String id) {
+         String findWithoutCoalesce(String id) {
             return "user-" + id;
         }
 
         @CoalescePut(value = "users", key = "#id")
-        public String save(String id) {
+         String save(String id) {
             return "saved-" + id;
         }
 
         @CoalesceEvict(value = "users", key = "#id")
-        public void delete(String id) {
-            // Solo se intercepta.
+         void delete(String id) {
+            // Only intercepted.
         }
     }
 
     /**
-     * Arranca Redis, crea la instancia y luego detiene Redis.
+     * Starts Redis, creates the instance and then stops Redis.
      */
     @BeforeEach
-    public void setUp() {
+     void setUp() {
         container = RedisContainers.newStandalone();
         container.start();
         instance = register(new RedisInstance(
@@ -73,10 +73,10 @@ class RedisUnavailableIT extends AbstractRedisIT {
     }
 
     /**
-     * Elimina el contenedor por si la prueba falló antes de detenerlo.
+     * Removes the container in case the test failed before stopping it.
      */
     @AfterEach
-    public void stopContainer() {
+     void stopContainer() {
         container.stop();
     }
 
@@ -86,22 +86,22 @@ class RedisUnavailableIT extends AbstractRedisIT {
     }
 
     @Test
-    public void cacheable_ShouldRunMethod_WhenRedisIsDown() {
+     void cacheable_ShouldRunMethod_WhenRedisIsDown() {
         assertEquals("user-1", service.find("1"));
     }
 
     @Test
-    public void cacheableWithoutCoalesce_ShouldRunMethod_WhenRedisIsDown() {
+     void cacheableWithoutCoalesce_ShouldRunMethod_WhenRedisIsDown() {
         assertEquals("user-2", service.findWithoutCoalesce("2"));
     }
 
     @Test
-    public void put_ShouldReturnResult_WhenRedisIsDown() {
+     void put_ShouldReturnResult_WhenRedisIsDown() {
         assertEquals("saved-3", service.save("3"));
     }
 
     @Test
-    public void evict_ShouldNotFail_WhenRedisIsDown() {
+     void evict_ShouldNotFail_WhenRedisIsDown() {
         assertDoesNotThrow(() -> service.delete("4"));
     }
 }

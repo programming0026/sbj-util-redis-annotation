@@ -26,53 +26,53 @@ import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
 /**
- * Pruebas de los aspectos aplicados a través de un proxy real.
- * Comprueban que los pointcuts enlazan la anotación con el parámetro del aviso,
- * algo que las pruebas que llaman directamente al aspecto no detectan.
+ * Tests of the aspects applied through a real proxy.
+ * They check that the pointcuts bind the annotation to the advice parameter,
+ * something that tests calling the aspect directly do not detect.
  *
  * @author Java Universe
  */
 class AspectProxyTest {
 
-    /** Administrador de caché simulado. */
+    /** Mocked cache manager. */
     private CoalesceCacheManager cacheManager;
 
-    /** Servicio interceptado por los aspectos. */
+    /** Service intercepted by the aspects. */
     private SampleService proxy;
 
     /**
-     * Servicio de ejemplo con las anotaciones de la librería.
+     * Sample service with the library's annotations.
      */
-    public static class SampleService {
+     static class SampleService {
 
         @CoalesceCacheable(value = "${cache.prefix}", key = "#id", ttl = 60, coalesce = false)
-        public String find(String id) {
+         String find(String id) {
             return "value-" + id;
         }
 
         @CoalesceCaching(put = @CoalescePut(value = "${cache.prefix}", key = "#id", ttl = 30))
-        public String update(String id) {
+         String update(String id) {
             return "updated-" + id;
         }
 
         @CoalescePut(value = "${cache.prefix}", key = "#id", ttl = 45)
-        public String save(String id) {
+         String save(String id) {
             return "saved-" + id;
         }
 
         @CoalesceEvict(value = "${cache.prefix}", key = "#id")
-        public void remove(String id) {
-            // Solo se intercepta.
+         void remove(String id) {
+            // Only intercepted.
         }
 
         @CoalesceCacheable(value = "${cache.prefix}", key = "#id", ttl = 60, coalesce = false)
         @CoalesceCacheable(value = "byName", key = "#id", ttl = 90, coalesce = false)
-        public String findTwice(String id) {
+         String findTwice(String id) {
             return "twice-" + id;
         }
 
         @CoalesceCacheable(value = "${cache.prefix}", key = "#id")
-        public List<String> findCoalesced(String id) throws IOException {
+         List<String> findCoalesced(String id) throws IOException {
             if ("io".equals(id)) {
                 throw new IOException("checked failure");
             }
@@ -84,51 +84,51 @@ class AspectProxyTest {
 
         @CoalesceCacheable(value = "a", key = "#id", condition = "#id == 'never'")
         @CoalesceCacheable(value = "b", key = "#id", condition = "#id == 'never'")
-        public String findWhenNoConditionApplies(String id) {
+         String findWhenNoConditionApplies(String id) {
             return "direct-" + id;
         }
 
         @CoalescePut(value = "${cache.prefix}", key = "#id")
-        public String saveWithDefaultTtl(String id) {
+         String saveWithDefaultTtl(String id) {
             return "saved-" + id;
         }
 
         @CoalescePut(value = "${cache.prefix}", key = "#id")
-        public String saveNothing(String id) {
+         String saveNothing(String id) {
             return null;
         }
 
         @CoalesceCaching(put = @CoalescePut(value = "${cache.prefix}", key = "#id"))
-        public String updateNothing(String id) {
+         String updateNothing(String id) {
             return null;
         }
 
         @CoalesceCacheable(value = "${cache.prefix}", key = "#a0", ttl = 60, coalesce = false)
-        public String findByPosition(String id) {
+         String findByPosition(String id) {
             return "pos-" + id;
         }
 
         @CoalesceEvict(value = {"${cache.prefix}", "byName"}, key = "#p0")
-        public void removeEverywhere(String id) {
-            // Solo se intercepta.
+         void removeEverywhere(String id) {
+            // Only intercepted.
         }
 
         @CoalescePut(value = "${cache.prefix}", key = "#id", condition = "null")
-        public String saveWithNullCondition(String id) {
+         String saveWithNullCondition(String id) {
             return "saved-" + id;
         }
 
         @CoalesceEvict(value = "${cache.prefix}", key = "#id", condition = "null")
-        public void removeWithNullCondition(String id) {
-            // Solo se intercepta.
+         void removeWithNullCondition(String id) {
+            // Only intercepted.
         }
     }
 
     /**
-     * Crea el proxy con los tres aspectos y un entorno con propiedades.
+     * Creates the proxy with the three aspects and an environment with properties.
      */
     @BeforeEach
-    public void setUp() {
+     void setUp() {
         cacheManager = mock(CoalesceCacheManager.class);
         when(cacheManager.lookup(anyString(), any())).thenReturn(CacheResult.miss(null));
         when(cacheManager.getOrLoad(anyString(), any(), anyLong(), anyBoolean(), any()))
@@ -137,10 +137,10 @@ class AspectProxyTest {
     }
 
     /**
-     * Crea el proxy con los tres aspectos.
+     * Creates the proxy with the three aspects.
      *
-     * @param configuredTtlSeconds TTL en segundos configurado por nombre de caché
-     * @return servicio interceptado
+     * @param configuredTtlSeconds TTL in seconds configured per cache name
+     * @return intercepted service
      */
     private SampleService proxyWith(Map<String, Long> configuredTtlSeconds) {
         MockEnvironment environment = new MockEnvironment().withProperty("cache.prefix", "users");
@@ -154,10 +154,10 @@ class AspectProxyTest {
     }
 
     /**
-     * {@code @CoalesceCacheable} debe interceptarse y guardar con el prefijo resuelto.
+     * {@code @CoalesceCacheable} must be intercepted and store with the resolved prefix.
      */
     @Test
-    public void cacheable_ShouldBeIntercepted() {
+     void cacheable_ShouldBeIntercepted() {
         when(cacheManager.lookup(eq("users:1"), any())).thenReturn(CacheResult.miss(null));
 
         assertEquals("value-1", proxy.find("1"));
@@ -166,30 +166,30 @@ class AspectProxyTest {
     }
 
     /**
-     * {@code @CoalesceCaching} debe interceptarse y aplicar sus guardados.
+     * {@code @CoalesceCaching} must be intercepted and apply its puts.
      */
     @Test
-    public void caching_ShouldBeIntercepted() {
+     void caching_ShouldBeIntercepted() {
         assertEquals("updated-2", proxy.update("2"));
 
         verify(cacheManager).put(eq("users:2"), eq("updated-2"), eq(30L), any());
     }
 
     /**
-     * {@code @CoalescePut} debe interceptarse y guardar el resultado.
+     * {@code @CoalescePut} must be intercepted and store the result.
      */
     @Test
-    public void put_ShouldBeIntercepted() {
+     void put_ShouldBeIntercepted() {
         assertEquals("saved-3", proxy.save("3"));
 
         verify(cacheManager).put(eq("users:3"), eq("saved-3"), eq(45L), any());
     }
 
     /**
-     * {@code @CoalesceEvict} debe interceptarse e invalidar la clave.
+     * {@code @CoalesceEvict} must be intercepted and evict the key.
      */
     @Test
-    public void evict_ShouldBeIntercepted() {
+     void evict_ShouldBeIntercepted() {
         proxy.remove("4");
 
         verify(cacheManager).evict("users:4");
@@ -197,11 +197,11 @@ class AspectProxyTest {
     }
 
     /**
-     * Dos {@code @CoalesceCacheable} en el mismo método deben interceptarse:
-     * sin valor en caché, el método se ejecuta y el resultado se guarda en las dos claves.
+     * Two {@code @CoalesceCacheable} on the same method must be intercepted:
+     * with no cached value, the method runs and the result is stored under both keys.
      */
     @Test
-    public void repeatedCacheable_ShouldBeInterceptedAndCacheUnderEveryKey() {
+     void repeatedCacheable_ShouldBeInterceptedAndCacheUnderEveryKey() {
         when(cacheManager.lookup(anyString(), any())).thenReturn(CacheResult.miss(null));
 
         assertEquals("twice-5", proxy.findTwice("5"));
@@ -211,10 +211,10 @@ class AspectProxyTest {
     }
 
     /**
-     * Con dos {@code @CoalesceCacheable}, basta un acierto en cualquiera de las claves.
+     * With two {@code @CoalesceCacheable}, a hit on either key is enough.
      */
     @Test
-    public void repeatedCacheable_ShouldReturnHitFromAnyKey() {
+     void repeatedCacheable_ShouldReturnHitFromAnyKey() {
         when(cacheManager.lookup(eq("users:6"), any())).thenReturn(CacheResult.miss(null));
         when(cacheManager.lookup(eq("byName:6"), any())).thenReturn(CacheResult.hit("in-cache"));
 
@@ -224,33 +224,33 @@ class AspectProxyTest {
     }
 
     /**
-     * Una condición de {@code @CoalescePut} que da null cuenta como falsa: no se guarda y no falla.
+     * A {@code @CoalescePut} condition evaluating to null counts as false: nothing is stored and it does not fail.
      */
     @Test
-    public void put_WithNullCondition_ShouldSkipCacheWithoutFailing() {
+     void put_WithNullCondition_ShouldSkipCacheWithoutFailing() {
         assertEquals("saved-7", proxy.saveWithNullCondition("7"));
 
         verify(cacheManager, never()).put(anyString(), any(), anyLong(), any());
     }
 
     /**
-     * Una condición de {@code @CoalesceEvict} que da null cuenta como falsa: no se invalida y no falla.
+     * A {@code @CoalesceEvict} condition evaluating to null counts as false: nothing is evicted and it does not fail.
      */
     @Test
-    public void evict_WithNullCondition_ShouldSkipEvictionWithoutFailing() {
+     void evict_WithNullCondition_ShouldSkipEvictionWithoutFailing() {
         proxy.removeWithNullCondition("8");
 
         verify(cacheManager, never()).evict(anyString());
     }
 
     /**
-     * Con coalescencia, el aspecto pasa al administrador el tipo de retorno genérico del método
-     * y el TTL de reserva cuando la anotación no indica ninguno.
+     * With coalescing, the aspect passes the manager the method's generic return type
+     * and the fallback TTL when the annotation specifies none.
      *
-     * @throws IOException nunca en esta prueba
+     * @throws IOException never in this test
      */
     @Test
-    public void coalescedCacheable_ShouldPassReturnTypeAndFallbackTtl() throws IOException {
+     void coalescedCacheable_ShouldPassReturnTypeAndFallbackTtl() throws IOException {
         assertEquals(List.of("9"), proxy.findCoalesced("9"));
 
         org.mockito.ArgumentCaptor<Type> type = org.mockito.ArgumentCaptor.forClass(Type.class);
@@ -261,13 +261,13 @@ class AspectProxyTest {
     }
 
     /**
-     * Con coalescencia no se lee la caché antes de {@code getOrLoad}, que ya la consulta:
-     * así cada petición hace una sola lectura.
+     * With coalescing the cache is not read before {@code getOrLoad}, which already queries it:
+     * so each request performs a single read.
      *
-     * @throws IOException nunca en esta prueba
+     * @throws IOException never in this test
      */
     @Test
-    public void coalescedCacheable_ShouldNotReadCacheBeforeGetOrLoad() throws IOException {
+     void coalescedCacheable_ShouldNotReadCacheBeforeGetOrLoad() throws IOException {
         proxy.findCoalesced("10");
 
         verify(cacheManager, never()).lookup(anyString(), any());
@@ -275,10 +275,10 @@ class AspectProxyTest {
     }
 
     /**
-     * Sin coalescencia, un acierto con valor nulo (nulo guardado) se devuelve sin ejecutar el método.
+     * Without coalescing, a hit with a null value (stored null) is returned without running the method.
      */
     @Test
-    public void cacheable_WithStoredNull_ShouldReturnNullWithoutLoading() {
+     void cacheable_WithStoredNull_ShouldReturnNullWithoutLoading() {
         when(cacheManager.lookup(eq("users:10"), any())).thenReturn(CacheResult.hit(null));
 
         assertNull(proxy.find("10"));
@@ -287,20 +287,20 @@ class AspectProxyTest {
     }
 
     /**
-     * Las expresiones admiten los argumentos por posición, que no dependen de compilar con -parameters.
+     * Expressions accept arguments by position, which does not depend on compiling with -parameters.
      */
     @Test
-    public void expressions_ShouldSupportPositionalArguments() {
+     void expressions_ShouldSupportPositionalArguments() {
         assertEquals("pos-15", proxy.findByPosition("15"));
 
         verify(cacheManager).put(eq("users:15"), eq("pos-15"), eq(60L), any());
     }
 
     /**
-     * Una invalidación con varios nombres de caché borra la clave en todos.
+     * An eviction with several cache names deletes the key in all of them.
      */
     @Test
-    public void evict_WithSeveralCacheNames_ShouldEvictTheKeyInEachOne() {
+     void evict_WithSeveralCacheNames_ShouldEvictTheKeyInEachOne() {
         proxy.removeEverywhere("16");
 
         verify(cacheManager).evict("users:16");
@@ -308,10 +308,10 @@ class AspectProxyTest {
     }
 
     /**
-     * Las excepciones del método llegan a quien llama con su tipo, sean comprobadas o no.
+     * Exceptions of the method reach the caller with their type, whether checked or not.
      */
     @Test
-    public void coalescedCacheable_ShouldPropagateOriginalExceptions() {
+     void coalescedCacheable_ShouldPropagateOriginalExceptions() {
         IOException checked = assertThrows(IOException.class, () -> proxy.findCoalesced("io"));
         IllegalStateException unchecked =
                 assertThrows(IllegalStateException.class, () -> proxy.findCoalesced("boom"));
@@ -321,12 +321,12 @@ class AspectProxyTest {
     }
 
     /**
-     * Sin {@code ttl} en la anotación se usa el configurado para esa caché.
+     * Without {@code ttl} in the annotation, the one configured for that cache is used.
      *
-     * @throws IOException nunca en esta prueba
+     * @throws IOException never in this test
      */
     @Test
-    public void annotationsWithoutTtl_ShouldUseTtlConfiguredForTheCache() throws IOException {
+     void annotationsWithoutTtl_ShouldUseTtlConfiguredForTheCache() throws IOException {
         SampleService configured = proxyWith(Map.of("users", 1800L));
 
         configured.findCoalesced("11");
@@ -339,10 +339,10 @@ class AspectProxyTest {
     }
 
     /**
-     * Si ninguna de las anotaciones repetidas cumple su condición, el método se ejecuta sin caché.
+     * If none of the repeated annotations meets its condition, the method runs without cache.
      */
     @Test
-    public void repeatedCacheable_WhenNoConditionApplies_ShouldSkipCache() {
+     void repeatedCacheable_WhenNoConditionApplies_ShouldSkipCache() {
         assertEquals("direct-12", proxy.findWhenNoConditionApplies("12"));
 
         verify(cacheManager, never()).lookup(anyString(), any());
@@ -350,10 +350,10 @@ class AspectProxyTest {
     }
 
     /**
-     * Un {@code @CoalescePut} cuyo método devuelve nulo invalida la entrada en lugar de guardar un nulo.
+     * A {@code @CoalescePut} whose method returns null evicts the entry instead of storing a null.
      */
     @Test
-    public void put_WithNullResult_ShouldEvictInsteadOfStoringNull() {
+     void put_WithNullResult_ShouldEvictInsteadOfStoringNull() {
         assertNull(proxy.saveNothing("13"));
         assertNull(proxy.updateNothing("14"));
 

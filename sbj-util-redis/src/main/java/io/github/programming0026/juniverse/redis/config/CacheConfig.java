@@ -66,14 +66,14 @@ import org.springframework.data.redis.listener.RedisMessageListenerContainer;
 
 
 /**
- * Configuración que activa {@link EnableRedisLibrary}.
+ * Configuration that activates {@link EnableRedisLibrary}.
  *
- * <p>Todos los beans son condicionales: si la aplicación define uno del mismo tipo (o, en el
- * caso de la plantilla, con el nombre {@code redisTemplate}), la librería usa ese y no crea el
- * suyo. La plantilla y la fábrica de conexiones llevan los mismos nombres que usa Spring Boot,
- * {@code redisTemplate} y {@code redisConnectionFactory}, para que su autoconfiguración de Redis
- * no cree otras. Esta clase se importa mediante {@link RedisLibraryImportSelector}, que es lo
- * que hace fiable el orden en que se evalúan las condiciones.</p>
+ * <p>All beans are conditional: if the application defines one of the same type (or, in the
+ * case of the template, with the name {@code redisTemplate}), the library uses that one and does not create
+ * its own. The template and the connection factory use the same names as Spring Boot,
+ * {@code redisTemplate} and {@code redisConnectionFactory}, so that its Redis autoconfiguration
+ * does not create others. This class is imported through {@link RedisLibraryImportSelector}, which is what
+ * makes the order in which the conditions are evaluated reliable.</p>
  *
  * @author Java Universe
  */
@@ -83,45 +83,45 @@ import org.springframework.data.redis.listener.RedisMessageListenerContainer;
 @Slf4j
 public class CacheConfig implements ImportAware, EnvironmentAware, BeanFactoryAware {
 
-    /** Cada cuánto se reintenta la suscripción a los avisos mientras Redis no responde. */
+    /** How often the subscription to notifications is retried while Redis is not responding. */
     private static final Duration SUBSCRIPTION_RETRY_INTERVAL = Duration.ofSeconds(5);
 
-    /** Cada cuánto se vuelve a consultar la topología del clúster aunque no haya errores. */
+    /** How often the cluster topology is queried again even when there are no errors. */
     private static final Duration CLUSTER_TOPOLOGY_REFRESH_PERIOD = Duration.ofSeconds(60);
 
     /**
-     * Atributo del nombre de usuario.
+     * User name attribute.
      */
     private static final String ATTRIBUTE_USER_NAME = "userName";
 
     /**
-     * Atributos tal como vienen en la anotación, sin resolver.
+     * Attributes as they come in the annotation, unresolved.
      */
     private AnnotationAttributes attributes;
 
     /**
-     * Atributos con los placeholders resueltos. Se calculan la primera vez que se usan.
+     * Attributes with placeholders resolved. Computed the first time they are used.
      */
     private AnnotationAttributes resolvedAttributes;
 
     /**
-     * Entorno con el que se resuelven los placeholders {@code ${...}}.
+     * Environment used to resolve the {@code ${...}} placeholders.
      */
     private Environment environment;
 
-    /** Cortacircuitos compartido por las tres formas de caché; se crea al primer uso. */
+    /** Circuit breaker shared by the three forms of cache; created on first use. */
     private RedisCircuitBreaker circuitBreaker;
 
-    /** Fábrica de beans, de la que se obtienen los paquetes base de la aplicación. */
+    /** Bean factory, from which the application's base packages are obtained. */
     private BeanFactory beanFactory;
 
-    /** Nombre de la clase que lleva {@link EnableRedisLibrary}. */
+    /** Name of the class carrying {@link EnableRedisLibrary}. */
     private String importingClassName;
 
     /**
-     * Recibe la fábrica de beans.
+     * Receives the bean factory.
      *
-     * @param beanFactory fábrica de beans de la aplicación
+     * @param beanFactory application bean factory
      */
     @Override
     public void setBeanFactory(BeanFactory beanFactory) {
@@ -129,10 +129,10 @@ public class CacheConfig implements ImportAware, EnvironmentAware, BeanFactoryAw
     }
 
     /**
-     * Prefijo de la aplicación para claves, bloqueos y canales: el de la anotación o,
-     * si está vacío, {@code spring.application.name}.
+     * Application prefix for keys, locks and channels: the one in the annotation or,
+     * if empty, {@code spring.application.name}.
      *
-     * @return prefijo sin separador final; vacío si no hay ninguno
+     * @return prefix without trailing separator; empty if there is none
      */
     private String keyPrefix() {
         String keyPrefix = attributes().getString("keyPrefix");
@@ -145,9 +145,9 @@ public class CacheConfig implements ImportAware, EnvironmentAware, BeanFactoryAw
     }
 
     /**
-     * Lee de la anotación el TTL de cada caché.
+     * Reads the TTL of each cache from the annotation.
      *
-     * @return TTL por nombre de caché
+     * @return TTL per cache name
      */
     private Map<String, Duration> configuredTtls() {
         Map<String, Duration> ttls = new HashMap<>();
@@ -156,7 +156,7 @@ public class CacheConfig implements ImportAware, EnvironmentAware, BeanFactoryAw
                 String name = entry.getString("name");
                 Long ttl = entry.getNumber("ttl");
                 Validator.validateTTL(name, ttl);
-                // Los mapas de atributos construidos a mano pueden no traer la unidad.
+                // Hand-built attribute maps may not include the unit.
                 TimeUnit unit = entry.containsKey("unit") ? entry.getEnum("unit") : TimeUnit.MINUTES;
                 ttls.put(name, Duration.of(ttl, unit.toChronoUnit()));
             }
@@ -165,9 +165,9 @@ public class CacheConfig implements ImportAware, EnvironmentAware, BeanFactoryAw
     }
 
     /**
-     * TTL de cada caché en segundos, que es la unidad de las anotaciones {@code @Coalesce*}.
+     * TTL of each cache in seconds, which is the unit of the {@code @Coalesce*} annotations.
      *
-     * @return segundos por nombre de caché; como mínimo uno
+     * @return seconds per cache name; at least one
      */
     private Map<String, Long> configuredTtlSeconds() {
         Map<String, Long> seconds = new HashMap<>();
@@ -176,10 +176,10 @@ public class CacheConfig implements ImportAware, EnvironmentAware, BeanFactoryAw
     }
 
     /**
-     * Paquetes cuyas clases se pueden reconstruir a partir del nombre guardado en Redis:
-     * los paquetes base de la aplicación más los indicados en la anotación.
+     * Packages whose classes may be rebuilt from the name stored in Redis:
+     * the application's base packages plus those given in the annotation.
      *
-     * @return paquetes de confianza
+     * @return trusted packages
      */
     private List<String> trustedPackages() {
         List<String> packages = new ArrayList<>(List.of(attributes().getStringArray("trustedPackages")));
@@ -192,13 +192,13 @@ public class CacheConfig implements ImportAware, EnvironmentAware, BeanFactoryAw
     }
 
     /**
-     * Crea la plantilla interna de la caché con coalescencia. Lee y escribe bytes sin
-     * transformar porque los valores los serializa {@link CacheValueCodec} con el tipo
-     * de cada método. No se registra como bean para no interferir con las plantillas
-     * de la aplicación.
+     * Creates the internal template of the coalescing cache. It reads and writes bytes without
+     * transformation because the values are serialized by {@link CacheValueCodec} with the type
+     * of each method. It is not registered as a bean so as not to interfere with the
+     * application's templates.
      *
-     * @param connectionFactory fábrica de conexiones
-     * @return plantilla de claves de texto y valores en bytes
+     * @param connectionFactory connection factory
+     * @return template with string keys and byte values
      */
     private RedisTemplate<String, byte[]> rawTemplate(RedisConnectionFactory connectionFactory) {
         RedisTemplate<String, byte[]> template = new RedisTemplate<>();
@@ -213,10 +213,10 @@ public class CacheConfig implements ImportAware, EnvironmentAware, BeanFactoryAw
     }
 
     /**
-     * Devuelve los atributos de {@link EnableRedisLibrary} con los placeholders resueltos.
-     * Si no hay entorno (por ejemplo, en pruebas unitarias), los valores se usan tal cual.
+     * Returns the {@link EnableRedisLibrary} attributes with placeholders resolved.
+     * If there is no environment (for example, in unit tests), the values are used as they are.
      *
-     * @return atributos resueltos
+     * @return resolved attributes
      */
     private AnnotationAttributes attributes() {
         if (resolvedAttributes == null) {
@@ -228,9 +228,9 @@ public class CacheConfig implements ImportAware, EnvironmentAware, BeanFactoryAw
     }
 
     /**
-     * Recibe el entorno de Spring.
+     * Receives the Spring environment.
      *
-     * @param environment entorno de la aplicación
+     * @param environment application environment
      */
     @Override
     public void setEnvironment(Environment environment) {
@@ -239,11 +239,11 @@ public class CacheConfig implements ImportAware, EnvironmentAware, BeanFactoryAw
     }
 
     /**
-     * Administrador de caché con coalescencia.
-     * 
-     * @param connectionFactory fábrica de conexiones
-     * @param redisMessageListener escucha de mensaje
-     * @return administrador CoalesceCacheManager
+     * Coalescing cache manager.
+     *
+     * @param connectionFactory connection factory
+     * @param redisMessageListener message listener
+     * @return CoalesceCacheManager
      */
     @Bean
     @ConditionalOnMissingBean
@@ -260,10 +260,10 @@ public class CacheConfig implements ImportAware, EnvironmentAware, BeanFactoryAw
     }
 
     /**
-     * Devuelve el cortacircuitos compartido: una avería de Redis detectada por cualquiera de las
-     * tres formas de caché evita la espera en las demás. Con {@code failOpen = false} no hay pausa.
+     * Returns the shared circuit breaker: a Redis failure detected by any of the
+     * three forms of cache avoids the wait in the others. With {@code failOpen = false} there is no pause.
      *
-     * @return cortacircuitos compartido
+     * @return shared circuit breaker
      */
     private synchronized RedisCircuitBreaker circuitBreaker() {
         if (circuitBreaker == null) {
@@ -275,11 +275,11 @@ public class CacheConfig implements ImportAware, EnvironmentAware, BeanFactoryAw
     }
 
     /**
-     * Devuelve los contadores de la caché: el bean {@link CacheMetrics} si existe (lo registra
-     * {@link CacheMetricsConfiguration} cuando Micrometer está disponible, o la aplicación),
-     * y si no, una implementación vacía.
+     * Returns the cache counters: the {@link CacheMetrics} bean if it exists (registered by
+     * {@link CacheMetricsConfiguration} when Micrometer is available, or by the application),
+     * and otherwise a no-op implementation.
      *
-     * @return contadores de la caché
+     * @return cache counters
      */
     private CacheMetrics cacheMetrics() {
         return beanFactory == null
@@ -288,15 +288,15 @@ public class CacheConfig implements ImportAware, EnvironmentAware, BeanFactoryAw
     }
 
     /**
-     * Lee de la anotación los ajustes de coalescencia.
+     * Reads the coalescing settings from the annotation.
      *
-     * @return ajustes de coalescencia
+     * @return coalescing settings
      */
     private CoalesceSettings coalesceSettings() {
         Long lockTimeout = attributes().getNumber("coalesceLockTimeout");
         Long waitTimeout = attributes().getNumber("coalesceWaitTimeout");
         Validator.validateCoalesceTimeouts(lockTimeout, waitTimeout);
-        // Los mapas de atributos construidos a mano pueden no traer la pausa.
+        // Hand-built attribute maps may not include the pause.
         long failurePause = attributes().containsKey("failurePause")
                 ? attributes().<Long>getNumber("failurePause")
                 : CoalesceSettings.defaults().failurePause().toMillis();
@@ -311,10 +311,10 @@ public class CacheConfig implements ImportAware, EnvironmentAware, BeanFactoryAw
     }
 
     /**
-     * Aspecto de coalescencia.
+     * Coalescing aspect.
      *
-     * @param cacheManager administrador de caché
-     * @return aspecto CoalesceCachingAspect
+     * @param cacheManager cache manager
+     * @return CoalesceCachingAspect
      */
     @Bean
     @ConditionalOnMissingBean
@@ -323,10 +323,10 @@ public class CacheConfig implements ImportAware, EnvironmentAware, BeanFactoryAw
     }
 
     /**
-     * Aspecto de guardado en caché.
+     * Cache put aspect.
      *
-     * @param cacheManager administrador de caché
-     * @return aspecto CoalescePutAspect
+     * @param cacheManager cache manager
+     * @return CoalescePutAspect
      */
     @Bean
     @ConditionalOnMissingBean
@@ -335,10 +335,10 @@ public class CacheConfig implements ImportAware, EnvironmentAware, BeanFactoryAw
     }
 
     /**
-     * Aspecto de invalidación de caché.
+     * Cache eviction aspect.
      *
-     * @param cacheManager administrador de caché
-     * @return aspecto CoalesceEvictAspect
+     * @param cacheManager cache manager
+     * @return CoalesceEvictAspect
      */
     @Bean
     @ConditionalOnMissingBean
@@ -347,17 +347,17 @@ public class CacheConfig implements ImportAware, EnvironmentAware, BeanFactoryAw
     }
 
     /**
-     * Escucha de mensajes de Redis.
-     * 
-     * @param connectionFactory fábrica de conexiones
-     * @return escucha de mensaje de Redis
+     * Redis message listener.
+     *
+     * @param connectionFactory connection factory
+     * @return Redis message listener container
      */
     @Bean
     @ConditionalOnMissingBean(RedisMessageListenerContainer.class)
     public RedisMessageListenerContainer redisMessageListenerContainer(
             RedisConnectionFactory connectionFactory) {
-        // Con la degradación activa, que Redis no esté disponible al arrancar no debe impedir
-        // que arranque la aplicación: la suscripción se reintenta hasta conseguirla.
+        // With degradation enabled, Redis being unavailable at startup must not prevent
+        // the application from starting: the subscription is retried until it succeeds.
         RedisMessageListenerContainer container = attributes().getBoolean("failOpen")
                 ? new ResilientRedisMessageListenerContainer(SUBSCRIPTION_RETRY_INTERVAL)
                 : new RedisMessageListenerContainer();
@@ -369,10 +369,10 @@ public class CacheConfig implements ImportAware, EnvironmentAware, BeanFactoryAw
     }
     
     /**
-     * Verificador de salud de Redis.
+     * Redis health checker.
      *
-     * @param redisTemplate plantilla de Redis
-     * @return verificador de salud de Redis
+     * @param redisTemplate Redis template
+     * @return Redis health checker
      */
     @Bean
     @ConditionalOnMissingBean
@@ -381,10 +381,10 @@ public class CacheConfig implements ImportAware, EnvironmentAware, BeanFactoryAw
     }
 
     /**
-     * Servicio de caché sobre Redis.
+     * Cache service on top of Redis.
      *
-     * @param redisTemplate plantilla de Redis
-     * @return servicio de caché de Redis
+     * @param redisTemplate Redis template
+     * @return Redis cache service
      */
     @Bean
     @ConditionalOnMissingBean
@@ -393,10 +393,10 @@ public class CacheConfig implements ImportAware, EnvironmentAware, BeanFactoryAw
     }
 
     /**
-     * Fábrica del constructor de operaciones de caché.
+     * Factory of the cache operation builder.
      *
-     * @param redisCacheService servicio de caché de Redis
-     * @return fábrica de constructor de operación de caché
+     * @param redisCacheService Redis cache service
+     * @return cache operation builder factory
      */
     @Bean
     @ConditionalOnMissingBean
@@ -417,14 +417,14 @@ public class CacheConfig implements ImportAware, EnvironmentAware, BeanFactoryAw
     }
 
     /**
-     * Interpreta un servidor. El atributo {@code host} puede llevar también el puerto
-     * ({@code host:puerto} o {@code [ipv6]:puerto}), que entonces manda sobre el atributo
-     * {@code port}. Así el puerto puede venir de una propiedad:
+     * Parses a server. The {@code host} attribute may also carry the port
+     * ({@code host:port} or {@code [ipv6]:port}), which then takes precedence over the
+     * {@code port} attribute. This way the port can come from a property:
      * {@code host = "${redis.host}:${redis.port}"}.
      *
-     * @param host valor del atributo {@code host}, con los placeholders ya resueltos
-     * @param defaultPort valor del atributo {@code port}
-     * @return servidor y puerto
+     * @param host value of the {@code host} attribute, with placeholders already resolved
+     * @param defaultPort value of the {@code port} attribute
+     * @return server and port
      */
     private static HostsDto parseHost(String host, int defaultPort) {
         String text = host == null ? "" : host.trim();
@@ -440,7 +440,7 @@ public class CacheConfig implements ImportAware, EnvironmentAware, BeanFactoryAw
                 }
             }
         } else if (text.indexOf(':') >= 0 && text.indexOf(':') == text.lastIndexOf(':')) {
-            // Un solo ':' separa servidor y puerto; con varios es una dirección IPv6 sin puerto.
+            // A single ':' separates host and port; with several it is an IPv6 address without a port.
             hostName = text.substring(0, text.indexOf(':'));
             portText = text.substring(text.indexOf(':') + 1);
         }
@@ -458,9 +458,9 @@ public class CacheConfig implements ImportAware, EnvironmentAware, BeanFactoryAw
     }
 
     /**
-     * Crea la configuración standalone.
+     * Creates the standalone configuration.
      *
-     * @return configuración standalone de Redis
+     * @return Redis standalone configuration
      */
 
     private RedisStandaloneConfiguration createStandaloneConfig() {
@@ -484,9 +484,9 @@ public class CacheConfig implements ImportAware, EnvironmentAware, BeanFactoryAw
 
 
     /**
-     * Crea la configuración de clúster.
+     * Creates the cluster configuration.
      *
-     * @return configuración de clúster de Redis
+     * @return Redis cluster configuration
      */
     private RedisClusterConfiguration createClusterConfig() {
         List<HostsDto> hosts = getHostEntries();
@@ -508,9 +508,9 @@ public class CacheConfig implements ImportAware, EnvironmentAware, BeanFactoryAw
     }
 
     /**
-     * Crea la configuración de sentinel.
+     * Creates the sentinel configuration.
      *
-     * @return configuración de sentinel
+     * @return sentinel configuration
      */
 
     private RedisSentinelConfiguration createSentinelConfig() {
@@ -528,7 +528,7 @@ public class CacheConfig implements ImportAware, EnvironmentAware, BeanFactoryAw
         }
         sentinelConfig.setDatabase(attributes().getNumber("database"));
 
-        // userName y pwd autentican contra el maestro y las réplicas, igual que en los otros modos.
+        // userName and pwd authenticate against the master and the replicas, as in the other modes.
         String userName = attributes().getString(ATTRIBUTE_USER_NAME);
         String pwd = attributes().getString("pwd");
         if (StringUtils.hasText(userName)) {
@@ -538,7 +538,7 @@ public class CacheConfig implements ImportAware, EnvironmentAware, BeanFactoryAw
             sentinelConfig.setPassword(pwd);
         }
 
-        // Los sentinels tienen su propia autenticación, independiente de la de los datos.
+        // The sentinels have their own authentication, independent from that of the data nodes.
         String sentinelUserName = attributes().getString("sentinelUserName");
         String sentinelPwd = attributes().getString("sentinelPwd");
         if (StringUtils.hasText(sentinelUserName)) {
@@ -551,9 +551,9 @@ public class CacheConfig implements ImportAware, EnvironmentAware, BeanFactoryAw
     }
 
     /**
-     * Crea la fábrica de conexiones de Redis.
+     * Creates the Redis connection factory.
      *
-     * @return fábrica de conexiones de Redis
+     * @return Redis connection factory
      */
     @Bean(name = "redisConnectionFactory")
     @ConditionalOnMissingBean(RedisConnectionFactory.class)
@@ -566,12 +566,12 @@ public class CacheConfig implements ImportAware, EnvironmentAware, BeanFactoryAw
 
         Validator.validateTimeout(connectionTimeout, readTimeout);
 
-        // connectionTimeout limita el establecimiento de la conexión (opción del socket);
-        // readTimeout limita la espera de la respuesta de cada orden.
-        // El keep-alive detecta las conexiones que un cortafuegos o un balanceador cortó en silencio.
-        // Sin datos durante 30 s, se sondea la conexión cada 10 s; tras 3 sondeos sin respuesta se
-        // da por muerta y Lettuce reconecta. Donde el sistema no admite estos tiempos, Lettuce
-        // usa el keep-alive básico.
+        // connectionTimeout limits connection establishment (a socket option);
+        // readTimeout limits the wait for the response to each command.
+        // Keep-alive detects connections that a firewall or a load balancer silently dropped.
+        // After 30 s without data, the connection is probed every 10 s; after 3 unanswered probes it
+        // is considered dead and Lettuce reconnects. Where the system does not support these timings,
+        // Lettuce uses basic keep-alive.
         SocketOptions socketOptions = SocketOptions.builder()
                 .connectTimeout(Duration.ofMillis(connectionTimeout))
                 .keepAlive(SocketOptions.KeepAliveOptions.builder()
@@ -582,16 +582,16 @@ public class CacheConfig implements ImportAware, EnvironmentAware, BeanFactoryAw
                         .build())
                 .build();
 
-        // Con la degradación activa conviene fallar enseguida mientras no hay conexión, en lugar
-        // de encolar las órdenes hasta que venza readTimeout: la petición sigue sin caché.
+        // With degradation enabled it is better to fail immediately while there is no connection,
+        // instead of queueing commands until readTimeout expires: the request proceeds without cache.
         ClientOptions.DisconnectedBehavior disconnectedBehavior = attributes().getBoolean("failOpen")
                 ? ClientOptions.DisconnectedBehavior.REJECT_COMMANDS
                 : ClientOptions.DisconnectedBehavior.DEFAULT;
 
         ClientOptions clientOptions;
         if (mode == Mode.CLUSTER) {
-            // Sin refresco de topología, tras una conmutación por fallo o un movimiento de slots
-            // el cliente seguiría enviando órdenes a los nodos antiguos.
+            // Without topology refresh, after a failover or a slot move
+            // the client would keep sending commands to the old nodes.
             ClusterTopologyRefreshOptions topologyRefresh = ClusterTopologyRefreshOptions.builder()
                     .enableAllAdaptiveRefreshTriggers()
                     .enablePeriodicRefresh(CLUSTER_TOPOLOGY_REFRESH_PERIOD)
@@ -634,11 +634,11 @@ public class CacheConfig implements ImportAware, EnvironmentAware, BeanFactoryAw
     }
 
     /**
-     * Crea plantilla de Redis.
+     * Creates the Redis template.
      *
-     * @param <T> tipo genérico
-     * @param connectionFactory fábrica de conexiones
-     * @return plantilla de Redis
+     * @param <T> generic type
+     * @param connectionFactory connection factory
+     * @return Redis template
      */
     @Bean(name = "redisTemplate")
     @ConditionalOnMissingBean(name = "redisTemplate")
@@ -663,9 +663,9 @@ public class CacheConfig implements ImportAware, EnvironmentAware, BeanFactoryAw
     }
 
     /**
-     * Obtiene configuración de conversor de objeto.
+     * Gets the object mapper configuration.
      *
-     * @return configuración de conversor de objeto
+     * @return object mapper configuration
      */
     private ObjectMapperConfig getObjectMapperConfig() {
         var configClass = attributes().getClass("mapperConfig");
@@ -684,8 +684,8 @@ public class CacheConfig implements ImportAware, EnvironmentAware, BeanFactoryAw
                     configClass.getName());
             return config;
         } catch (ReflectiveOperationException ex) {
-            // Seguir con la configuración predeterminada cambiaría el formato de lo que se guarda
-            // en Redis sin que nadie lo notase: es mejor no arrancar.
+            // Falling back to the default configuration would change the format of what is stored
+            // in Redis without anyone noticing: it is better not to start.
             throw new IllegalStateException(
                     "Cannot instantiate the ObjectMapperConfig " + configClass.getName()
                     + " declared in @EnableRedisLibrary(mapperConfig). "
@@ -694,9 +694,9 @@ public class CacheConfig implements ImportAware, EnvironmentAware, BeanFactoryAw
     }
 
     /**
-     * Administrador de caché.
-     * @param connectionFactory fábrica de conexiones
-     * @return administrador de caché
+     * Cache manager.
+     * @param connectionFactory connection factory
+     * @return cache manager
      */
     @Bean
     @ConditionalOnMissingBean(CacheManager.class)
@@ -718,9 +718,9 @@ public class CacheConfig implements ImportAware, EnvironmentAware, BeanFactoryAw
 
         Map<String, RedisCacheConfiguration> cacheConfiguration = new HashMap<>();
         configuredTtls().forEach((cacheName, ttl) -> cacheConfiguration.put(cacheName, defaults.entryTtl(ttl)));
-        // Desde Spring Data Redis 4 las escrituras de la caché son asíncronas por defecto: una
-        // lectura inmediata puede no ver lo recién guardado y los errores de escritura se pierden.
-        // Con escrituras inmediatas, guardar e invalidar terminan antes de devolver el control.
+        // Since Spring Data Redis 4, cache writes are asynchronous by default: an immediate
+        // read may not see what was just stored and write errors are lost.
+        // With immediate writes, put and evict complete before control is returned.
         RedisCacheWriter cacheWriter = RedisCacheWriter.create(
                 connectionFactory, RedisCacheWriter.RedisCacheWriterConfigurer::immediateWrites);
         RedisCacheManager redisCacheManager = RedisCacheManager.builder(cacheWriter)
@@ -730,16 +730,16 @@ public class CacheConfig implements ImportAware, EnvironmentAware, BeanFactoryAw
         if (!attributes().getBoolean("failOpen")) {
             return redisCacheManager;
         }
-        // Al envolverlo, Spring ya no lo inicializa por su cuenta.
+        // Once wrapped, Spring no longer initializes it on its own.
         redisCacheManager.afterPropertiesSet();
         return new FailOpenCacheManager(redisCacheManager, circuitBreaker());
     }
 
     /**
-     * Busca {@link EnableRedisLibrary} en las superclases y en las anotaciones compuestas.
+     * Looks for {@link EnableRedisLibrary} in the superclasses and in composed annotations.
      *
-     * @param className nombre de la clase de configuración
-     * @return atributos de la anotación, o {@code null} si no está
+     * @param className name of the configuration class
+     * @return annotation attributes, or {@code null} if it is not present
      */
     private static AnnotationAttributes findInHierarchy(String className) {
         try {
@@ -752,9 +752,9 @@ public class CacheConfig implements ImportAware, EnvironmentAware, BeanFactoryAw
     }
 
     /**
-     * Recibe los metadatos de la importación.
+     * Receives the import metadata.
      *
-     * @param importMetadata metadatos de la anotación que importa la configuración
+     * @param importMetadata metadata of the annotation that imports the configuration
      */
     @Override
     public void setImportMetadata(AnnotationMetadata importMetadata) {
@@ -763,8 +763,8 @@ public class CacheConfig implements ImportAware, EnvironmentAware, BeanFactoryAw
         this.importingClassName = importMetadata.getClassName();
         this.resolvedAttributes = null;
         if (this.attributes == null && this.importingClassName != null) {
-            // La anotación puede estar en una superclase de la clase de configuración
-            // o dentro de otra anotación propia de la aplicación.
+            // The annotation may be on a superclass of the configuration class
+            // or inside another annotation of the application's own.
             this.attributes = findInHierarchy(this.importingClassName);
         }
         if (this.attributes == null) {

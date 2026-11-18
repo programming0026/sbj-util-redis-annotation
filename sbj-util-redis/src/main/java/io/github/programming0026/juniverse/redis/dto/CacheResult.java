@@ -5,12 +5,12 @@ import lombok.Getter;
 import lombok.ToString;
 
 /**
- * Envoltorio del resultado de las operaciones de caché, con información de acierto o fallo.
+ * Wrapper for the result of cache operations, with hit or miss information.
  *
- * <p>Esta clase permite saber de forma segura si un valor vino de la caché (acierto)
- * o de la fuente de datos (fallo), sin condiciones de carrera.</p>
+ * <p>This class makes it possible to know safely whether a value came from the cache (hit)
+ * or from the data source (miss), without race conditions.</p>
  *
- * @param <T> tipo del valor en caché
+ * @param <T> type of the cached value
  * @author Java Universe
  */
 @Getter
@@ -18,10 +18,10 @@ import lombok.ToString;
 @AllArgsConstructor
 public class CacheResult<T> {
 
-    /** Valor obtenido de la caché o cargado. */
+    /** Value obtained from the cache or loaded. */
     private final T value;
 
-    /** Indica si fue un acierto de caché (true) o un fallo (false). */
+    /** Whether it was a cache hit (true) or a miss (false). */
     private final boolean cacheHit;
 
 
@@ -30,22 +30,22 @@ public class CacheResult<T> {
     }
 
     /**
-     * Crea un resultado de acierto de caché.
+     * Creates a cache hit result.
      *
-     * @param <T> tipo de valor
-     * @param value valor obtenido de la caché
-     * @return CacheResult que indica un acierto
+     * @param <T> value type
+     * @param value value obtained from the cache
+     * @return CacheResult indicating a hit
      */
     public static <T> CacheResult<T> hit(T value) {
         return new CacheResult<>(value, true);
     }
 
     /**
-     * Crea un resultado de fallo de caché.
+     * Creates a cache miss result.
      *
-     * @param <T> tipo de valor
-     * @param value valor cargado de la fuente
-     * @return CacheResult que indica un fallo
+     * @param <T> value type
+     * @param value value loaded from the source
+     * @return CacheResult indicating a miss
      */
     public static <T> CacheResult<T> miss(T value) {
         return new CacheResult<>(value, false);

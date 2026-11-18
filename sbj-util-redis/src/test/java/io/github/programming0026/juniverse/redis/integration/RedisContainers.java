@@ -16,49 +16,49 @@ import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.utility.DockerImageName;
 
 /**
- * Contenedores de Redis compartidos por las pruebas de integración.
- * Cada contenedor se arranca una sola vez, la primera vez que se pide, y Testcontainers
- * lo elimina al terminar la JVM.
+ * Redis containers shared by the integration tests.
+ * Each container is started only once, the first time it is requested, and Testcontainers
+ * removes it when the JVM ends.
  *
  * @author Java Universe
  */
 public final class RedisContainers {
 
-    /** Imagen de Redis usada en todas las pruebas. */
+    /** Redis image used in all the tests. */
     public static final DockerImageName IMAGE = DockerImageName.parse("redis:7-alpine");
 
-    /** Puerto de Redis dentro del contenedor standalone. */
+    /** Redis port inside the standalone container. */
     private static final int REDIS_PORT = 6379;
 
-    /** Tiempo máximo de cada orden; corto para que un fallo no alargue la prueba. */
+    /** Maximum time of each command; short so that a failure does not lengthen the test. */
     private static final Duration COMMAND_TIMEOUT = Duration.ofSeconds(5);
 
-    /** Contenedor standalone compartido. */
+    /** Shared standalone container. */
     private static GenericContainer<?> standalone;
 
-    /** Contenedor de clúster (un solo nodo con todos los slots) compartido. */
+    /** Shared cluster container (a single node with all the slots). */
     private static GenericContainer<?> cluster;
 
-    /** Puerto del nodo del clúster; es el mismo dentro y fuera del contenedor. */
+    /** Port of the cluster node; it is the same inside and outside the container. */
     private static int clusterPort;
 
     private RedisContainers() {
     }
 
     /**
-     * Crea un contenedor standalone nuevo, sin arrancar.
-     * Sirve para las pruebas que necesitan detener Redis sin afectar a las demás.
+     * Creates a new standalone container, not started.
+     * Useful for tests that need to stop Redis without affecting the others.
      *
-     * @return contenedor sin arrancar
+     * @return container not started
      */
     public static GenericContainer<?> newStandalone() {
         return new GenericContainer<>(IMAGE).withExposedPorts(REDIS_PORT);
     }
 
     /**
-     * Crea una fábrica de conexiones hacia el contenedor standalone compartido.
+     * Creates a connection factory to the shared standalone container.
      *
-     * @return fábrica de conexiones sin inicializar
+     * @return uninitialized connection factory
      */
     public static synchronized LettuceConnectionFactory standaloneFactory() {
         if (standalone == null) {
@@ -69,21 +69,21 @@ public final class RedisContainers {
     }
 
     /**
-     * Crea una fábrica de conexiones hacia un contenedor standalone concreto.
+     * Creates a connection factory to a specific standalone container.
      *
-     * @param container contenedor ya arrancado
-     * @return fábrica de conexiones sin inicializar
+     * @param container container already started
+     * @return uninitialized connection factory
      */
     public static LettuceConnectionFactory standaloneFactory(GenericContainer<?> container) {
         return standaloneFactory(container, COMMAND_TIMEOUT);
     }
 
     /**
-     * Crea una fábrica de conexiones hacia un contenedor standalone concreto.
+     * Creates a connection factory to a specific standalone container.
      *
-     * @param container contenedor ya arrancado
-     * @param commandTimeout tiempo máximo de cada orden
-     * @return fábrica de conexiones sin inicializar
+     * @param container container already started
+     * @param commandTimeout maximum time of each command
+     * @return uninitialized connection factory
      */
     public static LettuceConnectionFactory standaloneFactory(GenericContainer<?> container, Duration commandTimeout) {
         RedisStandaloneConfiguration config = new RedisStandaloneConfiguration(
@@ -92,9 +92,9 @@ public final class RedisContainers {
     }
 
     /**
-     * Crea una fábrica de conexiones hacia el clúster compartido.
+     * Creates a connection factory to the shared cluster.
      *
-     * @return fábrica de conexiones sin inicializar
+     * @return uninitialized connection factory
      */
     public static synchronized LettuceConnectionFactory clusterFactory() {
         if (cluster == null) {
@@ -113,12 +113,12 @@ public final class RedisContainers {
     }
 
     /**
-     * Arranca un clúster de un solo nodo que posee los 16384 slots.
-     * Un nodo de clúster anuncia su propia dirección a los clientes, así que el puerto
-     * debe ser el mismo dentro y fuera del contenedor y la dirección anunciada debe ser
-     * la del host de Docker.
+     * Starts a single-node cluster that owns all 16384 slots.
+     * A cluster node announces its own address to clients, so the port
+     * must be the same inside and outside the container and the announced address must be
+     * the Docker host's.
      *
-     * @return contenedor arrancado y con el clúster en estado correcto
+     * @return container started with the cluster in a healthy state
      */
     private static GenericContainer<?> startCluster() {
         try {
@@ -164,23 +164,22 @@ public final class RedisContainers {
     }
 
     /**
-     * Busca un puerto libre para el nodo del clúster.
-     * Redis usa además el puerto + 10000 para el bus del clúster, así que el puerto
-     * elegido no puede pasar de 55535.
+     * Looks for a free port for the cluster node.
+     * Redis also uses the port + 10000 for the cluster bus, so the chosen
+     * port cannot exceed 55535.
      *
-     * @return puerto libre
-     * @throws IOException si no se encuentra ninguno
+     * @return free port
      */
-    private static int findFreePort() throws IOException {
+    private static int findFreePort() {
         return freePorts(1)[0];
     }
 
     /**
-     * Busca varios puertos libres distintos, todos por debajo de 55535 para que el puerto
-     * + 10000 del bus del clúster siga siendo válido.
+     * Looks for several different free ports, all below 55535 so that the port
+     * + 10000 of the cluster bus remains valid.
      *
-     * @param count cuántos puertos hacen falta
-     * @return puertos libres
+     * @param count how many ports are needed
+     * @return free ports
      */
     public static int[] freePorts(int count) {
         java.util.Set<Integer> ports = new java.util.LinkedHashSet<>();
@@ -189,7 +188,7 @@ public final class RedisContainers {
             try (ServerSocket socket = new ServerSocket(candidate)) {
                 ports.add(socket.getLocalPort());
             } catch (IOException e) {
-                // Ocupado: se prueba otro.
+                // Busy: try another one.
             }
         }
         if (ports.size() < count) {

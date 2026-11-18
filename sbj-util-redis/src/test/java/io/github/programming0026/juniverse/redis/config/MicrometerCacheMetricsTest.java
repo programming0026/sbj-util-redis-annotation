@@ -8,16 +8,16 @@ import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
- * Pruebas de los contadores publicados en Micrometer.
+ * Tests of the counters published to Micrometer.
  *
  * @author Java Universe
  */
 class MicrometerCacheMetricsTest {
 
-    /** Registro de métricas en memoria. */
+    /** In-memory metrics registry. */
     private final SimpleMeterRegistry registry = new SimpleMeterRegistry();
 
-    /** Contadores bajo prueba. */
+    /** Counters under test. */
     private final MicrometerCacheMetrics metrics = new MicrometerCacheMetrics(registry);
 
     private double requests(String result) {
@@ -25,7 +25,7 @@ class MicrometerCacheMetricsTest {
     }
 
     @Test
-    public void counters_ShouldBePublishedWithTheirTags() {
+     void counters_ShouldBePublishedWithTheirTags() {
         metrics.hit();
         metrics.hit();
         metrics.miss();
@@ -46,18 +46,18 @@ class MicrometerCacheMetricsTest {
     }
 
     /**
-     * Los contadores de peticiones existen desde el arranque, con valor cero, para que los
-     * paneles no muestren huecos antes de la primera petición.
+     * The request counters exist from startup, with a value of zero, so that the
+     * dashboards show no gaps before the first request.
      */
     @Test
-    public void requestCounters_ShouldExistBeforeAnyRequest() {
+     void requestCounters_ShouldExistBeforeAnyRequest() {
         assertEquals(0, requests("hit"));
         assertEquals(0, requests("miss"));
         assertEquals(0, requests("coalesced"));
     }
 
     @Test
-    public void noopMetrics_ShouldAcceptEveryCall() {
+     void noopMetrics_ShouldAcceptEveryCall() {
         CacheMetrics noop = CacheMetrics.NOOP;
 
         assertDoesNotThrow(() -> {

@@ -21,11 +21,11 @@ import java.util.concurrent.TimeoutException;
 @Slf4j
 public class RedisHealthChecker {
 
-    /** Segundos que se espera como máximo la respuesta de la orden INFO. */
+    /** Maximum number of seconds to wait for the response to the INFO command. */
     private static final long INFO_TIMEOUT_SECONDS = 5;
 
     /**
-     * Plantilla de Redis.
+     * Redis template.
      */
     private final RedisTemplate<String, Object> redisTemplate;
 
@@ -34,10 +34,10 @@ public class RedisHealthChecker {
     }
 
     /**
-     * Crea estado.
+     * Creates a status.
      *
-     * @param message mensaje
-     * @return DTO de estado de Redis
+     * @param message message
+     * @return Redis status DTO
      */
     private RedisStatusDto createStatus(String message) {
 
@@ -53,9 +53,9 @@ public class RedisHealthChecker {
     }
 
     /**
-     * Comprueba si Redis está activo.
+     * Checks whether Redis is active.
      *
-     * @return DTO de estado de Redis
+     * @return Redis status DTO
      */
     public RedisStatusDto isRedisActive() {
 
@@ -88,7 +88,7 @@ public class RedisHealthChecker {
                 }
 
                 long usedMemory = parseLong(info.get("used_memory"), 0L);
-                // maxmemory es el límite configurado en Redis; 0 significa «sin límite».
+                // maxmemory is the limit configured in Redis; 0 means "no limit".
                 long maxMemory = parseLong(info.get("maxmemory"), 0L);
                 int connectedClients = parseInt(info.get("connected_clients"), 0);
                 String redisVersion = info.getOrDefault("redis_version", "");
@@ -114,11 +114,11 @@ public class RedisHealthChecker {
     }
 
     /**
-     * Obtiene la información de Redis con una conexión nativa de Lettuce.
-     * Admite los modos standalone, clúster y sentinel.
+     * Gets Redis information using a native Lettuce connection.
+     * Supports the standalone, cluster and sentinel modes.
      *
-     * @param connection conexión a Redis
-     * @return propiedades de la orden INFO, por nombre
+     * @param connection Redis connection
+     * @return properties of the INFO command, by name
      */
     private Map<String, String> getRedisInfo(RedisConnection connection) {
         Map<String, String> info = new HashMap<>();
@@ -172,10 +172,10 @@ public class RedisHealthChecker {
     }
 
     /**
-     * Interpreta la salida del comando INFO de Redis.
+     * Parses the output of the Redis INFO command.
      *
-     * @param infoString salida del comando INFO
-     * @return mapa de pares clave-valor
+     * @param infoString output of the INFO command
+     * @return map of key-value pairs
      */
     private Map<String, String> parseRedisInfo(String infoString) {
         Map<String, String> result = new HashMap<>();
@@ -204,11 +204,11 @@ public class RedisHealthChecker {
     }
 
     /**
-     * Convierte un valor long de forma segura.
+     * Safely converts a long value.
      *
-     * @param value        valor en texto
-     * @param defaultValue valor predeterminado
-     * @return número convertido o el valor predeterminado
+     * @param value        text value
+     * @param defaultValue default value
+     * @return converted number or the default value
      */
     private long parseLong(String value, long defaultValue) {
         try {
@@ -220,11 +220,11 @@ public class RedisHealthChecker {
     }
 
     /**
-     * Convierte un valor int de forma segura.
+     * Safely converts an int value.
      *
-     * @param value        valor en texto
-     * @param defaultValue valor predeterminado
-     * @return número convertido o el valor predeterminado
+     * @param value        text value
+     * @param defaultValue default value
+     * @return converted number or the default value
      */
     private int parseInt(String value, int defaultValue) {
         try {

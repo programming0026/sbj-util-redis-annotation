@@ -52,12 +52,10 @@
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-data-redis</artifactId>
         </dependency>
-        <!-- Jackson 3: la librería lo usa directamente para serializar los valores. -->
         <dependency>
             <groupId>tools.jackson.core</groupId>
             <artifactId>jackson-databind</artifactId>
         </dependency>
-        <!-- Opcional: si la aplicación tiene un MeterRegistry, la librería publica sus contadores. -->
         <dependency>
             <groupId>io.micrometer</groupId>
             <artifactId>micrometer-core</artifactId>
@@ -87,7 +85,6 @@
             <groupId>org.springframework</groupId>
             <artifactId>spring-core</artifactId>
         </dependency>
-        <!-- Pruebas de integración (*IT) contra un Redis real en Docker. -->
         <dependency>
             <groupId>org.testcontainers</groupId>
             <artifactId>testcontainers</artifactId>
@@ -136,7 +133,6 @@
                     </execution>
                 </executions>
             </plugin>
-            <!-- Ejecuta las pruebas *IT en la fase verify; se omiten solas si no hay Docker. -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-failsafe-plugin</artifactId>

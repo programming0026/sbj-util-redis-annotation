@@ -21,195 +21,195 @@ import org.springframework.context.annotation.Import;
 public @interface EnableRedisLibrary {
 
     /**
-     * Base de datos.
-     * Solo para los modos sentinel y standalone
+     * Database index.
+     * Only for the sentinel and standalone modes.
      *
-     * @return base de datos
+     * @return database index
      */
     int database() default 0;
     /**
-     * Servidores.
+     * Servers.
      *
-     * @return servidores configurados
+     * @return configured servers
      */
     HostEntry[] hostEntries() default {};
 
     /**
-     * Nombre de usuario de los nodos de datos.
-     * En modo SENTINEL se usa con el maestro y las réplicas, no con los sentinels
-     * (para ellos está {@link #sentinelUserName()}).
+     * User name for the data nodes.
+     * In SENTINEL mode it is used with the master and the replicas, not with the sentinels
+     * (for those there is {@link #sentinelUserName()}).
      *
-     * @return nombre de usuario; vacío si no hay autenticación por usuario
+     * @return user name; empty if there is no user authentication
      */
     String userName() default "";
 
     /**
-     * Contraseña de los nodos de datos. Indíquela siempre con un placeholder
-     * ({@code "${redis.password}"}), nunca escrita en el código.
-     * En modo SENTINEL se usa con el maestro y las réplicas, no con los sentinels
-     * (para ellos está {@link #sentinelPwd()}).
+     * Password for the data nodes. Always provide it through a placeholder
+     * ({@code "${redis.password}"}), never written in the code.
+     * In SENTINEL mode it is used with the master and the replicas, not with the sentinels
+     * (for those there is {@link #sentinelPwd()}).
      *
-     * @return contraseña; vacía si no hay autenticación
+     * @return password; empty if there is no authentication
      */
     String pwd() default "";
 
     /**
-     * Nombre de usuario de los sentinels. Solo se usa en modo SENTINEL.
+     * User name for the sentinels. Only used in SENTINEL mode.
      *
-     * @return nombre de usuario; vacío si los sentinels no piden usuario
+     * @return user name; empty if the sentinels do not require a user
      */
     String sentinelUserName() default "";
 
     /**
-     * Contraseña de los sentinels. Solo se usa en modo SENTINEL.
+     * Password for the sentinels. Only used in SENTINEL mode.
      *
-     * @return contraseña; vacía si los sentinels no piden autenticación
+     * @return password; empty if the sentinels do not require authentication
      */
     String sentinelPwd() default "";
 
     /**
-     * Modo.
+     * Mode.
      *
-     * @return modo
+     * @return mode
      */
     Mode mode() default Mode.STANDALONE;
 
     /**
-     * Tiempo máximo para establecer la conexión con Redis.
+     * Maximum time to establish the connection with Redis.
      *
-     * @return milisegundos; debe ser mayor que cero
+     * @return milliseconds; must be greater than zero
      */
     long connectionTimeout() default 5000;
 
     /**
-     * Tiempo máximo de espera de la respuesta de cada orden enviada a Redis.
+     * Maximum time to wait for the response to each command sent to Redis.
      *
-     * <p>Una orden de caché tarda normalmente milisegundos, así que este valor solo importa
-     * cuando Redis no contesta: es lo que tarda en detectarse la avería y, por tanto, lo que
-     * esperan las peticiones que llegan justo al empezar. Un valor alto alarga ese pico; uno
-     * demasiado bajo puede dar por caídas órdenes lentas pero válidas (valores muy grandes,
-     * red lenta).</p>
+     * <p>A cache command normally takes milliseconds, so this value only matters
+     * when Redis does not answer: it is how long it takes to detect the failure and, therefore, how long
+     * the requests that arrive right at the start have to wait. A high value lengthens that spike; one
+     * that is too low may treat slow but valid commands as failed (very large values,
+     * slow network).</p>
      *
-     * @return milisegundos; debe ser mayor que cero
+     * @return milliseconds; must be greater than zero
      */
     long readTimeout() default 1000;
 
     /**
-     * De qué nodos se lee cuando hay réplicas (modos CLUSTER y SENTINEL). Admite los nombres de
-     * Lettuce: {@code upstream}, {@code upstreamPreferred}, {@code replica},
+     * Which nodes to read from when replicas are available (CLUSTER and SENTINEL modes). Accepts the
+     * Lettuce names: {@code upstream}, {@code upstreamPreferred}, {@code replica},
      * {@code replicaPreferred}, {@code any}, {@code nearest}...
      *
-     * <p>Vacío (valor por defecto): se lee siempre del maestro. Leer de réplicas reparte la
-     * carga, pero una réplica puede ir unos milisegundos por detrás: una lectura inmediatamente
-     * posterior a un guardado o a una invalidación puede ver el estado anterior.</p>
+     * <p>Empty (default value): always read from the master. Reading from replicas spreads the
+     * load, but a replica may lag a few milliseconds behind: a read immediately
+     * after a put or an eviction may see the previous state.</p>
      *
-     * @return preferencia de lectura; vacío para leer del maestro
+     * @return read preference; empty to read from the master
      */
     String readFrom() default "";
 
     /**
-     * Prefijo que se antepone a todas las claves, bloqueos y canales de esta aplicación.
-     * Evita que dos aplicaciones que comparten Redis se pisen las claves o reciban los
-     * avisos de la otra.
+     * Prefix prepended to all keys, locks and channels of this application.
+     * It prevents two applications that share Redis from overwriting each other's keys or receiving
+     * each other's notifications.
      *
-     * <p>Si se deja vacío se usa {@code spring.application.name}; si tampoco está definido,
-     * no hay prefijo. Todas las instancias de una misma aplicación deben usar el mismo.</p>
+     * <p>If left empty, {@code spring.application.name} is used; if that is not defined either,
+     * there is no prefix. All instances of the same application must use the same one.</p>
      *
-     * @return prefijo, sin el separador {@code :} final
+     * @return prefix, without the trailing {@code :} separator
      */
     String keyPrefix() default "";
 
     /**
-     * Paquetes cuyas clases se pueden reconstruir a partir del nombre de clase guardado en Redis.
-     * Solo afecta a los valores que se guardan sin tipo conocido: {@code RedisTemplate},
-     * {@code RedisCacheService}, {@code @Cacheable} de Spring y los métodos {@code @Coalesce*}
-     * que devuelven {@code Object}.
+     * Packages whose classes may be rebuilt from the class name stored in Redis.
+     * It only affects values that are stored without a known type: {@code RedisTemplate},
+     * {@code RedisCacheService}, Spring's {@code @Cacheable} and the {@code @Coalesce*} methods
+     * that return {@code Object}.
      *
-     * <p>Siempre se admiten los paquetes base de la aplicación (los de
-     * {@code @SpringBootApplication}; si no los hay, el de la clase que lleva esta anotación)
-     * y los tipos básicos de {@code java.lang}, {@code java.util}, {@code java.time} y
-     * {@code java.math}. Aquí se añaden los demás, por ejemplo los de una librería compartida
-     * de DTO. El valor {@code "*"} admite cualquier clase y no se recomienda.</p>
+     * <p>The application's base packages are always allowed (those of
+     * {@code @SpringBootApplication}; if there are none, the package of the class carrying this annotation)
+     * together with the basic types of {@code java.lang}, {@code java.util}, {@code java.time} and
+     * {@code java.math}. Any others are added here, for example those of a shared DTO
+     * library. The value {@code "*"} allows any class and is not recommended.</p>
      *
-     * <p>No se usa si se indica un {@link #mapperConfig()} propio.</p>
+     * <p>Not used if a custom {@link #mapperConfig()} is provided.</p>
      *
-     * @return paquetes adicionales de confianza
+     * @return additional trusted packages
      */
     String[] trustedPackages() default {};
 
     /**
-     * Qué hacer cuando Redis falla en las anotaciones {@code @Coalesce*}.
-     * Con {@code true}, el fallo se registra y el método de negocio se ejecuta como si el valor
-     * no estuviera en caché. Con {@code false}, el fallo se propaga a quien llama.
+     * What to do when Redis fails in the {@code @Coalesce*} annotations.
+     * With {@code true}, the failure is logged and the business method runs as if the value
+     * were not cached. With {@code false}, the failure is propagated to the caller.
      *
-     * <p>Mientras Redis no responde, las invalidaciones no se aplican; al recuperarse puede
-     * haber datos antiguos hasta que caduquen.</p>
+     * <p>While Redis is not responding, evictions are not applied; once it recovers there may
+     * be stale data until it expires.</p>
      *
-     * @return {@code true} para seguir funcionando sin caché cuando Redis falla
+     * @return {@code true} to keep working without cache when Redis fails
      */
     boolean failOpen() default true;
 
     /**
-     * Duración del bloqueo de una carga con coalescencia. La instancia que carga lo renueva
-     * mientras sigue trabajando, así que un método más lento que este tiempo no se ejecuta a la
-     * vez en otra instancia. En la práctica es lo que se tarda en detectar que la instancia que
-     * cargaba ha muerto: pasado ese tiempo sin renovación, otra petición puede cargar el valor.
+     * Duration of the lock held while a coalesced load runs. The instance doing the load renews it
+     * while it keeps working, so a method slower than this time is not executed at the
+     * same time on another instance. In practice it is the time taken to detect that the instance that
+     * was loading has died: after that time without renewal, another request may load the value.
      *
-     * @return milisegundos; debe ser mayor que cero
+     * @return milliseconds; must be greater than zero
      */
     long coalesceLockTimeout() default 30000;
 
     /**
-     * Tiempo que se deja de usar Redis tras un fallo de conexión o de tiempo de espera, para que
-     * las peticiones no paguen {@link #readTimeout()} una por una mientras dura la avería. Pasado
-     * ese tiempo, una sola petición vuelve a probar Redis. Solo se aplica con {@link #failOpen()};
-     * cero lo desactiva.
+     * Time during which Redis is not used after a connection or timeout failure, so that
+     * requests do not pay {@link #readTimeout()} one by one while the outage lasts. After
+     * that time, a single request tries Redis again. Only applies with {@link #failOpen()};
+     * zero disables it.
      *
-     * @return milisegundos; cero o mayor
+     * @return milliseconds; zero or greater
      */
     long failurePause() default 5000;
 
     /**
-     * Tiempo máximo que una petición espera el resultado que está cargando otra.
-     * Si se agota, la petición falla con {@code CoalesceException}. Debe superar la duración
-     * máxima de los métodos anotados con {@code @CoalesceCacheable}; un valor menor hace que las
-     * peticiones fallen antes en lugar de acumularse tras una carga lenta.
+     * Maximum time a request waits for the result that another request is loading.
+     * If it runs out, the request fails with {@code CoalesceException}. It must exceed the maximum
+     * duration of the methods annotated with {@code @CoalesceCacheable}; a lower value makes
+     * requests fail early instead of piling up behind a slow load.
      *
-     * @return milisegundos; debe ser mayor que cero
+     * @return milliseconds; must be greater than zero
      */
     long coalesceWaitTimeout() default 30000;
 
     /**
-     * Clase que construye el {@code ObjectMapper} con el que se serializan los valores.
-     * Debe tener un constructor público sin argumentos; si no se puede instanciar,
-     * la aplicación no arranca.
+     * Class that builds the {@code ObjectMapper} used to serialize the values.
+     * It must have a public no-argument constructor; if it cannot be instantiated,
+     * the application does not start.
      *
-     * @return clase de configuración del ObjectMapper
+     * @return ObjectMapper configuration class
      */
     Class<? extends ObjectMapperConfig> mapperConfig() default DefaultObjectMapperConfig.class;
 
 
     /**
-     * Entradas de TTL por caché.
+     * Per-cache TTL entries.
      *
-     * @return entradas de TTL
+     * @return TTL entries
      */
     TTLEntry[] ttlEntries() default {};
 
     /**
-     * Cifra la conexión con TLS. El certificado del servidor se valida contra el almacén de
-     * confianza de la JVM ({@code javax.net.ssl.trustStore}); para otro almacén o para
-     * autenticación con certificado de cliente, defina su propia {@code RedisConnectionFactory}.
+     * Encrypts the connection with TLS. The server certificate is validated against the JVM
+     * trust store ({@code javax.net.ssl.trustStore}); for another store or for
+     * client certificate authentication, define your own {@code RedisConnectionFactory}.
      *
-     * @return {@code true} para conectar con TLS
+     * @return {@code true} to connect using TLS
      */
     boolean useSsl() default false;
 
     /**
-     * Nombre del maestro de sentinel.
-     * Obligatorio cuando el modo es SENTINEL.
+     * Sentinel master name.
+     * Required when the mode is SENTINEL.
      *
-     * @return nombre del maestro de sentinel
+     * @return sentinel master name
      */
     String sentinelMaster() default "";
 

@@ -21,50 +21,50 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 /**
- * Pruebas unitarias de RedisHealthChecker.
+ * Unit tests for RedisHealthChecker.
  *
  * @author Java Universe
  */
 @ExtendWith(MockitoExtension.class)
 class RedisHealthCheckerTest {
 
-    /** Fábrica de conexiones simulada. */
+    /** Mocked connection factory. */
     @Mock
     private RedisConnectionFactory connectionFactory;
 
-    /** Conexión simulada. */
+    /** Mocked connection. */
     @Mock
     private RedisConnection connection;
 
-    /** Comandos asíncronos de Redis simulados. */
+    /** Mocked asynchronous Redis commands. */
     @Mock
     private RedisAsyncCommands<Object, Object> asyncCommands;
 
-    /** Futuro de Redis. */
+    /** Redis future. */
     @Mock
     private RedisFuture<String> redisFuture;
 
-    /** Plantilla de Redis. */
+    /** Redis template. */
     @Mock
     private RedisTemplate<String, Object> redisTemplate;
 
-    /** Verificador de salud bajo prueba. */
+    /** Health checker under test. */
     @InjectMocks
     private RedisHealthChecker healthChecker;
 
     /**
-     * Prepara la prueba.
+     * Sets up the test.
      */
     @BeforeEach
-    public void setUp() {
+     void setUp() {
         lenient().when(redisTemplate.getConnectionFactory()).thenReturn(connectionFactory);
         lenient().when(connectionFactory.getConnection()).thenReturn(connection);
     }
 
     /**
-     * Crea cadena de información de Redis de simulado.
+     * Creates a simulated Redis info string.
      *
-     * @return cadena de información
+     * @return info string
      */
     private String createMockRedisInfoString() {
         return """
@@ -93,10 +93,10 @@ class RedisHealthCheckerTest {
 
 
     /**
-     * Con Redis activo debe indicar que está conectado.
+     * With Redis active it must report that it is connected.
      */
     @Test
-    public void isRedisActive_WhenRedisIsUp_ShouldReturnConnectedTrue() throws Exception {
+     void isRedisActive_WhenRedisIsUp_ShouldReturnConnectedTrue() throws Exception {
         when(connection.ping()).thenReturn("PONG");
         when(connection.getNativeConnection()).thenReturn(asyncCommands);
         when(asyncCommands.info()).thenReturn(redisFuture);
@@ -115,10 +115,10 @@ class RedisHealthCheckerTest {
     }
 
     /**
-     * Con Redis activo debe medir el tiempo de respuesta.
+     * With Redis active it must measure the response time.
      */
     @Test
-    public void isRedisActive_WhenRedisIsUp_ShouldMeasureResponseTime() throws Exception {
+     void isRedisActive_WhenRedisIsUp_ShouldMeasureResponseTime() throws Exception {
         when(connection.ping()).thenReturn("PONG");
         when(connection.getNativeConnection()).thenReturn(asyncCommands);
         when(asyncCommands.info()).thenReturn(redisFuture);
@@ -132,10 +132,10 @@ class RedisHealthCheckerTest {
     }
 
     /**
-     * Cuando el PING tiene éxito debe devolver un mensaje de éxito.
+     * When PING succeeds it must return a success message.
      */
     @Test
-    public void isRedisActive_WhenPingSucceeds_ShouldReturnSuccessMessage() throws Exception {
+     void isRedisActive_WhenPingSucceeds_ShouldReturnSuccessMessage() throws Exception {
         when(connection.ping()).thenReturn("PONG");
         when(connection.getNativeConnection()).thenReturn(asyncCommands);
         when(asyncCommands.info()).thenReturn(redisFuture);
@@ -153,10 +153,10 @@ class RedisHealthCheckerTest {
     }
 
     /**
-     * Con la plantilla de Redis nula debe indicar que no está conectado.
+     * With a null Redis template it must report that it is not connected.
      */
     @Test
-    public void isRedisActive_WhenRedisTemplateIsNull_ShouldReturnNotConnected() {
+     void isRedisActive_WhenRedisTemplateIsNull_ShouldReturnNotConnected() {
         RedisHealthChecker checkerWithNullTemplate = new RedisHealthChecker(null);
 
         RedisStatusDto result = checkerWithNullTemplate.isRedisActive();
@@ -167,10 +167,10 @@ class RedisHealthCheckerTest {
     }
 
     /**
-     * Con la fábrica de conexiones nula debe indicar que no está conectado.
+     * With a null connection factory it must report that it is not connected.
      */
     @Test
-    public void isRedisActive_WhenConnectionFactoryIsNull_ShouldReturnNotConnected() {
+     void isRedisActive_WhenConnectionFactoryIsNull_ShouldReturnNotConnected() {
         when(redisTemplate.getConnectionFactory()).thenReturn(null);
 
         RedisStatusDto result = healthChecker.isRedisActive();
@@ -181,11 +181,11 @@ class RedisHealthCheckerTest {
     }
 
     /**
-     * Con Redis caído debe indicar que no está conectado.
+     * With Redis down it must report that it is not connected.
      */
     @SuppressWarnings("serial")
 	@Test
-    public void isRedisActive_WhenRedisIsDown_ShouldReturnConnectedFalse() {
+     void isRedisActive_WhenRedisIsDown_ShouldReturnConnectedFalse() {
         when(connectionFactory.getConnection()).thenThrow(new DataAccessException("Connection refused") {});
 
         RedisStatusDto result = healthChecker.isRedisActive();
@@ -195,11 +195,11 @@ class RedisHealthCheckerTest {
     }
 
     /**
-     * Con Redis caído debe incluir el mensaje de error.
+     * With Redis down it must include the error message.
      */
     @SuppressWarnings("serial")
 	@Test
-    public void isRedisActive_WhenRedisIsDown_ShouldIncludeErrorMessage() {
+     void isRedisActive_WhenRedisIsDown_ShouldIncludeErrorMessage() {
         String errorMessage = "Connection refused";
         when(connectionFactory.getConnection()).thenThrow(new DataAccessException(errorMessage) {});
 
@@ -212,11 +212,11 @@ class RedisHealthCheckerTest {
     }
 
     /**
-     * Cuando se lanza una excepción debe devolver tiempo de respuesta cero.
+     * When an exception is thrown it must return a response time of zero.
      */
     @SuppressWarnings("serial")
 	@Test
-    public void isRedisActive_WhenExceptionThrown_ShouldReturnZeroResponseTime() {
+     void isRedisActive_WhenExceptionThrown_ShouldReturnZeroResponseTime() {
         when(connectionFactory.getConnection()).thenThrow(new DataAccessException("Connection error") {});
 
         RedisStatusDto result = healthChecker.isRedisActive();
@@ -227,10 +227,10 @@ class RedisHealthCheckerTest {
     }
 
     /**
-     * Cuando el PING devuelve algo distinto de PONG debe indicar que no está conectado.
+     * When PING returns something other than PONG it must report that it is not connected.
      */
     @Test
-    public void isRedisActive_WhenPingReturnsNonPong_ShouldReturnNotConnected() throws Exception {
+     void isRedisActive_WhenPingReturnsNonPong_ShouldReturnNotConnected() throws Exception {
         when(connection.ping()).thenReturn("INVALID");
         when(connection.getNativeConnection()).thenReturn(asyncCommands);
         when(asyncCommands.info()).thenReturn(redisFuture);
@@ -244,10 +244,10 @@ class RedisHealthCheckerTest {
     }
 
     /**
-     * Cuando el PING devuelve nulo debe manejarlo sin fallar.
+     * When PING returns null it must handle it without failing.
      */
     @Test
-    public void isRedisActive_WhenPingReturnsNull_ShouldHandleGracefully() throws Exception {
+     void isRedisActive_WhenPingReturnsNull_ShouldHandleGracefully() throws Exception {
         when(connection.ping()).thenReturn(null);
         when(connection.getNativeConnection()).thenReturn(asyncCommands);
         when(asyncCommands.info()).thenReturn(redisFuture);
@@ -260,10 +260,10 @@ class RedisHealthCheckerTest {
     }
 
     /**
-     * Cuando el PING devuelve una cadena vacía debe manejarlo sin fallar.
+     * When PING returns an empty string it must handle it without failing.
      */
     @Test
-    public void isRedisActive_WhenPingReturnsEmptyString_ShouldHandleGracefully() throws Exception {
+     void isRedisActive_WhenPingReturnsEmptyString_ShouldHandleGracefully() throws Exception {
         when(connection.ping()).thenReturn("");
         when(connection.getNativeConnection()).thenReturn(asyncCommands);
         when(asyncCommands.info()).thenReturn(redisFuture);
@@ -276,10 +276,10 @@ class RedisHealthCheckerTest {
     }
 
     /**
-     * Cuando el PING devuelve pong en minúsculas debe indicar que está conectado.
+     * When PING returns lowercase pong it must report that it is connected.
      */
     @Test
-    public void isRedisActive_WhenPingReturnsPongLowercase_ShouldReturnConnected() throws Exception {
+     void isRedisActive_WhenPingReturnsPongLowercase_ShouldReturnConnected() throws Exception {
         when(connection.ping()).thenReturn("pong");
         when(connection.getNativeConnection()).thenReturn(asyncCommands);
         when(asyncCommands.info()).thenReturn(redisFuture);
@@ -292,10 +292,10 @@ class RedisHealthCheckerTest {
     }
 
     /**
-     * Cuando INFO trae valores de memoria inválidos debe manejarlo sin fallar.
+     * When INFO brings invalid memory values it must handle them without failing.
      */
     @Test
-    public void isRedisActive_WhenRedisInfoHasInvalidMemoryValues_ShouldHandleGracefully() throws Exception {
+     void isRedisActive_WhenRedisInfoHasInvalidMemoryValues_ShouldHandleGracefully() throws Exception {
         String infoWithInvalidNumbers = """
             # Server
             redis_version:7.0.0
@@ -323,10 +323,10 @@ class RedisHealthCheckerTest {
     }
 
     /**
-     * Cuando INFO trae líneas mal formadas debe manejarlo sin fallar.
+     * When INFO brings malformed lines it must handle them without failing.
      */
     @Test
-    public void isRedisActive_WhenRedisInfoHasMalformedLines_ShouldHandleGracefully() throws Exception {
+     void isRedisActive_WhenRedisInfoHasMalformedLines_ShouldHandleGracefully() throws Exception {
         String infoWithMalformedLines = """
             # Server
             redis_version:7.0.0
@@ -357,10 +357,10 @@ class RedisHealthCheckerTest {
     }
 
     /**
-     * Cuando INFO está vacío debe manejarlo sin fallar.
+     * When INFO is empty it must handle it without failing.
      */
     @Test
-    public void isRedisActive_WhenRedisInfoIsEmptyString_ShouldHandleGracefully() throws Exception {
+     void isRedisActive_WhenRedisInfoIsEmptyString_ShouldHandleGracefully() throws Exception {
         when(connection.ping()).thenReturn("PONG");
         when(connection.getNativeConnection()).thenReturn(asyncCommands);
         when(asyncCommands.info()).thenReturn(redisFuture);
@@ -377,10 +377,10 @@ class RedisHealthCheckerTest {
     }
 
     /**
-     * Cuando INFO con la conexión nativa agota el tiempo debe manejarlo sin fallar.
+     * When INFO with the native connection times out it must handle it without failing.
      */
     @Test
-    public void isRedisActive_WhenNativeConnectionInfoTimesOut_ShouldHandleGracefully() throws Exception {
+     void isRedisActive_WhenNativeConnectionInfoTimesOut_ShouldHandleGracefully() throws Exception {
         when(connection.ping()).thenReturn("PONG");
         when(connection.getNativeConnection()).thenReturn(asyncCommands);
         when(asyncCommands.info()).thenReturn(redisFuture);
@@ -396,11 +396,11 @@ class RedisHealthCheckerTest {
     }
 
     /**
-     * Cuando INFO con la conexión nativa lanza ExecutionException
-     * debe manejarlo sin fallar.
+     * When INFO with the native connection throws ExecutionException
+     * it must handle it without failing.
      */
     @Test
-    public void isRedisActive_WhenNativeConnectionInfoThrowsExecutionException_ShouldHandleGracefully()
+     void isRedisActive_WhenNativeConnectionInfoThrowsExecutionException_ShouldHandleGracefully()
             throws Exception {
         when(connection.ping()).thenReturn("PONG");
         when(connection.getNativeConnection()).thenReturn(asyncCommands);

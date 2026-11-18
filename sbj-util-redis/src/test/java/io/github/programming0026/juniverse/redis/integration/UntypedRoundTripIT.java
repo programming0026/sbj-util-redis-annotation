@@ -30,30 +30,30 @@ import org.testcontainers.junit.jupiter.Testcontainers;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
- * Comprueba contra Redis las formas de caché que no conocen el tipo del valor:
- * {@code RedisCacheService}, {@code RedisTemplate} y el {@code @Cacheable} de Spring.
- * Cada valor se guarda, se lee de vuelta y debe ser igual al original, con el mismo tipo.
+ * Checks against Redis the forms of cache that do not know the type of the value:
+ * {@code RedisCacheService}, {@code RedisTemplate} and Spring's {@code @Cacheable}.
+ * Each value is stored, read back and must equal the original, with the same type.
  *
- * <p>La aplicación de prueba no indica {@code trustedPackages}: los records de esta clase se
- * admiten porque están en el paquete de la clase que lleva {@code @EnableRedisLibrary}.</p>
+ * <p>The test application does not specify {@code trustedPackages}: the records of this class are
+ * accepted because they are in the package of the class carrying {@code @EnableRedisLibrary}.</p>
  *
  * @author Java Universe
  */
 @Testcontainers(disabledWithoutDocker = true)
 class UntypedRoundTripIT {
 
-    /** Contexto de Spring. */
+    /** Spring context. */
     private AnnotationConfigApplicationContext context;
 
     /**
-     * Servicio con métodos {@code @Cacheable} de Spring que devuelven tipos que antes se perdían.
+     * Service with Spring {@code @Cacheable} methods that return types that used to be lost.
      */
-    public static class SpringCachedService {
+     public static class SpringCachedService {
 
-        /** Número de ejecuciones reales. */
+        /** Number of real executions. */
         private final AtomicInteger calls = new AtomicInteger();
 
-        public int callCount() {
+         int callCount() {
             return calls.get();
         }
 
@@ -88,29 +88,29 @@ class UntypedRoundTripIT {
         }
     }
 
-    public static Order sampleOrder(Long id) {
+     static Order sampleOrder(Long id) {
         return new Order(id, new BigDecimal("19.90"), Status.OPEN, LocalDateTime.of(2026, 1, 15, 10, 30),
                 List.of("a", "b"));
     }
 
     /**
-     * Aplicación con la configuración predeterminada de la librería.
+     * Application with the library's default configuration.
      */
     @Configuration
     @EnableRedisLibrary(hostEntries = @HostEntry(host = "${it.redis.address}"), keyPrefix = "untyped")
-    public static class Application {
+     public static class Application {
 
         @Bean
-        public SpringCachedService springCachedService() {
+         SpringCachedService springCachedService() {
             return new SpringCachedService();
         }
     }
 
     /**
-     * Arranca la aplicación contra el Redis compartido de las pruebas.
+     * Starts the application against the tests' shared Redis.
      */
     @BeforeEach
-    public void start() {
+     void start() {
         LettuceConnectionFactory shared = RedisContainers.standaloneFactory();
         String address = shared.getStandaloneConfiguration().getHostName() + ":"
                 + shared.getStandaloneConfiguration().getPort();
@@ -122,18 +122,18 @@ class UntypedRoundTripIT {
     }
 
     /**
-     * Cierra la aplicación.
+     * Closes the application.
      */
     @AfterEach
-    public void close() {
+     void close() {
         context.close();
     }
 
     /**
-     * El {@code @Cacheable} de Spring devuelve, desde Redis, el mismo valor y tipo que el método.
+     * Spring's {@code @Cacheable} returns, from Redis, the same value and type as the method.
      */
     @Test
-    public void springCacheable_ShouldReturnTheOriginalTypes() {
+     void springCacheable_ShouldReturnTheOriginalTypes() {
         SpringCachedService service = context.getBean(SpringCachedService.class);
 
         assertServedFromCache(service, () -> service.order(7L), sampleOrder(7L));
@@ -156,10 +156,10 @@ class UntypedRoundTripIT {
     }
 
     /**
-     * {@code RedisCacheService} devuelve, desde Redis, el mismo valor y tipo que el cargador.
+     * {@code RedisCacheService} returns, from Redis, the same value and type as the loader.
      */
     @Test
-    public void redisCacheService_ShouldReturnTheOriginalTypes() {
+     void redisCacheService_ShouldReturnTheOriginalTypes() {
         RedisCacheService service = context.getBean(RedisCacheService.class);
         Object[] values = {
             sampleOrder(3L), 5L, new BigDecimal("1.50"), Status.OPEN, LocalDate.of(2026, 2, 1),
@@ -181,11 +181,11 @@ class UntypedRoundTripIT {
     }
 
     /**
-     * La plantilla {@code redisTemplate} de la librería conserva igualmente los tipos.
+     * The library's {@code redisTemplate} template also preserves the types.
      */
     @Test
     @SuppressWarnings("unchecked")
-    public void redisTemplate_ShouldReturnTheOriginalTypes() {
+     void redisTemplate_ShouldReturnTheOriginalTypes() {
         RedisTemplate<String, Object> template = context.getBean("redisTemplate", RedisTemplate.class);
 
         template.opsForValue().set("untyped:template:pedido", sampleOrder(8L));

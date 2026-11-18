@@ -20,30 +20,30 @@ import org.springframework.data.redis.serializer.RedisSerializer;
 import org.springframework.data.redis.serializer.StringRedisSerializer;
 
 /**
- * Simula una instancia de aplicación que usa la librería: tiene su propia conexión,
- * su plantilla, su escucha de mensajes y su administrador de caché.
- * Crear dos instancias contra el mismo Redis equivale a tener dos réplicas del servicio.
+ * Simulates an application instance that uses the library: it has its own connection,
+ * its template, its message listener and its cache manager.
+ * Creating two instances against the same Redis is equivalent to having two replicas of the service.
  *
- * <p>Los componentes se montan igual que en {@code CacheConfig}, con el serializador
- * y el {@code ObjectMapper} predeterminados de la librería.</p>
+ * <p>The components are assembled the same way as in {@code CacheConfig}, with the library's
+ * default serializer and {@code ObjectMapper}.</p>
  *
  * @author Java Universe
  */
 public final class RedisInstance implements AutoCloseable {
 
-    /** Fábrica de conexiones de esta instancia. */
+    /** Connection factory of this instance. */
     private final LettuceConnectionFactory connectionFactory;
 
-    /** Plantilla de Redis con los serializadores de la librería. */
+    /** Redis template with the library's serializers. */
     private final RedisTemplate<String, Object> template;
 
-    /** Escucha de mensajes pub/sub. */
+    /** Pub/sub message listener. */
     private final RedisMessageListenerContainer listenerContainer;
 
-    /** Administrador de caché con coalescencia. */
+    /** Coalescing cache manager. */
     private final CoalesceCacheManager cacheManager;
 
-    /** Servicio de caché programático. */
+    /** Programmatic cache service. */
     private final RedisCacheService cacheService;
 
     public RedisInstance(LettuceConnectionFactory connectionFactory) {
@@ -99,11 +99,11 @@ public final class RedisInstance implements AutoCloseable {
     }
 
     /**
-     * Envuelve un servicio con los tres aspectos de la librería, como haría Spring.
+     * Wraps a service with the library's three aspects, as Spring would.
      *
-     * @param <T> tipo del servicio
-     * @param target servicio real
-     * @return proxy interceptado por los aspectos
+     * @param <T> service type
+     * @param target real service
+     * @return proxy intercepted by the aspects
      */
     public <T> T proxy(T target) {
         AspectJProxyFactory factory = new AspectJProxyFactory(target);
@@ -115,10 +115,10 @@ public final class RedisInstance implements AutoCloseable {
     }
 
     /**
-     * Lee una clave tal como está en Redis, sin deserializar.
+     * Reads a key as it is in Redis, without deserializing.
      *
-     * @param key clave completa
-     * @return contenido como texto, o {@code null} si la clave no existe
+     * @param key full key
+     * @return content as text, or {@code null} if the key does not exist
      */
     public String rawValue(String key) {
         try (RedisConnection connection = connectionFactory.getConnection()) {
@@ -128,7 +128,7 @@ public final class RedisInstance implements AutoCloseable {
     }
 
     /**
-     * Borra todas las claves de Redis.
+     * Deletes all the keys in Redis.
      */
     public void flushAll() {
         try (RedisConnection connection = connectionFactory.getConnection()) {
@@ -137,8 +137,8 @@ public final class RedisInstance implements AutoCloseable {
     }
 
     /**
-     * Detiene la escucha y cierra las conexiones.
-     * Los errores se ignoran porque Redis puede estar ya detenido.
+     * Stops the listener and closes the connections.
+     * Errors are ignored because Redis may already be stopped.
      */
     @Override
     public void close() {
@@ -146,12 +146,12 @@ public final class RedisInstance implements AutoCloseable {
             listenerContainer.stop();
             listenerContainer.destroy();
         } catch (Exception e) {
-            // Redis puede estar detenido a propósito por la prueba.
+            // Redis may have been stopped on purpose by the test.
         }
         try {
             connectionFactory.destroy();
         } catch (RuntimeException e) {
-            // Igual que arriba.
+            // Same as above.
         }
     }
 }

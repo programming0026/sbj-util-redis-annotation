@@ -5,17 +5,17 @@ import org.springframework.core.Ordered;
 import org.springframework.core.type.AnnotationMetadata;
 
 /**
- * Importa {@link CacheConfig} después de las clases de configuración de la aplicación y antes
- * de la autoconfiguración de Spring Boot.
+ * Imports {@link CacheConfig} after the application's configuration classes and before
+ * Spring Boot's autoconfiguration.
  *
- * <p>El orden importa porque los beans de la librería son condicionales
+ * <p>The order matters because the library's beans are conditional
  * ({@code @ConditionalOnMissingBean}):</p>
  * <ul>
- *   <li>Al evaluarse después de la configuración de la aplicación, la librería ve los beans que
- *       esta define (por ejemplo, su propia {@code RedisConnectionFactory}) y no los duplica.</li>
- *   <li>Al evaluarse antes de la autoconfiguración de Spring Boot, es esta la que ve los beans
- *       de la librería y se retira, en lugar de crear una conexión a {@code localhost} con
- *       las propiedades {@code spring.data.redis.*}.</li>
+ *   <li>Being evaluated after the application's configuration, the library sees the beans that
+ *       it defines (for example, its own {@code RedisConnectionFactory}) and does not duplicate them.</li>
+ *   <li>Being evaluated before Spring Boot's autoconfiguration, it is the latter that sees the library's
+ *       beans and backs off, instead of creating a connection to {@code localhost} with
+ *       the {@code spring.data.redis.*} properties.</li>
  * </ul>
  *
  * @author Java Universe
@@ -23,16 +23,16 @@ import org.springframework.core.type.AnnotationMetadata;
 public class RedisLibraryImportSelector implements DeferredImportSelector, Ordered {
 
     /**
-     * Posición entre los selectores diferidos: por delante del de la autoconfiguración de
-     * Spring Boot, que usa {@code Ordered.LOWEST_PRECEDENCE - 1}.
+     * Position among the deferred selectors: ahead of Spring Boot's autoconfiguration
+     * selector, which uses {@code Ordered.LOWEST_PRECEDENCE - 1}.
      */
     public static final int ORDER = Ordered.LOWEST_PRECEDENCE - 100;
 
     /**
-     * Devuelve la configuración de la librería.
+     * Returns the library's configuration.
      *
-     * @param importingClassMetadata metadatos de la clase que lleva {@code @EnableRedisLibrary}
-     * @return nombres de {@link CacheMetricsConfiguration} y {@link CacheConfig}
+     * @param importingClassMetadata metadata of the class carrying {@code @EnableRedisLibrary}
+     * @return names of {@link CacheMetricsConfiguration} and {@link CacheConfig}
      */
     @Override
     public String[] selectImports(AnnotationMetadata importingClassMetadata) {
@@ -40,7 +40,7 @@ public class RedisLibraryImportSelector implements DeferredImportSelector, Order
     }
 
     /**
-     * Devuelve la posición de este selector entre los diferidos.
+     * Returns the position of this selector among the deferred ones.
      *
      * @return {@link #ORDER}
      */

@@ -4,16 +4,16 @@ import java.time.Duration;
 import java.util.Objects;
 
 /**
- * Ajustes de la caché con coalescencia.
+ * Settings of the coalescing cache.
  *
- * @param failOpen si es {@code true}, un fallo de Redis se trata como un fallo de caché y el método
- *                 de negocio se ejecuta igualmente; si es {@code false}, el fallo se propaga
- * @param lockTimeout tiempo que se confía en la instancia que está cargando un valor; pasado ese
- *                    tiempo el bloqueo caduca y otra petición puede cargarlo. Debe superar la
- *                    duración máxima del método en caché
- * @param waitTimeout tiempo máximo que una petición espera el resultado que carga otra
- * @param failurePause tiempo que se deja de usar Redis tras un fallo de conexión, para que las
- *                     peticiones no paguen el tiempo de espera una por una. Solo con {@code failOpen}
+ * @param failOpen if {@code true}, a Redis failure is treated as a cache miss and the business
+ *                 method runs anyway; if {@code false}, the failure is propagated
+ * @param lockTimeout time the instance that is loading a value is trusted; after that
+ *                    time the lock expires and another request may load it. It must exceed the
+ *                    maximum duration of the cached method
+ * @param waitTimeout maximum time a request waits for the result another one is loading
+ * @param failurePause time during which Redis is not used after a connection failure, so that
+ *                     requests do not pay the timeout one by one. Only with {@code failOpen}
  * @author Java Universe
  */
 public record CoalesceSettings(
@@ -22,14 +22,14 @@ public record CoalesceSettings(
         Duration waitTimeout,
         Duration failurePause) {
 
-    /** Duración predeterminada del bloqueo y de la espera. */
+    /** Default duration of the lock and of the wait. */
     private static final Duration DEFAULT_TIMEOUT = Duration.ofSeconds(30);
 
-    /** Pausa predeterminada tras un fallo de conexión. */
+    /** Default pause after a connection failure. */
     private static final Duration DEFAULT_FAILURE_PAUSE = Duration.ofSeconds(5);
 
     /**
-     * Valida los ajustes.
+     * Validates the settings.
      */
     public CoalesceSettings {
         requirePositive(lockTimeout, "lockTimeout");
@@ -41,20 +41,20 @@ public record CoalesceSettings(
     }
 
     /**
-     * Crea los ajustes con la pausa predeterminada tras un fallo de conexión.
+     * Creates the settings with the default pause after a connection failure.
      *
-     * @param failOpen si los fallos de Redis se tratan como fallos de caché
-     * @param lockTimeout duración del bloqueo
-     * @param waitTimeout espera máxima del resultado de otra petición
+     * @param failOpen whether Redis failures are treated as cache misses
+     * @param lockTimeout lock duration
+     * @param waitTimeout maximum wait for another request's result
      */
     public CoalesceSettings(boolean failOpen, Duration lockTimeout, Duration waitTimeout) {
         this(failOpen, lockTimeout, waitTimeout, DEFAULT_FAILURE_PAUSE);
     }
 
     /**
-     * Ajustes predeterminados: degradación activada, bloqueo y espera de 30 segundos.
+     * Default settings: degradation enabled, 30-second lock and wait.
      *
-     * @return ajustes predeterminados
+     * @return default settings
      */
     public static CoalesceSettings defaults() {
         return new CoalesceSettings(true, DEFAULT_TIMEOUT, DEFAULT_TIMEOUT, DEFAULT_FAILURE_PAUSE);

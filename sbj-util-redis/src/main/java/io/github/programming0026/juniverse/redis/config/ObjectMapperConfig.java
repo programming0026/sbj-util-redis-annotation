@@ -9,9 +9,9 @@ import tools.jackson.databind.ObjectMapper;
 public interface ObjectMapperConfig {
 
     /**
-     * Configura.
+     * Configures the mapper.
      *
-     * @return conversor de objeto
+     * @return object mapper
      */
     ObjectMapper configure();
 }

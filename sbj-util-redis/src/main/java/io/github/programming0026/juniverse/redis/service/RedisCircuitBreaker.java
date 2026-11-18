@@ -9,41 +9,41 @@ import org.springframework.dao.DataAccessResourceFailureException;
 import org.springframework.dao.QueryTimeoutException;
 
 /**
- * Deja de usar Redis durante un tiempo después de un fallo de conexión.
+ * Stops using Redis for a while after a connection failure.
  *
- * <p>Cuando Redis no contesta, cada operación espera hasta agotar {@code readTimeout}. Sin esta
- * pausa, cada petición pagaría esa espera una o varias veces mientras dure la avería. Tras un
- * fallo de conexión o de tiempo de espera, las operaciones de caché se saltan Redis durante
- * {@link #getPause()} y se comportan como si la caché estuviera vacía.</p>
+ * <p>When Redis does not answer, each operation waits until {@code readTimeout} runs out. Without this
+ * pause, each request would pay that wait one or several times while the outage lasts. After a
+ * connection or timeout failure, cache operations skip Redis for
+ * {@link #getPause()} and behave as if the cache were empty.</p>
  *
- * <p>Al acabar la pausa, solo una operación vuelve a probar Redis; las demás siguen sin usarlo
- * mientras tanto. Si la prueba sale bien ({@link #recordSuccess()}), Redis vuelve a usarse para
- * todas; si falla, empieza otra pausa. Así, mientras dure la avería, cada pausa cuesta como
- * mucho una espera, por mucho tráfico que haya.</p>
+ * <p>When the pause ends, only one operation tries Redis again; the others keep not using it
+ * in the meantime. If the probe succeeds ({@link #recordSuccess()}), Redis is used again for
+ * everyone; if it fails, another pause begins. This way, while the outage lasts, each pause costs at
+ * most one wait, no matter how much traffic there is.</p>
  *
- * <p>Una misma instancia la comparten las anotaciones {@code @Coalesce*}, {@code RedisCacheService}
- * y el {@code @Cacheable} de Spring, así que la avería que detecta una evita la espera en las demás.
- * Los errores de una orden concreta (por ejemplo, una respuesta de error del servidor) no abren
- * la pausa, porque no indican que Redis esté caído.</p>
+ * <p>The same instance is shared by the {@code @Coalesce*} annotations, {@code RedisCacheService}
+ * and Spring's {@code @Cacheable}, so an outage detected by one avoids the wait in the others.
+ * Errors of a specific command (for example, an error response from the server) do not open
+ * the pause, because they do not indicate that Redis is down.</p>
  *
  * @author Java Universe
  */
 public class RedisCircuitBreaker {
 
-    /** Duración de la pausa tras un fallo de conexión. */
+    /** Duration of the pause after a connection failure. */
     private final Duration pause;
 
     /**
-     * Instante ({@link System#nanoTime()}) hasta el que no se usa Redis; 0 si no hay pausa.
-     * Pasado ese instante sin haberse cerrado, la pausa sigue vigente para todos menos para la
-     * operación que prueba Redis.
+     * Instant ({@link System#nanoTime()}) until which Redis is not used; 0 if there is no pause.
+     * Once that instant has passed without the pause being closed, it remains in force for everyone except the
+     * operation that probes Redis.
      */
     private final AtomicLong pausedUntilNanos = new AtomicLong();
 
     /**
-     * Crea el cortacircuitos.
+     * Creates the circuit breaker.
      *
-     * @param pause tiempo que se deja de usar Redis tras un fallo de conexión; cero lo desactiva
+     * @param pause time during which Redis is not used after a connection failure; zero disables it
      */
     public RedisCircuitBreaker(Duration pause) {
         if (pause == null || pause.isNegative()) {
@@ -53,23 +53,23 @@ public class RedisCircuitBreaker {
     }
 
     /**
-     * Devuelve la duración de la pausa.
+     * Returns the duration of the pause.
      *
-     * @return duración de la pausa
+     * @return pause duration
      */
     public Duration getPause() {
         return pause;
     }
 
     /**
-     * Indica si hay que saltarse Redis porque hubo un fallo de conexión hace poco.
+     * Tells whether Redis must be skipped because there was a connection failure a short while ago.
      *
-     * <p>Al acabar la pausa devuelve {@code false} a una sola llamada, que hace de prueba, y
-     * {@code true} a las demás hasta que esa prueba registre su resultado. Si la prueba no
-     * registra nada (por ejemplo, porque su hilo se interrumpe), otra llamada prueba pasada
-     * una nueva pausa.</p>
+     * <p>When the pause ends it returns {@code false} to a single call, which acts as the probe, and
+     * {@code true} to the others until that probe records its result. If the probe does not
+     * record anything (for example, because its thread is interrupted), another call probes after
+     * a new pause.</p>
      *
-     * @return {@code true} si la operación no debe llegar a Redis
+     * @return {@code true} if the operation must not reach Redis
      */
     public boolean isOpen() {
         long until = pausedUntilNanos.get();
@@ -80,14 +80,14 @@ public class RedisCircuitBreaker {
         if (now - until < 0) {
             return true;
         }
-        // La pausa acabó: la primera llamada que consigue reprogramarla es la que prueba Redis.
+        // The pause is over: the first call that manages to reschedule it is the one that probes Redis.
         long nextProbe = now + pause.toNanos();
         return !pausedUntilNanos.compareAndSet(until, nextProbe == 0 ? 1 : nextProbe);
     }
 
     /**
-     * Registra que una operación contra Redis terminó bien: si había pausa, se cierra y Redis
-     * vuelve a usarse para todos.
+     * Records that an operation against Redis completed successfully: if there was a pause, it is closed and Redis
+     * is used again for everyone.
      */
     public void recordSuccess() {
         if (pausedUntilNanos.get() != 0) {
@@ -96,11 +96,11 @@ public class RedisCircuitBreaker {
     }
 
     /**
-     * Registra un fallo de una operación contra Redis. Si es un fallo de conexión o de tiempo
-     * de espera, abre la pausa.
+     * Records a failure of an operation against Redis. If it is a connection or timeout
+     * failure, it opens the pause.
      *
-     * @param failure excepción lanzada por la operación
-     * @return {@code true} si el fallo abrió la pausa
+     * @param failure exception thrown by the operation
+     * @return {@code true} if the failure opened the pause
      */
     public boolean recordFailure(Throwable failure) {
         if (pause.isZero() || !isConnectionFailure(failure)) {
@@ -112,13 +112,13 @@ public class RedisCircuitBreaker {
     }
 
     /**
-     * Indica si el fallo significa que no se llega a Redis (conexión caída, rechazada o sin
-     * respuesta), a diferencia de un error de una orden concreta. Revisa toda la cadena de
-     * causas, porque según el camino la excepción llega traducida por Spring o tal cual
-     * la lanza Lettuce.
+     * Tells whether the failure means Redis cannot be reached (connection down, refused or
+     * unresponsive), as opposed to an error of a specific command. It checks the whole chain of
+     * causes, because depending on the path the exception arrives translated by Spring or exactly as
+     * Lettuce throws it.
      *
-     * @param failure excepción lanzada por la operación
-     * @return {@code true} si es un fallo de conexión o de tiempo de espera
+     * @param failure exception thrown by the operation
+     * @return {@code true} if it is a connection or timeout failure
      */
     public static boolean isConnectionFailure(Throwable failure) {
         for (Throwable current = failure; current != null; current = current.getCause()) {
