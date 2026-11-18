@@ -57,7 +57,7 @@ class SerializationRoundTripIT extends AbstractRedisIT {
     /**
      * Service with one method for each return type to be checked.
      */
-     private static class TypesService {
+     public static class TypesService {
 
         /** Number of times some real method ran. */
         private final AtomicInteger calls = new AtomicInteger();
@@ -68,73 +68,73 @@ class SerializationRoundTripIT extends AbstractRedisIT {
         }
 
         @CoalesceCacheable(value = "types", key = "'pojo'")
-         Item pojo() {
+        public Item pojo() {
             calls.incrementAndGet();
             return item();
         }
 
         @CoalesceCacheable(value = "types", key = "'string'")
-         String string() {
+        public String string() {
             calls.incrementAndGet();
             return "hello";
         }
 
         @CoalesceCacheable(value = "types", key = "'arrayList'")
-         List<Item> arrayList() {
+        public List<Item> arrayList() {
             calls.incrementAndGet();
             return new ArrayList<>(List.of(item()));
         }
 
         @CoalesceCacheable(value = "types", key = "'map'")
-         Map<String, Long> map() {
+        public Map<String, Long> map() {
             calls.incrementAndGet();
             return new HashMap<>(Map.of("a", 1L));
         }
 
         @CoalesceCacheable(value = "types", key = "'record'")
-         Person recordPerson() {
+        public Person recordPerson() {
             calls.incrementAndGet();
             return new Person(1L, "Ana");
         }
 
         @CoalesceCacheable(value = "types", key = "'long'")
-         Long longValue() {
+        public Long longValue() {
             calls.incrementAndGet();
             return 5L;
         }
 
         @CoalesceCacheable(value = "types", key = "'bigDecimal'")
-         BigDecimal bigDecimal() {
+        public BigDecimal bigDecimal() {
             calls.incrementAndGet();
             return new BigDecimal("10.50");
         }
 
         @CoalesceCacheable(value = "types", key = "'dateTime'")
-         LocalDateTime dateTime() {
+        public LocalDateTime dateTime() {
             calls.incrementAndGet();
             return LocalDateTime.of(2026, 1, 15, 10, 30);
         }
 
         @CoalesceCacheable(value = "types", key = "'enum'")
-         Status enumValue() {
+        public Status enumValue() {
             calls.incrementAndGet();
             return Status.CLOSED;
         }
 
         @CoalesceCacheable(value = "types", key = "'listOf'")
-         List<Item> listOf() {
+        public List<Item> listOf() {
             calls.incrementAndGet();
             return List.of(item());
         }
 
         @CoalesceCacheable(value = "types", key = "'streamToList'")
-         List<Item> streamToList() {
+        public List<Item> streamToList() {
             calls.incrementAndGet();
             return Stream.of(item()).toList();
         }
 
         @CoalesceCacheable(value = "types", key = "'null'", cacheNull = true)
-         Item nullValue() {
+        public Item nullValue() {
             calls.incrementAndGet();
             return null;
         }
