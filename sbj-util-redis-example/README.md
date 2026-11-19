@@ -2,6 +2,8 @@
 
 Aplicación de ejemplo con Spring Boot que muestra cuatro patrones de caché con Redis usando la librería `sbj-util-redis`.
 
+> English version: [README.en.md](README.en.md)
+
 ## Descripción
 
 Este proyecto es una aplicación de demostración que enseña cómo implementar caché con Redis en Spring Boot de cuatro maneras distintas:

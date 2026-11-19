@@ -2,6 +2,8 @@
 
 Librería de utilidades para Spring Boot, potente y flexible, que simplifica la integración con Redis: operaciones de caché, verificación de salud y opciones avanzadas de configuración.
 
+> English version: [README.en.md](README.en.md)
+
 ## Tabla de contenido
 
 - [Características](#características)
