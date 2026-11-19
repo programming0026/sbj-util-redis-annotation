@@ -107,7 +107,7 @@ public class UserServiceImpl implements UserService {
     }
 
     /**
-     * Elimina usuario.
+     * Deletes a user.
      * Shows RedisCacheService with the cacheEvict operation
      * @return {@code true} if the user was deleted; {@code false} if it did not exist
      */
@@ -134,7 +134,7 @@ public class UserServiceImpl implements UserService {
     }
 
     /**
-     * Obtiene usuarios todos.
+     * Gets all users.
      * Shows RedisCacheService in list operations
      */
     @Override

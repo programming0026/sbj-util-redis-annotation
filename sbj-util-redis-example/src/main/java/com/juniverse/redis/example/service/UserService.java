@@ -19,7 +19,7 @@ public interface UserService {
     UserDTO getUserById(Long id, boolean forceRefresh);
 
     /**
-     * Obtiene usuarios todos.
+     * Gets all users.
      * @return list of all users
      */
     List<UserDTO> getUsers();
