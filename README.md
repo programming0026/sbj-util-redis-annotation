@@ -2,6 +2,8 @@
 
 Una **librería** para Spring Boot 4 que simplifica el uso de Redis (caché con TTL por nombre, modos Standalone, Sentinel y Cluster, anotaciones `@Coalesce*` que evitan la avalancha de peticiones a la base de datos) y un **ejemplo** que muestra cómo usarla.
 
+> English version: [README.en.md](README.en.md)
+
 | Módulo | Qué es | Paquete |
 |--------|--------|---------|
 | [`sbj-util-redis`](sbj-util-redis/README.md) | La librería (`io.github.programming0026:sbj-util-redis-annotation:3.0.0`, sobre Jackson 3), con pruebas unitarias y de integración contra Redis real (Standalone, Sentinel, Cluster, TLS y averías) | `io.github.programming0026.juniverse.redis` |
