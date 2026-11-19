@@ -27,7 +27,7 @@ import org.mockito.quality.Strictness;
 import org.springframework.cache.Cache;
 import org.springframework.cache.CacheManager;
 
-/** Con RedisCacheService simulado: comprueba cómo el servicio usa la librería, sin necesitar un Redis. */
+/** With a mocked RedisCacheService: checks how the service uses the library, without needing a Redis. */
 @ExtendWith(MockitoExtension.class)
 @MockitoSettings(strictness = Strictness.LENIENT)
 public class UserServiceImplTest {
@@ -44,7 +44,7 @@ public class UserServiceImplTest {
     @SuppressWarnings("unchecked")
     public void setUp() {
         service = new UserServiceImpl(cacheManager, redisCacheService);
-        // "cache vacía": cada cacheable() ejecuta el cargador que le pasa el servicio
+        // "empty cache": each cacheable() runs the loader passed in by the service
         when(redisCacheService.cacheable(any(), any(), any(Supplier.class), any(Duration.class)))
                 .thenAnswer(invocation -> ((Supplier<?>) invocation.getArgument(2)).get());
     }

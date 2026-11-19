@@ -19,7 +19,7 @@ import org.springframework.cache.CacheManager;
 import org.springframework.stereotype.Service;
 
 /**
- * Implementación del servicio de usuarios que muestra el uso de RedisCacheService
+ * Users service implementation showing the use of RedisCacheService
  *
  * @author Java Universe
  */
@@ -35,9 +35,9 @@ public class UserServiceImpl implements UserService {
     private static final AtomicLong idGenerator = new AtomicLong(10);
 
     /**
-     * Constructor para la inyección de dependencias
-     * @param cacheManager administrador de caché
-     * @param redisCacheService servicio de caché de Redis
+     * Constructor for dependency injection
+     * @param cacheManager cache manager
+     * @param redisCacheService Redis cache service
      */
     public UserServiceImpl(CacheManager cacheManager, RedisCacheService redisCacheService) {
         this.cacheManager = cacheManager;
@@ -46,7 +46,7 @@ public class UserServiceImpl implements UserService {
     }
 
     /**
-     * Inicializa usuarios de ejemplo en memoria
+     * Initializes sample users in memory
      */
     private void createUsers() {
         IntStream.rangeClosed(1, 10)
@@ -55,8 +55,8 @@ public class UserServiceImpl implements UserService {
     }
 
     /**
-     * Obtiene un usuario por identificador, con actualización forzada opcional
-     * Muestra RedisCacheService con caché condicional
+     * Gets a user by id, with optional forced refresh
+     * Shows RedisCacheService with conditional caching
      */
     @Override
     public UserDTO getUserById(Long id, boolean forceRefresh) {
@@ -80,8 +80,8 @@ public class UserServiceImpl implements UserService {
     }
 
     /**
-     * Guarda o actualiza un usuario
-     * Muestra RedisCacheService con la operación cachePut
+     * Saves or updates a user
+     * Shows RedisCacheService with the cachePut operation
      */
     @Override
     public UserDTO saveOrUpdateUser(UserDTO user) {
@@ -108,8 +108,8 @@ public class UserServiceImpl implements UserService {
 
     /**
      * Elimina usuario.
-     * Muestra RedisCacheService con la operación cacheEvict
-     * @return {@code true} si se eliminó el usuario; {@code false} si no existía
+     * Shows RedisCacheService with the cacheEvict operation
+     * @return {@code true} if the user was deleted; {@code false} if it did not exist
      */
     @Override
     public boolean deleteUser(Long id) {
@@ -125,7 +125,7 @@ public class UserServiceImpl implements UserService {
     }
 
     /**
-     * Limpia caché de usuarios todos.
+     * Clears the entire users cache
      */
     @Override
     public void clearCache() {
@@ -135,7 +135,7 @@ public class UserServiceImpl implements UserService {
 
     /**
      * Obtiene usuarios todos.
-     * Muestra RedisCacheService en operaciones de lista
+     * Shows RedisCacheService in list operations
      */
     @Override
     public List<UserDTO> getUsers() {

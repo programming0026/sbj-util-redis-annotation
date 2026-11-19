@@ -18,7 +18,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
- * Controlador de usuarios que muestra el uso de CacheOperationBuilder
+ * Users controller showing the use of CacheOperationBuilder
  *
  * @author Java Universe
  */
@@ -31,8 +31,8 @@ public class UserController {
     private final UserService userService;
 
     /**
-     * Constructor para la inyección de dependencias
-     * @param userService servicio de usuario
+     * Constructor for dependency injection
+     * @param userService user service
      */
     public UserController(UserService userService) {
         this.userService = userService;
@@ -40,7 +40,7 @@ public class UserController {
 
     /**
      * Obtiene usuarios todos.
-     * @return ResponseEntity con la lista de usuarios
+     * @return ResponseEntity with the list of users
      */
     @GetMapping(produces = {MediaType.APPLICATION_JSON_VALUE})
     public ResponseEntity<List<UserDTO>> getUsers() {
@@ -49,10 +49,10 @@ public class UserController {
     }
 
     /**
-     * Obtiene usuario por identificador.
-     * @param id identificador de usuario
-     * @param forceRefresh fuerza la actualización de la caché
-     * @return ResponseEntity con el usuario o NOT_FOUND
+     * Gets a user by id
+     * @param id user id
+     * @param forceRefresh forces a cache refresh
+     * @return ResponseEntity with the user or NOT_FOUND
      */
     @GetMapping(path = "/{id}", produces = {MediaType.APPLICATION_JSON_VALUE})
     public ResponseEntity<UserDTO> getUser(
@@ -66,8 +66,8 @@ public class UserController {
     }
 
     /**
-     * Limpia toda la caché de usuarios
-     * @return ResponseEntity con estado OK
+     * Clears the entire users cache
+     * @return ResponseEntity with OK status
      */
     @GetMapping(path = "/refresh", produces = {MediaType.APPLICATION_JSON_VALUE})
     public ResponseEntity<Void> refreshAll() {
@@ -76,9 +76,9 @@ public class UserController {
     }
 
     /**
-     * Elimina usuario por identificador.
-     * @param id identificador de usuario
-     * @return ResponseEntity con NO_CONTENT o NOT_FOUND
+     * Deletes a user by id
+     * @param id user id
+     * @return ResponseEntity with NO_CONTENT or NOT_FOUND
      */
     @DeleteMapping(path = "/{id}", produces = {MediaType.APPLICATION_JSON_VALUE})
     public ResponseEntity<Void> delete(@PathVariable("id") Long id) {
@@ -90,9 +90,9 @@ public class UserController {
     }
 
     /**
-     * Crea o actualiza un usuario
-     * @param user datos de usuario
-     * @return ResponseEntity con el usuario creado o actualizado
+     * Creates or updates a user
+     * @param user user data
+     * @return ResponseEntity with the created or updated user
      */
     @PostMapping(produces = {MediaType.APPLICATION_JSON_VALUE})
     public ResponseEntity<UserDTO> save(@RequestBody UserDTO user) {

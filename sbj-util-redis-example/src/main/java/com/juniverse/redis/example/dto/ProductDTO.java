@@ -9,7 +9,7 @@ import lombok.Setter;
 import lombok.AllArgsConstructor;
 import lombok.NoArgsConstructor;
 /**
- * Objeto de transferencia de producto
+ * Product data transfer object
  *
  * @author Java Universe
  */

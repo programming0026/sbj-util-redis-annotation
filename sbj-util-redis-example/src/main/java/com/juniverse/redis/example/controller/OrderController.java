@@ -15,7 +15,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
- * Controlador REST de pedidos con el patrón de caché con coalescencia
+ * Orders REST controller using the coalescing cache pattern
  *
  * @author Java Universe
  */

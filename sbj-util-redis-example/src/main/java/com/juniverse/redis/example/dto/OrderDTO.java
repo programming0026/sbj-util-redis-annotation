@@ -11,7 +11,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 /**
- * Objeto de transferencia de pedido
+ * Order data transfer object
  *
  * @author Java Universe
  */

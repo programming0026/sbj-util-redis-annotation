@@ -7,13 +7,13 @@ import io.github.programming0026.juniverse.redis.enums.Mode;
 import org.springframework.context.annotation.Configuration;
 
 /**
- * Configuración de Redis con la librería sbj-util-redis
- * Configura Redis en modo STANDALONE (un solo servidor en el puerto 6379) con entradas de TTL para distintas cachés.
- * Los atributos de texto admiten placeholders {@code ${...}}: el host, el usuario, la contraseña y el nombre
- * de la caché se leen de {@code application.properties} y se pueden sobrescribir con variables de entorno
- * o argumentos de línea de comandos (por ejemplo {@code --redis.host=redis.internal}).
- * Los atributos numéricos (puerto, TTL) no admiten placeholders porque Java exige constantes.
- * Las configuraciones SENTINEL y CLUSTER se conservan abajo, comentadas, para cambiar de modo.
+ * Redis configuration using the sbj-util-redis library.
+ * Configures Redis in STANDALONE mode (a single server on port 6379) with TTL entries for different caches.
+ * String attributes support {@code ${...}} placeholders: the host, user, password and cache name
+ * are read from {@code application.properties} and can be overridden with environment variables
+ * or command-line arguments (for example {@code --redis.host=redis.internal}).
+ * Numeric attributes (port, TTL) do not support placeholders because Java requires constants.
+ * The SENTINEL and CLUSTER configurations are kept below, commented out, to switch modes.
  *
  * @author Java Universe
  */

@@ -10,7 +10,7 @@ import com.juniverse.redis.example.dto.ProductDTO;
 import java.time.LocalDate;
 import org.junit.jupiter.api.Test;
 
-/** Sin Spring: las anotaciones de caché no actúan, así que se prueba solo la lógica del servicio. */
+/** Without Spring: the cache annotations do not run, so only the service logic is tested. */
 public class ProductServiceImplTest {
 
     private final ProductServiceImpl service = new ProductServiceImpl();

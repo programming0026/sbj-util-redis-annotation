@@ -3,28 +3,28 @@ package com.juniverse.redis.example.util;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * Clase de utilidades para operaciones comunes
+ * Utility class for common operations
  *
  * @author Java Universe
  */
 @Slf4j
 public final class Utility {
 
-    /** Propiedad del sistema que reemplaza el retraso simulado en milisegundos (las pruebas unitarias la ponen en 0). */
+    /** System property that overrides the simulated delay in milliseconds (unit tests set it to 0). */
     public static final String DELAY_PROPERTY = "example.slow-service-millis";
 
     private static final long DEFAULT_DELAY_MILLIS = 3000L;
 
     /**
-     * Constructor privado para evitar la instanciación
+     * Private constructor to prevent instantiation
      */
     private Utility() {
     }
 
     /**
-     * Simula un servicio lento esperando 3 segundos (o el valor de la
-     * propiedad del sistema {@value #DELAY_PROPERTY}, en milisegundos)
-     * Se usa para mostrar las ventajas de la caché
+     * Simulates a slow service by waiting 3 seconds (or the value of the
+     * system property {@value #DELAY_PROPERTY}, in milliseconds).
+     * Used to show the benefits of caching
      */
     public static void simulateSlowService() {
         try {

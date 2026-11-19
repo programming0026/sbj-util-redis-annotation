@@ -10,8 +10,8 @@ import java.util.List;
 import org.junit.jupiter.api.Test;
 
 /**
- * Sin Spring los aspectos de la librería no actúan: aquí se prueba la lógica de los métodos y que lleven las
- * anotaciones {@code @Coalesce*} con la configuración esperada.
+ * Without Spring the library aspects do not run: here we test the method logic and that they carry the
+ * {@code @Coalesce*} annotations with the expected configuration.
  */
 public class OrderServiceImplTest {
 
@@ -60,7 +60,7 @@ public class OrderServiceImplTest {
 
     @Test
     public void clearSearchCacheDoesNothingByItself() {
-        service.clearSearchCache(); // el borrado lo hace el aspecto @CoalesceEvict
+        service.clearSearchCache(); // the eviction is performed by the @CoalesceEvict aspect
     }
 
     @Test

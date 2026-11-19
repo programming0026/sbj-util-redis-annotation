@@ -4,7 +4,7 @@ import com.juniverse.redis.example.dto.OrderDTO;
 import java.util.List;
 
 /**
- * Interfaz del servicio de pedidos con el patrón de caché con coalescencia
+ * Orders service interface using the coalescing cache pattern
  *
  * @author Java Universe
  */

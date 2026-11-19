@@ -4,42 +4,42 @@ import com.juniverse.redis.example.dto.UserDTO;
 import java.util.List;
 
 /**
- * Interfaz del servicio de usuarios
+ * Users service interface
  *
  * @author Java Universe
  */
 public interface UserService {
 
     /**
-     * Obtiene un usuario por identificador, con actualización forzada opcional
-     * @param id identificador de usuario
-     * @param forceRefresh fuerza la actualización de la caché
-     * @return UserDto con los datos del usuario
+     * Gets a user by id, with optional forced refresh
+     * @param id user id
+     * @param forceRefresh forces a cache refresh
+     * @return UserDto with the user data
      */
     UserDTO getUserById(Long id, boolean forceRefresh);
 
     /**
      * Obtiene usuarios todos.
-     * @return usuarios de de de lista todos
+     * @return list of all users
      */
     List<UserDTO> getUsers();
 
     /**
-     * Elimina usuario por identificador.
-     * @param id identificador de usuario
-     * @return {@code true} si se eliminó el usuario; {@code false} si no existía
+     * Deletes a user by id
+     * @param id user id
+     * @return {@code true} if the user was deleted; {@code false} if it did not exist
      */
     boolean deleteUser(Long id);
 
     /**
-     * Guarda o actualiza un usuario
-     * @param user datos de usuario
-     * @return UserDto con el usuario guardado o actualizado
+     * Saves or updates a user
+     * @param user user data
+     * @return UserDto with the saved or updated user
      */
     UserDTO saveOrUpdateUser(UserDTO user);
 
     /**
-     * Limpia toda la caché de usuarios
+     * Clears the entire users cache
      */
     void clearCache();
 }

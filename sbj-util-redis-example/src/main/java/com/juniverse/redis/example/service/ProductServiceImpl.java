@@ -19,7 +19,7 @@ import org.springframework.cache.annotation.Caching;
 import org.springframework.stereotype.Service;
 
 /**
- * Implementación del servicio de productos que muestra las anotaciones de Spring Cache
+ * Products service implementation showing Spring Cache annotations
  *
  * @author Java Universe
  */
@@ -32,14 +32,14 @@ public class ProductServiceImpl implements ProductService {
     private static final AtomicLong idGenerator = new AtomicLong(10);
 
     /**
-     * Constructor para la inyección de dependencias
+     * Constructor for dependency injection
      */
     public ProductServiceImpl() {
         createProducts();
     }
 
     /**
-     * Inicializa productos de ejemplo en memoria
+     * Initializes sample products in memory
      */
     private void createProducts() {
         IntStream.rangeClosed(1, 10)
@@ -47,9 +47,9 @@ public class ProductServiceImpl implements ProductService {
     }
 
     /**
-     * Obtiene un producto por identificador con caché
-     * @param id identificador del producto
-     * @return ProductDto con los datos del producto
+     * Gets a product by id using the cache
+     * @param id product id
+     * @return ProductDto with the product data
      */
     @Override
     @Cacheable(value = "products", key = "#id")
@@ -59,9 +59,9 @@ public class ProductServiceImpl implements ProductService {
     }
 
     /**
-     * Guarda o actualiza un producto y actualiza la caché
-     * @param product datos del producto
-     * @return ProductDto con el producto guardado o actualizado
+     * Saves or updates a product and refreshes the cache
+     * @param product product data
+     * @return ProductDto with the saved or updated product
      */
     @Caching(
         put = @CachePut(value = "products", key = "#result.id"),
@@ -86,9 +86,9 @@ public class ProductServiceImpl implements ProductService {
     }
 
     /**
-     * Elimina un producto y lo invalida de la caché
-     * @param id identificador del producto
-     * @return {@code true} si se eliminó el producto; {@code false} si no existía
+     * Deletes a product and evicts it from the cache
+     * @param id product id
+     * @return {@code true} if the product was deleted; {@code false} if it did not exist
      */
     @Caching(evict = {
         @CacheEvict(value = "products", key = "#id"),
@@ -105,7 +105,7 @@ public class ProductServiceImpl implements ProductService {
     }
 
     /**
-     * Limpia toda la caché de productos
+     * Clears the entire products cache
      */
     @CacheEvict(value = "products", allEntries = true)
     @Override
@@ -114,8 +114,8 @@ public class ProductServiceImpl implements ProductService {
     }
 
     /**
-     * Obtiene todos los productos con caché
-     * @return lista de todos los productos
+     * Gets all products using the cache
+     * @return list of all products
      */
     @Override
     @Cacheable(value = "products", key = "'all'")

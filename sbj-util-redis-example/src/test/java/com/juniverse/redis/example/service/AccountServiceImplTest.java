@@ -24,8 +24,8 @@ import org.springframework.cache.Cache;
 import org.springframework.cache.CacheManager;
 
 /**
- * Usa el CacheOperationBuilder.Factory real de la librería sobre un RedisCacheService simulado: así se comprueba
- * también que el servicio construye bien las operaciones (nombre de caché, clave, TTL y condición).
+ * Uses the real CacheOperationBuilder.Factory from the library on top of a mocked RedisCacheService, which also verifies
+ * that the service builds the operations correctly (cache name, key, TTL and condition).
  */
 public class AccountServiceImplTest {
 

@@ -8,7 +8,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 /**
- * Objeto de transferencia de elemento de pedido
+ * Order item data transfer object
  *
  * @author Java Universe
  */
