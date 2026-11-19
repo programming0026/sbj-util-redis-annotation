@@ -30,14 +30,14 @@ jobs:
       # verify = compilar + tests + umbral de JaCoCo (80 %) + checkstyle + jars de fuentes y Javadoc.
       - name: Verify
         run: mvn -B -ntp verify
-        working-directory: sbj-redis-client
+        working-directory: sbj-util-redis
 
       - name: Upload test reports
         if: failure()
         uses: actions/upload-artifact@v4
         with:
           name: library-test-reports
-          path: sbj-redis-client/target/surefire-reports
+          path: sbj-util-redis/target/surefire-reports
 
   example:
     name: Example (against the library from this commit)
