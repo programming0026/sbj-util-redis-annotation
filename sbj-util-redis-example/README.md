@@ -62,7 +62,7 @@ El ejemplo se ejecuta en modo STANDALONE (configuración por defecto), así que 
 docker run -d --name redis -p 6379:6379 redis:7-alpine
 ```
 
-Para cambiar a SENTINEL o CLUSTER, edite `src/main/java/com/juniverse/redis/example/config/AppConfig.java`: comente el bloque `@EnableRedisLibrary` activo y descomente el que necesite.
+Para cambiar a SENTINEL o CLUSTER, edite `src/main/java/com/juniverse/redis/example/infrastructure/config/RedisConfig.java`: comente el bloque `@EnableRedisLibrary` activo y descomente el que necesite.
 
 ### 3. Instalar la librería
 
@@ -261,40 +261,55 @@ curl http://localhost:8080/api/v1/orders/1 &
 
 ## Arquitectura
 
+El proyecto sigue una **arquitectura hexagonal (puertos y adaptadores)**. El dominio y la capa de aplicación son Java puro: no conocen Spring, Redis ni la librería. La caché es un detalle de infraestructura que se aplica con adaptadores que *decoran* el almacenamiento.
+
+```
+            ┌──────────── infraestructura ────────────┐
+ HTTP ──▶   adapter/in/web  (controladores + DTO)
+                    │ usa
+                    ▼
+            domain/port/in   (casos de uso)  ◀── implementa ── application/service
+                                                                   │ usa
+                                                                   ▼
+            domain/port/out  (RepositoryPort, CachePort)
+                    ▲ implementa
+            adapter/out/cache (decorador con caché Redis) ──▶ adapter/out/persistence (memoria, lenta)
+            └─────────────────────────────────────────┘
+```
+
 ### Estructura de paquetes
 
 ```
 com.juniverse.redis.example
-├── config/
-│   └── AppConfig.java              # Configuración de Redis con @EnableRedisLibrary
-├── controller/
-│   ├── ProductController.java      # Endpoints REST de productos
-│   ├── UserController.java         # Endpoints REST de usuarios
-│   ├── AccountController.java      # Endpoints REST de cuentas
-│   ├── OrderController.java        # Endpoints REST de pedidos
-│   └── RedisHealthController.java  # Verificación de salud
-├── service/
-│   ├── ProductService.java         # Interfaz
-│   ├── ProductServiceImpl.java     # Implementación con @Cacheable
-│   ├── UserService.java            # Interfaz
-│   ├── UserServiceImpl.java        # Implementación con RedisCacheService
-│   ├── AccountService.java         # Interfaz
-│   ├── AccountServiceImpl.java     # Implementación con CacheOperationBuilder
-│   ├── OrderService.java           # Interfaz
-│   └── OrderServiceImpl.java       # Implementación con @CoalesceCacheable
-├── dto/
-│   ├── ProductDTO.java             # DTO con Serializable
-│   ├── UserDTO.java                # DTO con Serializable
-│   ├── AccountDTO.java             # DTO con Serializable
-│   ├── OrderDTO.java               # DTO con Serializable
-│   └── OrderItemDTO.java           # DTO con Serializable
-└── util/
-    └── Utility.java                # Utilidades (simulateSlowService)
+├── domain/                                   # Núcleo: sin dependencias externas
+│   ├── model/                                # Account, User, Product, Order, OrderItem
+│   └── port/
+│       ├── in/                               # Puertos de entrada: AccountUseCase, UserUseCase, ...
+│       └── out/                              # Puertos de salida: *RepositoryPort, *CachePort
+├── application/
+│   └── service/                              # AccountService, UserService, ProductService, OrderService
+└── infrastructure/
+    ├── adapter/
+    │   ├── in/web/                           # Controladores REST (Swagger) y dto/ con el mapeo al dominio
+    │   └── out/
+    │       ├── persistence/                  # Almacenamiento en memoria que simula una BD lenta
+    │       └── cache/                        # Un adaptador por patrón de caché de la librería:
+    │           ├── SpringCacheProductRepository.java           # @Cacheable / @CachePut / @CacheEvict
+    │           ├── RedisCacheServiceUserRepository.java        # RedisCacheService
+    │           ├── CacheOperationBuilderAccountRepository.java # CacheOperationBuilder.Factory
+    │           └── CoalescingOrderRepository.java              # @CoalesceCacheable y compañía
+    ├── config/
+    │   ├── RedisConfig.java                  # @EnableRedisLibrary (STANDALONE / SENTINEL / CLUSTER)
+    │   └── BeanConfig.java                   # Ensambla servicios, puertos y adaptadores
+    └── util/
+        └── Utility.java                      # simulateSlowService()
 ```
+
+Cada adaptador de caché implementa a la vez el `RepositoryPort` y el `CachePort` de su entidad, y delega en el adaptador de persistencia. Para cambiar el almacenamiento o la estrategia de caché basta con otro adaptador: los servicios de aplicación no cambian. `HexagonalArchitectureTest` comprueba que `domain` y `application` no importen Spring, la librería ni la infraestructura.
 
 ### Patrones de caché implementados
 
-#### 1. ProductService: anotaciones de Spring Cache
+#### 1. Productos: anotaciones de Spring Cache (`SpringCacheProductRepository`)
 
 **Ventajas:**
 - Sencillo y declarativo
@@ -304,16 +319,16 @@ com.juniverse.redis.example
 **Uso:**
 ```java
 @Cacheable(value = "products", key = "'all'")
-public List<ProductDTO> getProducts() { ... }
+public List<Product> findAll() { ... }
 
 @Caching(
     put = @CachePut(value = "products", key = "#result.id"),
     evict = @CacheEvict(value = "products", key = "'all'")
 )
-public ProductDTO saveOrUpdateProduct(ProductDTO product) { ... }
+public Product save(Product product) { ... }
 ```
 
-#### 2. UserService: RedisCacheService
+#### 2. Usuarios: RedisCacheService (`RedisCacheServiceUserRepository`)
 
 **Ventajas:**
 - Control programático
@@ -322,36 +337,33 @@ public ProductDTO saveOrUpdateProduct(ProductDTO product) { ... }
 
 **Uso:**
 ```java
-return redisCacheService.cacheable(
+return Optional.ofNullable(redisCacheService.cacheable(
     CACHE_NAME,
     String.valueOf(id),
-    () -> users.get(id),
-    Duration.ofMinutes(30)
-);
+    () -> delegate.findById(id).orElse(null),
+    Duration.ofMinutes(30)));
 ```
 
-#### 3. AccountService: CacheOperationBuilder.Factory
+#### 3. Cuentas: CacheOperationBuilder.Factory (`CacheOperationBuilderAccountRepository`)
 
 **Ventajas:**
 - Máxima flexibilidad
 - Retrollamadas para lógica adicional
-- Caché condicional
 - API fluida
 
 **Uso:**
 ```java
-return builderFactory.<AccountDTO>create()
+return Optional.ofNullable(builderFactory.<Account>create()
     .cacheName(CACHE_NAME)
     .key(String.valueOf(id))
-    .loader(() -> accounts.get(id))
+    .loader(() -> delegate.findById(id).orElse(null))
     .ttl(Duration.ofMinutes(20))
-    .condition(!forceRefresh)
     .onCacheHit(acc -> log.info("Cache hit!"))
     .onCacheMiss(acc -> log.info("Cache miss!"))
-    .cacheable();
+    .cacheable());
 ```
 
-#### 4. OrderService: anotaciones de coalescencia
+#### 4. Pedidos: anotaciones de coalescencia (`CoalescingOrderRepository`)
 
 **Ventajas:**
 - Evita las avalanchas de caché
@@ -370,23 +382,21 @@ return builderFactory.<AccountDTO>create()
     cacheNull = false,
     coalesce = true
 )
-public OrderDTO getOrderById(Long id) { ... }
+public Order findById(Long id) { ... }
 
 @CoalesceCaching(
-    put = {
-        @CoalescePut(value = "order", key = "#id", ttl = 300),
-        @CoalescePut(value = "order:status", key = "#newStatus", ttl = 120)
-    }
+    put = @CoalescePut(value = "order", key = "#order.id", ttl = 300),
+    evict = @CoalesceEvict(value = "order:status", key = "#order.status")
 )
-public OrderDTO updateOrderStatus(Long id, String newStatus) { ... }
+public Order save(Order order) { ... }
 
-@CoalesceEvict(pattern = "order:status:*")
-public void clearSearchCache() { ... }
+@CoalesceEvict(pattern = "'order:status:*'")
+public void evictStatusSearches() { ... }
 ```
 
 ### Invalidación de la caché
 
-Todos los servicios aplican el mismo patrón de invalidación:
+Todos los adaptadores de caché aplican el mismo patrón de invalidación:
 - Al **crear o actualizar**: se actualiza la caché individual y se invalida la lista completa
 - Al **eliminar**: se invalidan la caché individual y la lista completa
 
@@ -473,7 +483,7 @@ La anotación `@CoalesceCacheable` con `coalesce = true` garantiza que varias pe
 mvn test
 ```
 
-59 pruebas unitarias que no necesitan Redis: servicios (con `RedisCacheService` simulado y el `CacheOperationBuilder.Factory` real), controladores (`MockMvc` en modo independiente) y `Utility`. El retraso de 3 segundos que simula una base de datos lenta se desactiva en las pruebas con la propiedad del sistema `example.slow-service-millis` (en `0` en la configuración de Surefire); también puede usarla para acelerar o ralentizar la aplicación en ejecución, por ejemplo `java -Dexample.slow-service-millis=500 -jar ...`.
+82 pruebas unitarias que no necesitan Redis: servicios de aplicación (con los puertos simulados), adaptadores de caché (con `RedisCacheService` simulado y el `CacheOperationBuilder.Factory` real), adaptadores de persistencia, controladores (`MockMvc` en modo independiente), `Utility` y la regla de dependencias de la arquitectura hexagonal. El retraso de 3 segundos que simula una base de datos lenta se desactiva en las pruebas con la propiedad del sistema `example.slow-service-millis` (en `0` en la configuración de Surefire); también puede usarla para acelerar o ralentizar la aplicación en ejecución, por ejemplo `java -Dexample.slow-service-millis=500 -jar ...`.
 
 Los endpoints también se pueden probar a mano con:
 - curl
