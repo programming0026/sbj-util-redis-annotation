@@ -22,6 +22,14 @@ cd ../sbj-util-redis-example
 mvn spring-boot:run
 ```
 
+Con el ejemplo en marcha (puerto 8080 por defecto), la documentación de la API está en:
+
+| Recurso | Enlace |
+|---------|--------|
+| Swagger UI | [http://localhost:8080/swagger-ui/index.html](http://localhost:8080/swagger-ui/index.html) |
+| Especificación OpenAPI (JSON) | [http://localhost:8080/v3/api-docs](http://localhost:8080/v3/api-docs) |
+| Especificación OpenAPI (YAML) | [http://localhost:8080/v3/api-docs.yaml](http://localhost:8080/v3/api-docs.yaml) |
+
 ## Requisitos
 
 - JDK 21 y Maven 3.9 o superior.
